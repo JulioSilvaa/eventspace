@@ -1,0 +1,10 @@
+node_modules
+.claude
+.env
+.env.local
+.mcp.json
+projeto_plataforma_anuncios.md
+claude_code_tasks.md
+layout_home
+dist
+docs
