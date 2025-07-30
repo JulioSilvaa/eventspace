@@ -15,6 +15,7 @@ interface AuthState {
   signUp: (email: string, password: string, userData: Partial<User>) => Promise<{ error?: string }>
   signOut: () => Promise<void>
   updateProfile: (data: Partial<User>) => Promise<{ error?: string }>
+  changePassword: (newPassword: string) => Promise<{ error?: string }>
   checkAuth: () => Promise<void>
   setLoading: (loading: boolean) => void
   
@@ -176,6 +177,22 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
         }))
 
         return {}
+      },
+
+      changePassword: async (newPassword: string) => {
+        try {
+          const { error } = await supabase.auth.updateUser({
+            password: newPassword
+          })
+
+          if (error) {
+            return { error: error.message }
+          }
+
+          return {}
+        } catch (error) {
+          return { error: 'Erro inesperado ao alterar senha' }
+        }
       },
 
       checkAuth: async () => {

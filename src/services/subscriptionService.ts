@@ -143,16 +143,16 @@ class SubscriptionService {
     })
   }
 
-  getStatusBadge(status: Subscription['status']): { text: string; color: string } {
+  getStatusBadge(status: Subscription['status']): { text: string; color: string; icon: React.ReactNode } {
     const statusMap = {
-      active: { text: 'Ativo', color: 'green' },
-      canceled: { text: 'Cancelado', color: 'red' },
-      past_due: { text: 'Em Atraso', color: 'yellow' },
-      unpaid: { text: 'Não Pago', color: 'red' },
-      incomplete: { text: 'Incompleto', color: 'gray' },
+      active: { text: 'Ativo', color: 'green', icon: '✓' },
+      canceled: { text: 'Cancelado', color: 'red', icon: '✕' },
+      past_due: { text: 'Em Atraso', color: 'yellow', icon: '⚠' },
+      unpaid: { text: 'Não Pago', color: 'red', icon: '✕' },
+      incomplete: { text: 'Incompleto', color: 'gray', icon: '○' },
     }
 
-    return statusMap[status] || { text: 'Desconhecido', color: 'gray' }
+    return statusMap[status] || { text: 'Desconhecido', color: 'gray', icon: '?' }
   }
 
   isSubscriptionActive(subscription: Subscription): boolean {

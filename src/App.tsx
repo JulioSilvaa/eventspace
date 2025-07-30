@@ -21,6 +21,7 @@ import MyAds from './pages/dashboard/MyAds'
 import CreateAd from './pages/dashboard/CreateAd'
 import EditAd from './pages/dashboard/EditAd'
 import ReviewsManagement from './pages/dashboard/ReviewsManagement'
+import Settings from './pages/dashboard/Settings'
 
 // Checkout pages
 import Checkout from './pages/checkout/Checkout'
@@ -175,7 +176,7 @@ function App() {
         } />
         <Route path="/dashboard/configuracoes" element={
           <ProtectedRoute requiresPaidPlan={true}>
-            <div>Settings</div>
+            <Settings />
           </ProtectedRoute>
         } />
         
