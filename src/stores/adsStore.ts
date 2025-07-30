@@ -37,8 +37,6 @@ interface AdsState {
   updateAd: (id: string, adData: Partial<Ad>) => Promise<{ error?: string }>
   deleteAd: (id: string) => Promise<{ error?: string }>
   setSearchFilters: (filters: SearchFilters) => void
-  incrementViews: (id: string) => Promise<void>
-  incrementContacts: (id: string) => Promise<void>
   setLoading: (loading: boolean) => void
   setAdBlockerDetected: (detected: boolean) => void
 }
@@ -139,17 +137,17 @@ export const useAdsStore = create<AdsState>((set, get) => ({
       return
     }
 
-    // Fetch featured ads - simplified query without profiles join
+    // Fetch featured ads with metrics summary for views count
     const { data, error } = await supabase
       .from('listings')
       .select(`
         *,
         categories(id, name, type),
-        listing_images(id, image_url, display_order)
+        listing_images(id, image_url, display_order),
+        metrics_summary(views_count, contacts_count, favorites_count, reviews_count)
       `)
       .eq('status', 'active')
       .eq('featured', true)
-      .order('views_count', { ascending: false })
       .order('created_at', { ascending: false })
       .limit(limit)
 
@@ -158,8 +156,19 @@ export const useAdsStore = create<AdsState>((set, get) => ({
       return
     }
 
+    // Process data to calculate total views from metrics_summary
+    const processedData = (data || []).map(ad => {
+      const totalViews = ad.metrics_summary?.reduce((sum: number, metric: any) => 
+        sum + (metric.views_count || 0), 0) || 0
+      
+      return {
+        ...ad,
+        views_count: totalViews
+      }
+    }).sort((a, b) => b.views_count - a.views_count) // Sort by total views descending
+
     set({
-      featuredAds: data || [],
+      featuredAds: processedData,
       cache: { ...state.cache, featuredAds: now }
     })
   },
@@ -178,11 +187,11 @@ export const useAdsStore = create<AdsState>((set, get) => ({
       .select(`
         *,
         categories!inner(id, name, type),
-        listing_images(id, image_url, display_order)
+        listing_images(id, image_url, display_order),
+        metrics_summary(views_count, contacts_count, favorites_count, reviews_count)
       `)
       .eq('status', 'active')
       .eq('categories.type', 'space')
-      .order('views_count', { ascending: false })
       .order('created_at', { ascending: false })
       .limit(limit)
 
@@ -458,125 +467,7 @@ export const useAdsStore = create<AdsState>((set, get) => ({
     set({ searchFilters: filters })
   },
 
-  incrementViews: async (id: string) => {
-    try {
-      // First get current views_count
-      const { data: currentAd, error: fetchError } = await supabase
-        .from('listings')
-        .select('views_count')
-        .eq('id', id)
-        .single()
 
-      if (fetchError) {
-        console.error('Error fetching current views:', fetchError)
-        return
-      }
-
-      const newViewsCount = (currentAd.views_count || 0) + 1
-
-      // Update views_count
-      const { error: updateError } = await supabase
-        .from('listings')
-        .update({ views_count: newViewsCount })
-        .eq('id', id)
-
-      if (!updateError) {
-        // Update local state
-        set((state) => ({
-          currentAd: state.currentAd?.id === id 
-            ? { ...state.currentAd, views_count: newViewsCount }
-            : state.currentAd,
-        }))
-      } else {
-        // Only log error if it's not a network/blocking issue
-        if (!updateError.message?.includes('Failed to fetch') && !updateError.message?.includes('ERR_BLOCKED_BY_CLIENT')) {
-          console.error('Error updating views:', updateError)
-        } else {
-          // Mark ad blocker as detected for future operations
-          set((state) => ({ ...state, adBlockerDetected: true }))
-        }
-      }
-    } catch (error) {
-      // Only log error if it's not a network/blocking issue (ad blockers)
-      const errorMessage = error instanceof Error ? error.message : String(error)
-      if (!errorMessage.includes('Failed to fetch') && !errorMessage.includes('ERR_BLOCKED_BY_CLIENT')) {
-        console.error('Error incrementing views:', error)
-      } else {
-        // Mark ad blocker as detected for future operations
-        set((state) => ({ ...state, adBlockerDetected: true }))
-      }
-    }
-  },
-
-  incrementContacts: async (id: string) => {
-    try {
-      // Try to get current contacts_count, but handle if field doesn't exist
-      const { data: currentAd, error: fetchError } = await supabase
-        .from('listings')
-        .select('contacts_count, views_count')
-        .eq('id', id)
-        .single()
-
-      if (fetchError) {
-        console.error('Error fetching current ad data:', fetchError)
-        // If field doesn't exist, try using views_count as fallback for tracking
-        try {
-          const { error: fallbackError } = await supabase
-            .from('listings')
-            .select('views_count')
-            .eq('id', id)
-            .single()
-          
-          if (fallbackError) return
-          
-          // For now, just log the contact attempt since we can't store it
-          return
-        } catch {
-          return
-        }
-      }
-
-      const newContactsCount = (currentAd.contacts_count || 0) + 1
-
-      // Try to update contacts_count
-      const { error: updateError } = await supabase
-        .from('listings')
-        .update({ contacts_count: newContactsCount })
-        .eq('id', id)
-
-      if (!updateError) {
-        // Update local state
-        set((state) => ({
-          currentAd: state.currentAd?.id === id 
-            ? { ...state.currentAd, contacts_count: newContactsCount }
-            : state.currentAd,
-        }))
-      } else {
-        // If contacts_count field doesn't exist, try alternative approach
-        if (updateError.message?.includes('column "contacts_count" of relation "listings" does not exist')) {
-          // Could implement alternative tracking here (separate table, etc.)
-          return
-        }
-        
-        // Only log other errors if they're not network/blocking issues
-        if (!updateError.message?.includes('Failed to fetch') && !updateError.message?.includes('ERR_BLOCKED_BY_CLIENT')) {
-          console.error('Error updating contacts:', updateError)
-        } else {
-          // Mark ad blocker as detected for future operations
-          set((state) => ({ ...state, adBlockerDetected: true }))
-        }
-      }
-    } catch (error) {
-      // Only log error if it's not a network/blocking issue (ad blockers)
-      const errorMessage = error instanceof Error ? error.message : String(error)
-      if (!errorMessage.includes('Failed to fetch') && !errorMessage.includes('ERR_BLOCKED_BY_CLIENT')) {
-        console.error('Error incrementing contacts:', error)
-      } else {
-        // Mark ad blocker as detected for future operations
-        set((state) => ({ ...state, adBlockerDetected: true }))
-      }
-    }
-  },
 
   setLoading: (loading: boolean) => {
     set({ isLoading: loading })

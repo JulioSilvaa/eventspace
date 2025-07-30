@@ -6,7 +6,9 @@ import {
   Eye, MessageCircle, Star, Package, TrendingUp, MapPin, 
   Clock, Users, Crown, Lock, BarChart3, Zap, Target
 } from 'lucide-react'
-import { useAuth } from '@/hooks/useAuth'
+// import { useAuth } from '@/hooks/useAuth' // Not used currently
+import { useUserRealTimeMetrics } from '@/hooks/useRealTimeMetrics'
+import { ActivityEvent } from '@/services/realTimeService'
 import { Ad } from '@/types'
 
 interface ActivityDisplayProps {
@@ -15,7 +17,9 @@ interface ActivityDisplayProps {
         'milestone' | 'update' | 'status_change' | 'peak_time' | 
         'geographic_insight' | 'demographic_insight' | 'competitor_analysis' | 
         'priority_lead' | 'auto_boost' | 'market_alert' | 'listing_created' |
-        'review_received' | 'listing_milestone' | 'performance_insight'
+        'review_received' | 'listing_milestone' | 'performance_insight' |
+        'listing_updated' | 'price_updated' | 'photos_updated' | 
+        'description_updated' | 'contact_updated'
   title: string
   description: string
   timestamp: Date
@@ -56,330 +60,397 @@ export default function RecentActivity({
   userPlan = 'basic',
   userAds = []
 }: RecentActivityProps) {
-  const { user } = useAuth()
+  // const { } = useAuth() // Not used currently
   const [activities, setActivities] = useState<ActivityDisplayProps[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   
-  // Fetch real activities from database
-  useEffect(() => {
-    // Generate premium teasers for non-premium users
-    const generatePremiumTeasers = (count: number): ActivityDisplayProps[] => {
-      const teasers: ActivityDisplayProps[] = [
-        {
-          id: 'teaser-geo',
-          type: 'geographic_insight',
-          title: '🔒 Insight Geográfico Premium',
-          description: 'Descubra de onde vêm seus melhores clientes',
-          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 4),
-          isPremium: true,
-          locked: true,
-          metadata: {
-            adTitle: userAds[0]?.title || 'Seu anúncio'
-          }
-        },
-        {
-          id: 'teaser-comp',
-          type: 'competitor_analysis',
-          title: '🔒 Análise da Concorrência',
-          description: 'Compare seu desempenho com anúncios similares',
-          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 7),
-          isPremium: true,
-          locked: true,
-          metadata: {
-            adTitle: userAds[0]?.title || 'Seu anúncio'
-          }
-        },
-        {
-          id: 'teaser-lead',
-          type: 'priority_lead',
-          title: '🔒 Leads Prioritários',
-          description: 'Identifique os melhores prospects automaticamente',
-          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 12),
-          isPremium: true,
-          locked: true,
-          metadata: {
-            adTitle: userAds[0]?.title || 'Seu anúncio'
-          }
-        }
-      ]
-      return teasers.slice(0, count)
-    }
+  // Hook para métricas em tempo real
+  const { 
+    metrics, 
+    isLoading: metricsLoading, 
+    error: metricsError
+  } = useUserRealTimeMetrics({
+    pollingInterval: 30000, // 30 segundos
+    enableRealTime: true,
+    includePremiumFeatures: userPlan === 'premium'
+  })
 
-    // Fallback activities for error cases
-    const generateFallbackActivities = (): ActivityDisplayProps[] => {
-      const baseActivities: ActivityDisplayProps[] = [
-        {
-          id: 'fallback-1',
-          type: 'update',
-          title: 'Sistema atualizado',
-          description: 'Melhorias de performance foram aplicadas',
-          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2),
+  // Converter eventos reais em atividades para display
+  const convertEventsToActivities = (events: ActivityEvent[], userAds: Ad[]): ActivityDisplayProps[] => {
+    const activities: ActivityDisplayProps[] = []
+
+    events.forEach((event) => {
+      const ad = userAds.find(ad => ad.id === event.listing_id)
+      const adTitle = ad?.title || 'Anúncio removido'
+
+      let activityType: ActivityDisplayProps['type'] = 'update'
+      let title = ''
+      let description = ''
+
+      switch (event.event_type) {
+        case 'view':
+          activityType = 'view'
+          title = '👀 Nova visualização'
+          description = `Seu anúncio "${adTitle}" foi visualizado`
+          break
+          
+        case 'contact_whatsapp':
+          activityType = 'contact'
+          title = '📱 Contato WhatsApp'
+          description = `Alguém entrou em contato via WhatsApp sobre "${adTitle}"`
+          break
+          
+        case 'contact_phone':
+          activityType = 'contact'
+          title = '📞 Ligação recebida'
+          description = `Alguém ligou sobre "${adTitle}"`
+          break
+          
+        case 'favorite_add':
+          activityType = 'rating'
+          title = '⭐ Novo favorito'
+          description = `"${adTitle}" foi adicionado aos favoritos`
+          break
+          
+        case 'review_add':
+          activityType = 'rating'
+          title = '💬 Nova avaliação'
+          description = `Você recebeu uma nova avaliação em "${adTitle}"`
+          break
+          
+        case 'share':
+          activityType = 'update'
+          title = '🔗 Compartilhamento'
+          description = `"${adTitle}" foi compartilhado${event.metadata?.platform ? ` no ${event.metadata.platform}` : ''}`
+          break
+
+        case 'listing_created':
+          activityType = 'listing_created'
+          title = '🎉 Anúncio Publicado'
+          description = `"${adTitle}" foi publicado com sucesso`
+          break
+
+        case 'listing_updated': {
+          activityType = 'listing_updated'
+          title = '✏️ Anúncio Atualizado'
+          const fields = event.metadata?.changedFields || []
+          description = `"${adTitle}" foi atualizado${fields.length > 0 ? ` (${fields.join(', ')})` : ''}`
+          break
+        }
+
+        case 'price_updated': {
+          activityType = 'price_updated'
+          title = '💰 Preço Atualizado'
+          const oldPrice = event.metadata?.oldPrice
+          const newPrice = event.metadata?.newPrice
+          const priceChange = event.metadata?.priceChangePercent
+          description = `Preço de "${adTitle}" alterado${oldPrice && newPrice ? ` de R$ ${oldPrice} para R$ ${newPrice}` : ''}${priceChange ? ` (${priceChange > 0 ? '+' : ''}${priceChange}%)` : ''}`
+          break
+        }
+
+        case 'photos_updated': {
+          activityType = 'photos_updated'
+          title = '📸 Fotos Atualizadas'
+          const photoAction = event.metadata?.photoAction
+          const photoCount = event.metadata?.photoCount
+          description = `Fotos de "${adTitle}" foram ${
+            photoAction === 'added' ? 'adicionadas' : 
+            photoAction === 'removed' ? 'removidas' : 
+            'atualizadas'
+          }${photoCount ? ` (${photoCount} fotos)` : ''}`
+          break
+        }
+
+        case 'description_updated':
+          activityType = 'description_updated'
+          title = '📝 Descrição Atualizada'
+          description = `Descrição de "${adTitle}" foi atualizada`
+          break
+
+        case 'contact_updated': {
+          activityType = 'contact_updated'
+          title = '📞 Contato Atualizado'
+          const contactFields = event.metadata?.updatedContactFields || []
+          description = `Informações de contato de "${adTitle}" foram atualizadas${contactFields.length > 0 ? ` (${contactFields.join(', ')})` : ''}`
+          break
+        }
+          
+        default:
+          activityType = 'update'
+          title = '📊 Atividade'
+          description = `Nova atividade em "${adTitle}"`
+      }
+
+      activities.push({
+        id: event.id || `event-${Date.now()}-${Math.random()}`,
+        type: activityType,
+        title,
+        description,
+        timestamp: new Date(event.created_at || Date.now()),
+        isPremium: false,
+        metadata: {
+          adTitle,
+          listingId: event.listing_id,
+          contactType: event.event_type === 'contact_whatsapp' ? 'whatsapp' : 
+                      event.event_type === 'contact_phone' ? 'phone' : undefined
+        }
+      })
+    })
+
+    return activities
+  }
+
+  // Função para gerar atividades baseadas em métricas consolidadas
+  const generateMetricsBasedActivities = (userAds: Ad[]): ActivityDisplayProps[] => {
+    const activities: ActivityDisplayProps[] = []
+
+    userAds.forEach((ad, index) => {
+      const views = ad.views_count || 0
+
+      // Atividade de criação de anúncio (sempre mostrar a data real de publicação)
+      activities.push({
+        id: `ad-created-${ad.id}`,
+        type: 'listing_created',
+        title: '🎉 Anúncio Publicado',
+        description: `"${ad.title}" foi publicado em ${ad.city}`,
+        timestamp: new Date(ad.created_at),
+        isPremium: false,
+        metadata: {
+          adTitle: ad.title,
+          listingId: ad.id
+        }
+      })
+
+      // Marco de visualizações
+      if (views >= 50 && views % 25 === 0) {
+        activities.push({
+          id: `milestone-${ad.id}-${views}`,
+          type: 'milestone',
+          title: '🎯 Marco Atingido',
+          description: `"${ad.title}" atingiu ${views} visualizações!`,
+          timestamp: new Date(Date.now() - 1000 * 60 * 60 * (2 + index)),
           isPremium: false,
           metadata: {
-            adTitle: userAds[0]?.title || 'Seu anúncio'
+            adTitle: ad.title,
+            listingId: ad.id,
+            milestone_value: views,
+            milestone_type: 'views'
           }
-        }
-      ]
-
-      if (userPlan !== 'premium') {
-        baseActivities.push(...generatePremiumTeasers(2))
+        })
       }
+    })
 
-      return baseActivities
+    return activities
+  }
+
+  // Gerar atividades premium com dados reais
+  const generatePremiumActivities = (userAds: Ad[]): ActivityDisplayProps[] => {
+    if (userPlan !== 'premium' || !metrics) return []
+
+    const activities: ActivityDisplayProps[] = []
+
+    // Insights geográficos reais
+    if (metrics.geographicInsights && metrics.geographicInsights.topCities.length > 0) {
+      const topCity = metrics.geographicInsights.topCities[0]
+      const growth = metrics.geographicInsights.trends.growth
+
+      activities.push({
+        id: 'premium-geo-insight',
+        type: 'geographic_insight',
+        title: '📍 Insight Geográfico',
+        description: `${topCity.percentage}% dos seus contatos vieram de ${topCity.city} ${metrics.geographicInsights.trends.period}`,
+        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2),
+        isPremium: true,
+        actionable: true,
+        metadata: {
+          adTitle: userAds[0]?.title || 'Seus anúncios',
+          location: topCity.city,
+          growth: growth
+        }
+      })
+
+      // Insight sobre novas localizações
+      if (metrics.geographicInsights.trends.newLocations > 0) {
+        activities.push({
+          id: 'premium-geo-expansion',
+          type: 'geographic_insight',
+          title: '🌍 Expansão Geográfica',
+          description: `${metrics.geographicInsights.trends.newLocations} novas cidades descobriram seus anúncios esta semana`,
+          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 6),
+          isPremium: true,
+          actionable: true,
+          metadata: {
+            adTitle: userAds[0]?.title || 'Seus anúncios',
+            growth: metrics.geographicInsights.trends.newLocations
+          }
+        })
+      }
     }
 
-    const fetchActivities = async () => {
-      if (!user?.id) {
-        setLoading(false)
-        return
-      }
-
-      try {
-        setLoading(true)
-        setError(null)
-        
-        // Generate common activities based on user's real data
-        const generateCommonActivities = (): ActivityDisplayProps[] => {
-          const commonActivities: ActivityDisplayProps[] = []
-          
-          // If user has ads, generate activities based on real data from each ad
-          if (userAds.length > 0) {
-            // Sort ads by most recent first
-            const sortedAds = [...userAds].sort((a, b) => 
-              new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-            )
-            
-            // Generate activities for individual ads with real data
-            sortedAds.forEach((ad, index) => {
-              const adAge = Math.floor((Date.now() - new Date(ad.created_at).getTime()) / (1000 * 60 * 60 * 24))
-              const views = ad.views_count || 0
-              const contacts = ad.contacts_count || 0
-              
-              // Recent views for this specific ad
-              if (views > 0) {
-                commonActivities.push({
-                  id: `ad-views-${ad.id}`,
-                  type: 'view',
-                  title: `👀 ${views} visualizações`,
-                  description: `Seu anúncio "${ad.title}" em ${ad.city}, ${ad.state} recebeu ${views} visualizações`,
-                  timestamp: new Date(Date.now() - 1000 * 60 * 60 * (2 + index)),
-                  isPremium: false,
-                  metadata: {
-                    adTitle: ad.title,
-                    growth: views > 10 ? Math.floor(views * 0.2) : 0,
-                    listingId: ad.id
-                  }
-                })
-              }
-              
-              // Contact activity for this specific ad
-              if (contacts > 0) {
-                commonActivities.push({
-                  id: `ad-contacts-${ad.id}`,
-                  type: 'contact',
-                  title: `📞 ${contacts} contato${contacts > 1 ? 's' : ''}`,
-                  description: `${contacts} pessoa${contacts > 1 ? 's' : ''} interessada${contacts > 1 ? 's' : ''} em "${ad.title}" (${ad.categories?.name || 'Categoria'})`,
-                  timestamp: new Date(Date.now() - 1000 * 60 * 60 * (4 + index)),
-                  isPremium: false,
-                  metadata: {
-                    adTitle: ad.title,
-                    contactType: 'whatsapp' as const,
-                    listingId: ad.id
-                  }
-                })
-              }
-              
-              // Ad creation activity (only for recent ads)
-              if (adAge <= 7) {
-                commonActivities.push({
-                  id: `ad-created-${ad.id}`,
-                  type: 'ad_created',
-                  title: '🎉 Anúncio Publicado',
-                  description: `"${ad.title}" foi publicado em ${ad.city} por R$ ${ad.price.toLocaleString('pt-BR')}/${ad.price_type === 'daily' ? 'dia' : ad.price_type === 'hourly' ? 'hora' : 'evento'}`,
-                  timestamp: new Date(ad.created_at),
-                  isPremium: false,
-                  metadata: {
-                    adTitle: ad.title
-                  }
-                })
-              }
-              
-              // Milestone activities based on real data
-              if (views >= 50) {
-                commonActivities.push({
-                  id: `ad-milestone-${ad.id}`,
-                  type: 'milestone',
-                  title: '🎯 Marco Atingido',
-                  description: `"${ad.title}" atingiu ${views} visualizações! ${ad.featured ? 'Anúncio em destaque está performando bem.' : ''}`,
-                  timestamp: new Date(Date.now() - 1000 * 60 * 60 * (6 + index)),
-                  isPremium: false,
-                  metadata: {
-                    adTitle: ad.title,
-                    milestone_value: views,
-                    milestone_type: 'views'
-                  }
-                })
-              }
-              
-              // Personalized tips based on real ad data
-              if (index === 0) { // Only for most recent ad
-                let tipDescription = ''
-                if (!ad.listing_images || ad.listing_images.length < 3) {
-                  tipDescription = `Anúncios com mais fotos recebem até 3x mais contatos. "${ad.title}" tem ${ad.listing_images?.length || 0} foto${(ad.listing_images?.length || 0) !== 1 ? 's' : ''}.`
-                } else if (!ad.delivery_available && ad.categories?.type === 'advertiser') {
-                  tipDescription = `Considere ativar a opção de entrega para "${ad.title}" para atrair mais clientes em ${ad.city}.`
-                } else {
-                  tipDescription = `"${ad.title}" está bem configurado! Continue monitorando o desempenho.`
-                }
-                
-                commonActivities.push({
-                  id: `ad-tip-${ad.id}`,
-                  type: 'update',
-                  title: '💡 Dica Personalizada',
-                  description: tipDescription,
-                  timestamp: new Date(Date.now() - 1000 * 60 * 60 * (8 + index)),
-                  isPremium: false,
-                  metadata: {
-                    adTitle: ad.title
-                  }
-                })
-              }
-            })
-          } else {
-            // Welcome activities for users without ads
-            commonActivities.push({
-              id: 'common-welcome-1',
-              type: 'update',
-              title: 'Bem-vindo ao EventSpace!',
-              description: 'Sua conta foi criada com sucesso. Crie seu primeiro anúncio para começar a receber contatos de clientes interessados.',
-              timestamp: new Date(Date.now() - 1000 * 60 * 30),
-              isPremium: false,
-              metadata: {
-                adTitle: 'Sistema'
-              }
-            })
-            
-            commonActivities.push({
-              id: 'common-tip-new-user',
-              type: 'update',
-              title: '🚀 Como Começar',
-              description: 'Anúncios com fotos de qualidade, descrição completa e preço justo recebem mais contatos. Comece criando seu primeiro anúncio!',
-              timestamp: new Date(Date.now() - 1000 * 60 * 60),
-              isPremium: false,
-              metadata: {
-                adTitle: 'Sistema'
-              }
-            })
-          }
-          
-          // Sort activities by timestamp (most recent first) and limit to 6
-          return commonActivities
-            .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
-            .slice(0, 6)
-        }
-
-        let simpleActivities: ActivityDisplayProps[] = []
-        
-        // Always generate common activities first
-        simpleActivities = generateCommonActivities()
-
-        if (userPlan === 'premium') {
-          // Add premium exclusive activities to common ones
-          const premiumActivities = [
-            {
-              id: 'premium-insight-1',
-              type: 'geographic_insight',
-              title: '📍 Análise Geográfica Avançada',
-              description: '65% dos seus leads vieram da região metropolitana nas últimas 2 semanas',
-              timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2),
-              isPremium: true,
-              actionable: true,
-              metadata: {
-                adTitle: userAds[0]?.title || 'Seu anúncio',
-                location: 'Região Metropolitana',
-                growth: 23
-              }
-            },
-            {
-              id: 'premium-competitor-1',
-              type: 'competitor_analysis',
-              title: '🏆 Desempenho vs Concorrência',
-              description: 'Seu anúncio está 40% acima da média em visualizações para sua categoria',
-              timestamp: new Date(Date.now() - 1000 * 60 * 60 * 4),
-              isPremium: true,
-              actionable: true,
-              metadata: {
-                adTitle: userAds[0]?.title || 'Seu anúncio',
-                competitorData: {
-                  comparison: 40,
-                  category: 'Espaços para Eventos'
-                }
-              }
-            },
-            {
-              id: 'premium-lead-1',
-              type: 'priority_lead',
-              title: '⭐ Lead de Alta Qualidade',
-              description: 'Novo contato interessado em evento para 150+ pessoas agendado para próximo mês',
-              timestamp: new Date(Date.now() - 1000 * 60 * 60 * 6),
-              isPremium: true,
-              actionable: true,
-              metadata: {
-                adTitle: userAds[0]?.title || 'Seu anúncio',
-                leadQuality: 'high' as const
-              }
-            },
-            {
-              id: 'premium-performance-1',
-              type: 'performance_insight',
-              title: '📈 Insight de Performance',
-              description: 'Taxa de conversão aumentou 15% após as últimas otimizações do seu perfil',
-              timestamp: new Date(Date.now() - 1000 * 60 * 60 * 8),
-              isPremium: true,
-              metadata: {
-                adTitle: userAds[0]?.title || 'Seu anúncio',
-                performance_change: 15,
-                engagement_score: 87
-              }
-            },
-            {
-              id: 'premium-market-1',
-              type: 'market_alert',
-              title: '🔔 Alerta de Mercado',
-              description: 'Aumento de 25% na demanda por espaços na sua região para o próximo trimestre',
-              timestamp: new Date(Date.now() - 1000 * 60 * 60 * 12),
-              isPremium: true,
-              actionable: true,
-              metadata: {
-                adTitle: 'Análise de Mercado',
-                growth: 25
-              }
+    // Insights competitivos reais
+    if (metrics.competitiveInsights && Array.isArray(metrics.competitiveInsights) && metrics.competitiveInsights.length > 0) {
+      const competitiveData = metrics.competitiveInsights[0] // Usar o primeiro insight como exemplo
+      
+      if (competitiveData.performance.overallRanking.percentile >= 75) {
+        activities.push({
+          id: 'premium-competitor-top',
+          type: 'competitor_analysis',
+          title: '🏆 Destaque na Categoria',
+          description: `Você está no ${competitiveData.performance.overallRanking.position} da categoria ${competitiveData.category}`,
+          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 4),
+          isPremium: true,
+          actionable: true,
+          metadata: {
+            adTitle: userAds[0]?.title || 'Seus anúncios',
+            competitorData: {
+              comparison: competitiveData.performance.overallRanking.percentile,
+              category: competitiveData.category
             }
-          ]
-          
-          // Add premium activities to common ones
-          simpleActivities.push(...premiumActivities)
-        } else {
-          // For non-premium users (basic and free), add premium teasers to common activities
-          const teasers = generatePremiumTeasers(2)
-          simpleActivities.push(...teasers)
-        }
-        
-        setActivities(simpleActivities)
-      } catch (error) {
-        console.error('Error fetching activities:', error)
-        setError('Erro ao carregar atividades')
-        setActivities(generateFallbackActivities())
-      } finally {
-        setLoading(false)
+          }
+        })
+      } else if (competitiveData.performance.viewsComparison.status === 'above') {
+        activities.push({
+          id: 'premium-competitor-views',
+          type: 'competitor_analysis',
+          title: '👀 Performance Superior',
+          description: `Suas visualizações estão ${Math.abs(competitiveData.performance.viewsComparison.percentage)}% acima da média da categoria`,
+          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 4),
+          isPremium: true,
+          actionable: true,
+          metadata: {
+            adTitle: userAds[0]?.title || 'Seus anúncios',
+            competitorData: {
+              comparison: competitiveData.performance.viewsComparison.percentage,
+              category: competitiveData.category
+            }
+          }
+        })
+      }
+
+      // Recomendação baseada na análise competitiva
+      if (competitiveData.recommendations && competitiveData.recommendations.length > 0) {
+        activities.push({
+          id: 'premium-competitor-recommendation',
+          type: 'competitor_analysis',
+          title: '💡 Recomendação Personalizada',
+          description: competitiveData.recommendations[0],
+          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 8),
+          isPremium: true,
+          actionable: true,
+          metadata: {
+            adTitle: userAds[0]?.title || 'Seus anúncios',
+            insight_type: 'recommendation'
+          }
+        })
       }
     }
 
-    fetchActivities()
-  }, [user?.id, userPlan, userAds])
+    return activities
+  }
 
+  // Gerar teasers premium para usuários não-premium
+  const generatePremiumTeasers = (): ActivityDisplayProps[] => {
+    if (userPlan === 'premium') return []
 
+    return [
+      {
+        id: 'teaser-geo',
+        type: 'geographic_insight',
+        title: '🔒 Análise Geográfica Premium',
+        description: 'Descubra de onde vêm seus melhores clientes',
+        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 6),
+        isPremium: true,
+        locked: true,
+        metadata: {
+          adTitle: userAds[0]?.title || 'Seus anúncios'
+        }
+      },
+      {
+        id: 'teaser-competitor',
+        type: 'competitor_analysis',
+        title: '🔒 Análise da Concorrência',
+        description: 'Compare seu desempenho com a concorrência',
+        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 8),
+        isPremium: true,
+        locked: true,
+        metadata: {
+          adTitle: userAds[0]?.title || 'Seus anúncios'
+        }
+      }
+    ]
+  }
+
+  // Atualizar atividades quando métricas mudarem
+  useEffect(() => {
+    if (!metrics) return
+
+    const allActivities: ActivityDisplayProps[] = []
+
+    // 1. Converter eventos reais em atividades
+    if (metrics.recentEvents && metrics.recentEvents.length > 0) {
+      const realTimeActivities = convertEventsToActivities(metrics.recentEvents, userAds)
+      allActivities.push(...realTimeActivities)
+    }
+
+    // 2. Adicionar apenas atividades de publicação e marcos (não eventos individuais)
+    const staticActivities = generateMetricsBasedActivities(userAds)
+    // Filtrar apenas atividades que não sejam baseadas em eventos reais
+    const filteredStaticActivities = staticActivities.filter(activity => 
+      activity.type === 'listing_created' || activity.type === 'milestone'
+    )
+    allActivities.push(...filteredStaticActivities)
+
+    // 3. Adicionar atividades premium ou teasers
+    if (userPlan === 'premium') {
+      const premiumActivities = generatePremiumActivities(userAds)
+      allActivities.push(...premiumActivities)
+    } else {
+      const teasers = generatePremiumTeasers()
+      allActivities.push(...teasers)
+    }
+
+    // 4. Remover duplicatas e ordenar por timestamp
+    const uniqueActivities = allActivities.filter((activity, index, arr) => 
+      arr.findIndex(a => a.id === activity.id) === index
+    )
+
+    const sortedActivities = uniqueActivities
+      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+    
+    // Manter apenas as 8 atividades mais recentes
+    const limitedActivities = sortedActivities.slice(0, 8)
+
+    setActivities(limitedActivities)
+  }, [metrics, userAds, userPlan])
+
+  // Fallback quando não há dados
+  useEffect(() => {
+    if (!metrics && !metricsLoading && userAds.length === 0) {
+      // Usuário sem anúncios - mostrar atividades de boas-vindas
+      setActivities([
+        {
+          id: 'welcome-1',
+          type: 'update',
+          title: 'Bem-vindo ao EventSpace!',
+          description: 'Sua conta foi criada com sucesso. Crie seu primeiro anúncio para começar a receber contatos.',
+          timestamp: new Date(Date.now() - 1000 * 60 * 30),
+          isPremium: false,
+          metadata: { adTitle: 'Sistema' }
+        },
+        {
+          id: 'tip-1',
+          type: 'update',
+          title: '🚀 Como Começar',
+          description: 'Anúncios com fotos de qualidade e descrição completa recebem mais contatos.',
+          timestamp: new Date(Date.now() - 1000 * 60 * 60),
+          isPremium: false,
+          metadata: { adTitle: 'Sistema' }
+        }
+      ])
+    }
+  }, [metrics, metricsLoading, userAds.length])
+
+  const loading = metricsLoading
+  const error = metricsError
   
   const getActivityIcon = (type: ActivityDisplayProps['type'], isPremium: boolean) => {
     const iconClass = isPremium ? "h-4 w-4 text-amber-600" : "h-4 w-4"
@@ -415,6 +486,16 @@ export default function RecentActivity({
       case 'ad_featured':
       case 'listing_created':
         return <Package className={`${iconClass} ${!isPremium && 'text-purple-500'}`} />
+      case 'listing_updated':
+        return <Package className={`${iconClass} ${!isPremium && 'text-blue-600'}`} />
+      case 'price_updated':
+        return <Package className={`${iconClass} ${!isPremium && 'text-green-600'}`} />
+      case 'photos_updated':
+        return <Package className={`${iconClass} ${!isPremium && 'text-pink-600'}`} />
+      case 'description_updated':
+        return <Package className={`${iconClass} ${!isPremium && 'text-indigo-600'}`} />
+      case 'contact_updated':
+        return <Package className={`${iconClass} ${!isPremium && 'text-teal-600'}`} />
       case 'performance_insight':
         return <BarChart3 className={`${iconClass} ${!isPremium && 'text-cyan-500'}`} />
       default:
@@ -448,6 +529,16 @@ export default function RecentActivity({
       case 'ad_featured':
       case 'listing_created':
         return 'bg-purple-50 border-purple-100'
+      case 'listing_updated':
+        return 'bg-blue-50 border-blue-100'
+      case 'price_updated':
+        return 'bg-green-50 border-green-100'
+      case 'photos_updated':
+        return 'bg-pink-50 border-pink-100'
+      case 'description_updated':
+        return 'bg-indigo-50 border-indigo-100'
+      case 'contact_updated':
+        return 'bg-teal-50 border-teal-100'
       case 'performance_insight':
         return 'bg-cyan-50 border-cyan-100'
       default:
@@ -514,7 +605,10 @@ export default function RecentActivity({
           </p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-4 max-h-96 overflow-y-auto pr-2" style={{
+          scrollbarWidth: 'thin',
+          scrollbarColor: '#d1d5db #f3f4f6'
+        }}>
           {activities.map((activity) => (
             <div 
               key={activity.id}
@@ -603,6 +697,14 @@ export default function RecentActivity({
               </div>
             </div>
           ))}
+          
+          {activities.length === 8 && (
+            <div className="pt-2 text-center">
+              <p className="text-xs text-gray-400">
+                Mostrando as 8 atividades mais recentes
+              </p>
+            </div>
+          )}
           
           {activities.length > 0 && userPlan !== 'premium' && (
             <div className="pt-4 border-t border-gray-100">

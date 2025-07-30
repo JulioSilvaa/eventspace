@@ -16,11 +16,15 @@ interface DashboardStatsData {
 interface DashboardStatsProps {
   data?: DashboardStatsData
   loading?: boolean
+  isRealTime?: boolean
+  lastUpdated?: Date | null
 }
 
 export default function DashboardStats({ 
   data,
-  loading = false
+  loading = false,
+  isRealTime = false,
+  lastUpdated
 }: DashboardStatsProps) {
   
   // Mock data for demonstration
@@ -95,9 +99,22 @@ export default function DashboardStats({
   return (
     <div>
       <div className="mb-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-1">
-          Resumo dos seus anúncios
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-gray-900 mb-1">
+            Resumo dos seus anúncios
+          </h2>
+          {isRealTime && (
+            <div className="flex items-center text-xs text-green-600">
+              <div className="w-2 h-2 bg-green-600 rounded-full animate-pulse mr-1"></div>
+              Real-time
+              {lastUpdated && (
+                <span className="text-gray-500 ml-2">
+                  Atualizado {lastUpdated.toLocaleTimeString()}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
         <p className="text-sm text-gray-600">
           Acompanhe o desempenho dos seus anúncios no EventSpace
         </p>

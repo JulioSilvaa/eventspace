@@ -7,6 +7,7 @@ import RecentActivity from '@/components/dashboard/RecentActivity'
 import UpgradeModal from '@/components/modals/UpgradeModal'
 import { useAuth } from '@/hooks/useAuth'
 import { useAdsStore } from '@/stores/adsStore'
+import { useUserRealTimeMetrics } from '@/hooks/useRealTimeMetrics'
 
 interface DashboardData {
   totalAds: number
@@ -50,6 +51,15 @@ export default function Dashboard() {
   const [loadingData, setLoadingData] = useState(true)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
 
+  // Hook para métricas em tempo real
+  const { 
+    metrics: realTimeMetrics, 
+    isLoading: metricsLoading 
+  } = useUserRealTimeMetrics({
+    pollingInterval: 30000, // 30 segundos
+    enableRealTime: true
+  })
+
 
   // Carregar anúncios do usuário e refresh profile se voltando do checkout
   useEffect(() => {
@@ -68,18 +78,27 @@ export default function Dashboard() {
     }
   }, [user, fetchUserAds, refreshProfile])
 
-  // Calcular estatísticas baseadas nos anúncios reais
+  // Calcular estatísticas usando dados real-time quando disponíveis
   useEffect(() => {
     if (userAds.length > 0) {
       const activeAds = userAds.filter(ad => ad.status === 'active')
-      const totalViews = userAds.reduce((sum, ad) => {
-        const views = ad.views_count || 0 // Default to 0 if views_count is undefined/null
-        return sum + views
-      }, 0)
       
-      // Para contatos, usaremos um valor simulado baseado nas visualizações
-      // Idealmente, isso viria de uma tabela de contatos/mensagens
-      const totalContacts = Math.floor(totalViews * 0.08) // ~8% conversion rate
+      // Usar métricas real-time se disponíveis, senão fallback para dados existentes
+      let totalViews = 0
+      let totalContacts = 0
+
+      if (realTimeMetrics) {
+        // Usar dados consolidados real-time
+        totalViews = realTimeMetrics.totalViews
+        totalContacts = realTimeMetrics.totalContacts
+      } else {
+        // Fallback para dados existentes
+        totalViews = userAds.reduce((sum, ad) => {
+          const views = ad.views_count || 0
+          return sum + views
+        }, 0)
+        totalContacts = Math.floor(totalViews * 0.08) // Simulado até termos dados reais
+      }
       
       const recentAds = userAds.slice(0, 3).map(ad => ({
         id: ad.id,
@@ -129,9 +148,9 @@ export default function Dashboard() {
       })
     }
     setLoadingData(false)
-  }, [userAds])
+  }, [userAds, realTimeMetrics])
 
-  if (isLoading) {
+  if (isLoading || metricsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
@@ -310,6 +329,8 @@ export default function Dashboard() {
         <DashboardStats 
           data={data || undefined}
           loading={loadingData}
+          isRealTime={!!realTimeMetrics}
+          lastUpdated={realTimeMetrics ? new Date() : null}
         />
 
         {/* Main Content Grid */}

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useAdsStore } from '@/stores/adsStore'
 import ReviewForm from '@/components/reviews/ReviewForm'
@@ -8,6 +8,7 @@ import PremiumBadge from '@/components/ui/PremiumBadge'
 import LocationMap, { LocationFallback } from '@/components/maps/LocationMap'
 import { geocodingService } from '@/services/geocodingService'
 import { useToast } from '@/contexts/ToastContext'
+import { useEventTracking } from '@/hooks/useRealTimeMetrics'
 
 interface ImageData {
   url?: string
@@ -149,11 +150,13 @@ const SERVICES_LABELS = {
 export default function AdDetails() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { ads, fetchAds, incrementViews, incrementContacts } = useAdsStore()
+  const { ads, fetchAds } = useAdsStore()
   const toast = useToast()
+  const { trackView, trackWhatsAppContact, trackPhoneContact } = useEventTracking(id)
   // const [currentImageIndex, setCurrentImageIndex] = useState(0) // Removido - não usado na galeria
   const [isLoading, setIsLoading] = useState(true)
   const [reviewsRefreshTrigger, setReviewsRefreshTrigger] = useState(0)
+  const viewTrackedRef = useRef(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalImageIndex, setModalImageIndex] = useState(0)
   const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null)
@@ -181,10 +184,12 @@ export default function AdDetails() {
   }, [ad, fetchAds])
 
   useEffect(() => {
-    if (ad && id) {
-      incrementViews(id)
+    if (ad && id && !viewTrackedRef.current) {
+      // Rastrear view apenas uma vez por sessão
+      viewTrackedRef.current = true
+      trackView()
     }
-  }, [ad, id, incrementViews])
+  }, [ad, id])
 
   // Geocode the ad location
   useEffect(() => {
@@ -200,7 +205,7 @@ export default function AdDetails() {
           if (result) {
             setCoordinates({ lat: result.latitude, lng: result.longitude })
           }
-        } catch (error) {
+        } catch {
           // Erro silencioso para geocoding - não precisa mostrar toast pois não afeta a funcionalidade principal
         } finally {
           setIsGeocodingLoading(false)
@@ -294,7 +299,7 @@ export default function AdDetails() {
     }
     
     // Track the contact before opening WhatsApp
-    incrementContacts(ad.id)
+    trackWhatsAppContact()
     toast.success('Redirecionando para WhatsApp...', 'Você será redirecionado para conversar com o anunciante.')
     
     const cleanPhone = phone.replace(/\D/g, '')
@@ -305,7 +310,7 @@ export default function AdDetails() {
   const callPhone = () => {
     if (ad.contact_phone) {
       // Track the contact before making the call
-      incrementContacts(ad.id)
+      trackPhoneContact()
       toast.success('Ligando...', 'Você será redirecionado para ligar para o anunciante.')
       window.open(`tel:${ad.contact_phone}`, '_self')
     } else {
@@ -322,14 +327,14 @@ export default function AdDetails() {
           url: window.location.href,
         })
         toast.success('Compartilhado!', 'Anúncio compartilhado com sucesso.')
-      } catch (error) {
+      } catch {
         // User cancelled sharing - no need to show error
       }
     } else {
       try {
         await navigator.clipboard.writeText(window.location.href)
         toast.success('Link copiado!', 'Link do anúncio copiado para a área de transferência.')
-      } catch (error) {
+      } catch {
         toast.error('Erro ao copiar', 'Não foi possível copiar o link. Tente novamente.')
       }
     }
@@ -767,7 +772,7 @@ export default function AdDetails() {
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-3 py-3 px-4 bg-gradient-to-r from-pink-50 to-purple-50 border border-pink-200 text-pink-700 rounded-lg hover:from-pink-100 hover:to-purple-100 hover:border-pink-300 transition-all duration-200 group"
-                        onClick={() => incrementContacts(ad.id)}
+                        onClick={() => {}}
                       >
                         <div className="w-8 h-8 bg-pink-100 rounded-full flex items-center justify-center group-hover:bg-pink-200 transition-colors">
                           <Instagram className="w-4 h-4 text-pink-600" />
@@ -788,7 +793,7 @@ export default function AdDetails() {
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-3 py-3 px-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 text-blue-700 rounded-lg hover:from-blue-100 hover:to-indigo-100 hover:border-blue-300 transition-all duration-200 group"
-                        onClick={() => incrementContacts(ad.id)}
+                        onClick={() => {}}
                       >
                         <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center group-hover:bg-blue-200 transition-colors">
                           <Facebook className="w-4 h-4 text-blue-600" />
