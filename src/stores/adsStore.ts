@@ -3,13 +3,6 @@ import { Ad, SearchFilters } from '@/types'
 import { supabase } from '@/lib/supabase'
 import { deleteAdImages } from '@/services/imageService'
 
-interface ProfileData {
-  plan_type: 'free' | 'basic' | 'premium'
-}
-
-interface AdWithProfile extends Ad {
-  profiles: ProfileData
-}
 
 interface AdsState {
   ads: Ad[]
@@ -146,71 +139,27 @@ export const useAdsStore = create<AdsState>((set, get) => ({
       return
     }
 
-    // Fetch featured ads with user information for premium prioritization
+    // Fetch featured ads - simplified query without profiles join
     const { data, error } = await supabase
       .from('listings')
       .select(`
         *,
         categories(id, name, type),
-        listing_images(id, image_url, display_order),
-        profiles(plan_type)
+        listing_images(id, image_url, display_order)
       `)
       .eq('status', 'active')
       .eq('featured', true)
-      .limit(limit * 2)  // Get more to allow for premium sorting
+      .order('views_count', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(limit)
 
     if (error) {
       console.error('Error fetching featured ads:', error)
-      // Fallback to simple query without profiles join
-      const { data: fallbackData, error: fallbackError } = await supabase
-        .from('listings')
-        .select(`
-          *,
-          categories(id, name, type),
-          listing_images(id, image_url, display_order)
-        `)
-        .eq('status', 'active')
-        .eq('featured', true)
-        .order('views_count', { ascending: false })
-        .order('created_at', { ascending: false })
-        .limit(limit)
-      
-      if (fallbackError) {
-        console.error('Error with fallback query:', fallbackError)
-        return
-      }
-      
-      set({
-        featuredAds: fallbackData || [],
-        cache: { ...state.cache, featuredAds: now }
-      })
       return
     }
 
-    // Sort ads by priority: premium users first, then by engagement metrics
-    const sortedAds = (data as AdWithProfile[] || []).sort((a, b) => {
-      // First priority: Premium users
-      const aPremium = a.profiles?.plan_type === 'premium' ? 1 : 0
-      const bPremium = b.profiles?.plan_type === 'premium' ? 1 : 0
-      
-      if (aPremium !== bPremium) {
-        return bPremium - aPremium  // Premium first
-      }
-      
-      // Second priority: Views count (engagement)
-      const aViews = a.views_count || 0
-      const bViews = b.views_count || 0
-      
-      if (aViews !== bViews) {
-        return bViews - aViews  // Higher views first
-      }
-      
-      // Third priority: Creation date (newer first)
-      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    }).slice(0, limit)  // Take only the requested limit
-
     set({
-      featuredAds: sortedAds,
+      featuredAds: data || [],
       cache: { ...state.cache, featuredAds: now }
     })
   },

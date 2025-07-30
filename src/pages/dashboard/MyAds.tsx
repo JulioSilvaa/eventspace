@@ -17,7 +17,8 @@ import {
   MapPin,
   Calendar,
   TrendingUp,
-  Crown
+  Crown,
+  ArrowLeft
 } from 'lucide-react'
 
 export default function MyAds() {
@@ -134,8 +135,16 @@ export default function MyAds() {
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-7xl mx-auto py-6 px-4">
           <div className="animate-pulse">
-            <div className="flex justify-between items-center mb-6">
-              <div className="h-8 bg-gray-200 rounded w-1/4"></div>
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-4">
+                <Link
+                  to="/dashboard"
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <ArrowLeft className="w-5 h-5 text-gray-600" />
+                </Link>
+                <div className="h-8 bg-gray-200 rounded w-1/4"></div>
+              </div>
               <div className="h-10 bg-gray-200 rounded w-32"></div>
             </div>
             <div className="grid gap-4">
@@ -153,15 +162,23 @@ export default function MyAds() {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto py-6 px-4">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-1">Meus Anúncios</h1>
-            <p className="text-gray-600">{userAds.length > 0 ? 'Gerencie seu anúncio no EventSpace' : 'Seu anúncio aparecerá aqui quando criado'}</p>
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <Link
+              to="/dashboard"
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5 text-gray-600" />
+            </Link>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Meus Anúncios</h1>
+              <p className="text-gray-600">{userAds.length > 0 ? 'Gerencie seus anúncios no EventSpace' : 'Seus anúncios aparecerão aqui quando criados'}</p>
+            </div>
           </div>
           {userAds.length === 0 && (
             <Link
               to="/dashboard/criar-anuncio"
-              className="mt-4 sm:mt-0 bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2"
+              className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2"
             >
               <Plus className="w-4 h-4" />
               Criar Meu Anúncio

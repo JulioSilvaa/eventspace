@@ -56,6 +56,9 @@ export interface Ad {
   rating?: number
   contact_whatsapp?: string
   contact_phone?: string
+  contact_email?: string
+  contact_instagram?: string
+  contact_facebook?: string
   created_at: string
   updated_at: string
   listing_images?: ListingImage[]

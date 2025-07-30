@@ -27,6 +27,59 @@ import { getMaxImagesForPlan } from '@/lib/planLimits'
 // Import supabase for fetching categories
 import { supabase } from '@/lib/supabase'
 
+// Mapas de tradução das comodidades
+const AMENITIES_LABELS = {
+  wifi: 'Wi-Fi',
+  parking: 'Estacionamento',
+  kitchen: 'Cozinha',
+  bathrooms: 'Banheiros',
+  air_conditioning: 'Ar Condicionado',
+  ventilation: 'Ventilação',
+  tv: 'TV/Televisão',
+  furniture: 'Mobiliário',
+  coffee_area: 'Área de Café',
+  microwave: 'Micro-ondas',
+  refrigerator: 'Geladeira/Frigobar',
+  washing_machine: 'Máquina de Lavar',
+  sound_basic: 'Som Básico',
+  phone: 'Telefone',
+  location_access: 'Fácil Acesso',
+}
+
+const FEATURES_LABELS = {
+  // Recursos para espaços
+  pool: 'Piscina',
+  bbq: 'Churrasqueira',
+  garden: 'Área Verde/Jardim',
+  soccer_field: 'Campo de Futebol',
+  game_room: 'Salão de Jogos',
+  gym: 'Academia',
+  sound_system: 'Som Ambiente',
+  lighting: 'Iluminação Especial',
+  decoration: 'Decoração Inclusa',
+  // Recursos para equipamentos
+  professional_sound: 'Som Profissional',
+  lighting_system: 'Sistema de Iluminação',
+  decoration_items: 'Itens Decorativos',
+  recording_equipment: 'Equipamento de Gravação',
+}
+
+const SERVICES_LABELS = {
+  cleaning: 'Limpeza',
+  security: 'Segurança',
+  waitstaff: 'Garçom/Atendimento',
+  catering: 'Buffet/Catering',
+  setup: 'Montagem/Desmontagem',
+}
+
+// Função para traduzir comodidades/recursos/serviços
+const translateItem = (item: string) => {
+  return AMENITIES_LABELS[item as keyof typeof AMENITIES_LABELS] || 
+         FEATURES_LABELS[item as keyof typeof FEATURES_LABELS] || 
+         SERVICES_LABELS[item as keyof typeof SERVICES_LABELS] || 
+         item // fallback para o ID original se não encontrar tradução
+}
+
 // Schema de validação
 const createListingSchema = z.object({
   // Step 1: Tipo
@@ -87,6 +140,12 @@ const createListingSchema = z.object({
     .max(25, 'WhatsApp muito longo')
     .optional(),
   contactEmail: z.string().email('Email inválido').optional().or(z.literal('')),
+  contactInstagram: z.string()
+    .max(50, 'Instagram muito longo')
+    .optional(),
+  contactFacebook: z.string()
+    .max(100, 'Facebook muito longo')
+    .optional(),
   
   // Featured (apenas para planos premium/pro)
   featured: z.boolean().optional(),
@@ -184,7 +243,10 @@ export default function CreateListing() {
     trigger
   } = useForm<CreateListingData>({
     resolver: zodResolver(createListingSchema),
-    mode: 'onChange'
+    mode: 'onChange',
+    defaultValues: {
+      state: 'SP' // São Paulo como padrão
+    }
   })
 
   const watchedCategoryType = watch('categoryType')
@@ -286,6 +348,8 @@ export default function CreateListing() {
       const specifications = {
         ...(data.capacity && { capacity: data.capacity }),
         ...(data.area_sqm && { area_sqm: data.area_sqm }),
+        ...(data.address?.trim() && { address: data.address.trim() }),
+        ...(data.reference_point?.trim() && { reference_point: data.reference_point.trim() }),
         ...(allAmenities.length > 0 && { amenities: allAmenities }),
         ...(allFeatures.length > 0 && { features: allFeatures }),
         ...(allServices.length > 0 && { services: allServices })
@@ -304,6 +368,9 @@ export default function CreateListing() {
         postal_code: data.postal_code || undefined,
         contact_phone: data.contactPhone,
         contact_whatsapp: data.contactWhatsapp || undefined,
+        contact_email: data.contactEmail?.trim() || undefined,
+        contact_instagram: data.contactInstagram || undefined,
+        contact_facebook: data.contactFacebook || undefined,
         delivery_available: false,
         featured: data.featured || false,
         status: 'active' as const,
@@ -781,6 +848,22 @@ export default function CreateListing() {
               hint="Email alternativo para contato"
               {...register('contactEmail')}
             />
+            <FormField
+              label="Instagram"
+              type="text"
+              placeholder="@seuinstagram ou instagram.com/seuusuario (opcional)"
+              error={errors.contactInstagram}
+              hint="Seu perfil no Instagram para mais visibilidade"
+              {...register('contactInstagram')}
+            />
+            <FormField
+              label="Facebook"
+              type="text"
+              placeholder="facebook.com/seuperfil (opcional)"
+              error={errors.contactFacebook}
+              hint="Sua página no Facebook para mais informações"
+              {...register('contactFacebook')}
+            />
 
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
               <h4 className="font-medium text-green-900 mb-2">🔒 Contato 100% transparente</h4>
@@ -844,7 +927,7 @@ export default function CreateListing() {
                       {/* Predefined amenities */}
                       {[...selectedAmenities, ...selectedFeatures, ...selectedServices].slice(0, 4).map((item, index) => (
                         <span key={index} className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs">
-                          {item}
+                          {translateItem(item)}
                         </span>
                       ))}
                       {/* Custom amenities with different styling */}

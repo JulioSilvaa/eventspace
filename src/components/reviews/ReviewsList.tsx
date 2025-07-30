@@ -108,26 +108,11 @@ export default function ReviewsList({ listingId, refreshTrigger }: ReviewsListPr
           {reviews.map((review) => (
             <div key={review.id} className="bg-white border border-gray-200 rounded-lg p-4">
               <div className="flex items-start gap-3">
-                <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
-                  <User className="w-5 h-5 text-gray-500" />
-                </div>
-                
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3 mb-2">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-gray-900">
-                        {review.reviewer_name}
-                      </span>
-                      {review.user_id ? (
-                        <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full font-medium">
-                          Usuário da plataforma
-                        </span>
-                      ) : (
-                        <span className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full font-medium">
-                          Avaliação externa
-                        </span>
-                      )}
-                    </div>
+                    <span className="font-medium text-gray-900">
+                      {review.reviewer_name}
+                    </span>
                     <StarRating rating={review.rating} readonly size="sm" />
                     <span className="text-xs text-gray-500">
                       {new Date(review.created_at).toLocaleDateString('pt-BR')}

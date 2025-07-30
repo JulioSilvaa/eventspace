@@ -1,0 +1,1 @@
+export { default as LocationMap, LocationFallback } from './LocationMap'

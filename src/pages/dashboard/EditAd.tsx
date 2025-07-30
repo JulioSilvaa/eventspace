@@ -23,6 +23,59 @@ import AmenitiesSelector from '@/components/forms/AmenitiesSelector'
 import { getBrazilianStates } from '@/lib/api/search'
 import { getMaxImagesForPlan } from '@/lib/planLimits'
 
+// Mapas de tradução das comodidades
+const AMENITIES_LABELS = {
+  wifi: 'Wi-Fi',
+  parking: 'Estacionamento',
+  kitchen: 'Cozinha',
+  bathrooms: 'Banheiros',
+  air_conditioning: 'Ar Condicionado',
+  ventilation: 'Ventilação',
+  tv: 'TV/Televisão',
+  furniture: 'Mobiliário',
+  coffee_area: 'Área de Café',
+  microwave: 'Micro-ondas',
+  refrigerator: 'Geladeira/Frigobar',
+  washing_machine: 'Máquina de Lavar',
+  sound_basic: 'Som Básico',
+  phone: 'Telefone',
+  location_access: 'Fácil Acesso',
+}
+
+const FEATURES_LABELS = {
+  // Recursos para espaços
+  pool: 'Piscina',
+  bbq: 'Churrasqueira',
+  garden: 'Área Verde/Jardim',
+  soccer_field: 'Campo de Futebol',
+  game_room: 'Salão de Jogos',
+  gym: 'Academia',
+  sound_system: 'Som Ambiente',
+  lighting: 'Iluminação Especial',
+  decoration: 'Decoração Inclusa',
+  // Recursos para equipamentos
+  professional_sound: 'Som Profissional',
+  lighting_system: 'Sistema de Iluminação',
+  decoration_items: 'Itens Decorativos',
+  recording_equipment: 'Equipamento de Gravação',
+}
+
+const SERVICES_LABELS = {
+  cleaning: 'Limpeza',
+  security: 'Segurança',
+  waitstaff: 'Garçom/Atendimento',
+  catering: 'Buffet/Catering',
+  setup: 'Montagem/Desmontagem',
+}
+
+// Função para traduzir comodidades/recursos/serviços
+const translateItem = (item: string) => {
+  return AMENITIES_LABELS[item as keyof typeof AMENITIES_LABELS] || 
+         FEATURES_LABELS[item as keyof typeof FEATURES_LABELS] || 
+         SERVICES_LABELS[item as keyof typeof SERVICES_LABELS] || 
+         item // fallback para o ID original se não encontrar tradução
+}
+
 const editAdSchema = z.object({
   categoryType: z.enum(['equipment', 'space'], {
     required_error: 'Selecione o tipo de anúncio'
@@ -75,6 +128,12 @@ const editAdSchema = z.object({
     .max(25, 'WhatsApp muito longo')
     .optional(),
   contactEmail: z.string().email('Email inválido').optional().or(z.literal('')),
+  contactInstagram: z.string()
+    .max(50, 'Instagram muito longo')
+    .optional(),
+  contactFacebook: z.string()
+    .max(100, 'Facebook muito longo')
+    .optional(),
   
   featured: z.boolean().optional(),
   
@@ -134,6 +193,9 @@ export default function EditAd() {
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([])
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([])
   const [selectedServices, setSelectedServices] = useState<string[]>([])
+  const [customAmenities, setCustomAmenities] = useState<string[]>([])
+  const [customFeatures, setCustomFeatures] = useState<string[]>([])
+  const [customServices, setCustomServices] = useState<string[]>([])
   const [removedExistingImageIds, setRemovedExistingImageIds] = useState<string[]>([])
   const maxImages = getMaxImagesForPlan(profile?.plan_type || 'free')
 
@@ -167,37 +229,59 @@ export default function EditAd() {
 
   useEffect(() => {
     if (currentAd && !isLoading) {
-      const categoryType = currentAd.categories?.type || 'equipment'
+      // Mapear o tipo da categoria do banco para o formato do formulário
+      let categoryType: 'equipment' | 'space' = 'equipment'
+      if (currentAd.categories?.type === 'space') {
+        categoryType = 'space'
+      } else if (currentAd.categories?.type === 'advertiser') {
+        categoryType = 'equipment'
+      }
       
       reset({
-        categoryType: categoryType as 'equipment' | 'space',
+        categoryType,
         title: currentAd.title,
         description: currentAd.description,
         category_id: currentAd.category_id,
-        capacity: currentAd.specifications?.capacity || undefined,
-        area_sqm: currentAd.specifications?.area_sqm || undefined,
+        capacity: (currentAd.specifications?.capacity as number) || undefined,
+        area_sqm: (currentAd.specifications?.area_sqm as number) || undefined,
         state: currentAd.state,
         city: currentAd.city,
         neighborhood: currentAd.neighborhood || '',
-        address: currentAd.specifications?.address || '',
+        address: (currentAd.specifications?.address as string) || '',
         postal_code: currentAd.postal_code || '',
-        reference_point: currentAd.specifications?.reference_point || '',
+        reference_point: (currentAd.specifications?.reference_point as string) || '',
         price: currentAd.price,
         priceType: currentAd.price_type,
         contactPhone: currentAd.contact_phone || '',
         contactWhatsapp: currentAd.contact_whatsapp || '',
-        contactEmail: currentAd.specifications?.contactEmail || '',
+        contactEmail: currentAd.contact_email || '',
+        contactInstagram: currentAd.contact_instagram || '',
+        contactFacebook: currentAd.contact_facebook || '',
         featured: currentAd.featured
       })
 
-      if (currentAd.specifications?.amenities) {
-        setSelectedAmenities(currentAd.specifications.amenities)
+      // Como as comodidades agora são salvas todas juntas no array 'amenities',
+      // precisamos separar as padrões das customizadas na hora de carregar
+      if (currentAd.specifications?.amenities && Array.isArray(currentAd.specifications.amenities)) {
+        const standardAmenities = ['wifi', 'parking', 'kitchen', 'bathrooms', 'air_conditioning', 'ventilation', 'tv', 'furniture', 'coffee_area', 'microwave', 'refrigerator', 'washing_machine', 'sound_basic', 'phone', 'location_access']
+        const selected = (currentAd.specifications.amenities as string[]).filter(item => standardAmenities.includes(item))
+        const custom = (currentAd.specifications.amenities as string[]).filter(item => !standardAmenities.includes(item))
+        setSelectedAmenities(selected)
+        setCustomAmenities(custom)
       }
-      if (currentAd.specifications?.features) {
-        setSelectedFeatures(currentAd.specifications.features)
+      if (currentAd.specifications?.features && Array.isArray(currentAd.specifications.features)) {
+        const standardFeatures = ['pool', 'bbq', 'garden', 'soccer_field', 'game_room', 'gym', 'sound_system', 'lighting', 'decoration', 'professional_sound', 'lighting_system', 'decoration_items', 'recording_equipment']
+        const selected = (currentAd.specifications.features as string[]).filter(item => standardFeatures.includes(item))
+        const custom = (currentAd.specifications.features as string[]).filter(item => !standardFeatures.includes(item))
+        setSelectedFeatures(selected)
+        setCustomFeatures(custom)
       }
-      if (currentAd.specifications?.services) {
-        setSelectedServices(currentAd.specifications.services)
+      if (currentAd.specifications?.services && Array.isArray(currentAd.specifications.services)) {
+        const standardServices = ['cleaning', 'security', 'waitstaff', 'catering', 'setup']
+        const selected = (currentAd.specifications.services as string[]).filter(item => standardServices.includes(item))
+        const custom = (currentAd.specifications.services as string[]).filter(item => !standardServices.includes(item))
+        setSelectedServices(selected)
+        setCustomServices(custom)
       }
     }
   }, [currentAd, isLoading, reset])
@@ -319,12 +403,19 @@ export default function EditAd() {
     setError(null)
     
     try {
+      // Combinar comodidades selecionadas com customizadas
+      const allAmenities = [...selectedAmenities, ...customAmenities]
+      const allFeatures = [...selectedFeatures, ...customFeatures]
+      const allServices = [...selectedServices, ...customServices]
+      
       const specifications = {
         ...(data.capacity && { capacity: data.capacity }),
         ...(data.area_sqm && { area_sqm: data.area_sqm }),
-        ...(selectedAmenities.length > 0 && { amenities: selectedAmenities }),
-        ...(selectedFeatures.length > 0 && { features: selectedFeatures }),
-        ...(selectedServices.length > 0 && { services: selectedServices })
+        ...(data.address?.trim() && { address: data.address.trim() }),
+        ...(data.reference_point?.trim() && { reference_point: data.reference_point.trim() }),
+        ...(allAmenities.length > 0 && { amenities: allAmenities }),
+        ...(allFeatures.length > 0 && { features: allFeatures }),
+        ...(allServices.length > 0 && { services: allServices })
       }
 
       const updateData = {
@@ -339,6 +430,9 @@ export default function EditAd() {
         postal_code: data.postal_code || undefined,
         contact_phone: data.contactPhone,
         contact_whatsapp: data.contactWhatsapp || undefined,
+        contact_email: data.contactEmail?.trim() || undefined,
+        contact_instagram: data.contactInstagram || undefined,
+        contact_facebook: data.contactFacebook || undefined,
         featured: data.featured || false,
         specifications: Object.keys(specifications).length > 0 ? specifications : undefined
       }
@@ -632,6 +726,12 @@ export default function EditAd() {
               onFeaturesChange={setSelectedFeatures}
               onServicesChange={setSelectedServices}
               categoryType={watchedCategoryType || 'space'}
+              customAmenities={customAmenities}
+              customFeatures={customFeatures}
+              customServices={customServices}
+              onCustomAmenitiesChange={setCustomAmenities}
+              onCustomFeaturesChange={setCustomFeatures}
+              onCustomServicesChange={setCustomServices}
             />
           </div>
         )
@@ -768,6 +868,22 @@ export default function EditAd() {
               hint="Email alternativo para contato"
               {...register('contactEmail')}
             />
+            <FormField
+              label="Instagram"
+              type="text"
+              placeholder="@seuinstagram ou instagram.com/seuusuario (opcional)"
+              error={errors.contactInstagram}
+              hint="Seu perfil no Instagram para mais visibilidade"
+              {...register('contactInstagram')}
+            />
+            <FormField
+              label="Facebook"
+              type="text"
+              placeholder="facebook.com/seuperfil (opcional)"
+              error={errors.contactFacebook}
+              hint="Sua página no Facebook para mais informações"
+              {...register('contactFacebook')}
+            />
 
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
               <h4 className="font-medium text-green-900 mb-2">🔒 Contato 100% transparente</h4>
@@ -831,7 +947,7 @@ export default function EditAd() {
                     <div className="flex flex-wrap gap-1 mt-1">
                       {[...selectedAmenities, ...selectedFeatures, ...selectedServices].slice(0, 6).map((item, index) => (
                         <span key={index} className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs">
-                          {item}
+                          {translateItem(item)}
                         </span>
                       ))}
                       {(selectedAmenities.length + selectedFeatures.length + selectedServices.length) > 6 && (

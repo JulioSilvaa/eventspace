@@ -5,6 +5,8 @@ import ReviewForm from '@/components/reviews/ReviewForm'
 import ReviewsList from '@/components/reviews/ReviewsList'
 import FavoriteButton from '@/components/favorites/FavoriteButton'
 import PremiumBadge from '@/components/ui/PremiumBadge'
+import LocationMap, { LocationFallback } from '@/components/maps/LocationMap'
+import { geocodingService } from '@/services/geocodingService'
 
 interface ImageData {
   url?: string
@@ -43,7 +45,18 @@ import {
   Camera,
   Dumbbell,
   X,
-  ZoomIn
+  ZoomIn,
+  Instagram,
+  Facebook,
+  Home,
+  Navigation,
+  Tv,
+  Sofa,
+  Coffee,
+  Microwave,
+  Refrigerator,
+  WashingMachine,
+  Speaker
 } from 'lucide-react'
 
 const AMENITIES_ICONS = {
@@ -53,6 +66,15 @@ const AMENITIES_ICONS = {
   bathrooms: Bath,
   air_conditioning: Snowflake,
   ventilation: Wind,
+  tv: Tv,
+  furniture: Sofa,
+  coffee_area: Coffee,
+  microwave: Microwave,
+  refrigerator: Refrigerator,
+  washing_machine: WashingMachine,
+  sound_basic: Speaker,
+  phone: Phone,
+  location_access: MapPin,
 }
 
 const FEATURES_ICONS = {
@@ -86,9 +108,19 @@ const AMENITIES_LABELS = {
   bathrooms: 'Banheiros',
   air_conditioning: 'Ar Condicionado',
   ventilation: 'Ventilação',
+  tv: 'TV/Televisão',
+  furniture: 'Mobiliário',
+  coffee_area: 'Área de Café',
+  microwave: 'Micro-ondas',
+  refrigerator: 'Geladeira/Frigobar',
+  washing_machine: 'Máquina de Lavar',
+  sound_basic: 'Som Básico',
+  phone: 'Telefone',
+  location_access: 'Fácil Acesso',
 }
 
 const FEATURES_LABELS = {
+  // Recursos para espaços
   pool: 'Piscina',
   bbq: 'Churrasqueira',
   garden: 'Área Verde/Jardim',
@@ -98,6 +130,7 @@ const FEATURES_LABELS = {
   sound_system: 'Som Ambiente',
   lighting: 'Iluminação Especial',
   decoration: 'Decoração Inclusa',
+  // Recursos para equipamentos
   professional_sound: 'Som Profissional',
   lighting_system: 'Sistema de Iluminação',
   decoration_items: 'Itens Decorativos',
@@ -121,6 +154,8 @@ export default function AdDetails() {
   const [reviewsRefreshTrigger, setReviewsRefreshTrigger] = useState(0)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalImageIndex, setModalImageIndex] = useState(0)
+  const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null)
+  const [isGeocodingLoading, setIsGeocodingLoading] = useState(false)
 
   const ad = ads.find(ad => ad.id === id)
   const images = ad?.listing_images
@@ -148,6 +183,31 @@ export default function AdDetails() {
       incrementViews(id)
     }
   }, [ad, id, incrementViews])
+
+  // Geocode the ad location
+  useEffect(() => {
+    if (ad && !coordinates) {
+      const geocodeLocation = async () => {
+        setIsGeocodingLoading(true)
+        try {
+          const result = await geocodingService.geocodeCity(
+            ad.city,
+            ad.state,
+            ad.neighborhood
+          )
+          if (result) {
+            setCoordinates({ lat: result.latitude, lng: result.longitude })
+          }
+        } catch (error) {
+          console.error('Erro ao geocodificar localização:', error)
+        } finally {
+          setIsGeocodingLoading(false)
+        }
+      }
+      
+      geocodeLocation()
+    }
+  }, [ad, coordinates])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -505,7 +565,7 @@ export default function AdDetails() {
                         const Icon = AMENITIES_ICONS[amenity as keyof typeof AMENITIES_ICONS] || Wifi
                         const label = AMENITIES_LABELS[amenity as keyof typeof AMENITIES_LABELS] || amenity
                         return (
-                          <div key={amenity} className="flex items-center gap-2 p-2 bg-primary-50 rounded-lg">
+                          <div key={String(amenity)} className="flex items-center gap-2 p-2 bg-primary-50 rounded-lg">
                             <Icon className="w-4 h-4 text-primary-600" />
                             <span className="text-sm font-medium text-gray-900">{String(label)}</span>
                           </div>
@@ -523,7 +583,7 @@ export default function AdDetails() {
                         const Icon = FEATURES_ICONS[feature as keyof typeof FEATURES_ICONS] || Music
                         const label = FEATURES_LABELS[feature as keyof typeof FEATURES_LABELS] || feature
                         return (
-                          <div key={feature} className="flex items-center gap-2 p-2 bg-green-50 rounded-lg">
+                          <div key={String(feature)} className="flex items-center gap-2 p-2 bg-green-50 rounded-lg">
                             <Icon className="w-4 h-4 text-green-600" />
                             <span className="text-sm font-medium text-gray-900">{String(label)}</span>
                           </div>
@@ -541,7 +601,7 @@ export default function AdDetails() {
                         const Icon = SERVICES_ICONS[service as keyof typeof SERVICES_ICONS] || UserCheck
                         const label = SERVICES_LABELS[service as keyof typeof SERVICES_LABELS] || service
                         return (
-                          <div key={service} className="flex items-center gap-2 p-2 bg-blue-50 rounded-lg">
+                          <div key={String(service)} className="flex items-center gap-2 p-2 bg-blue-50 rounded-lg">
                             <Icon className="w-4 h-4 text-blue-600" />
                             <span className="text-sm font-medium text-gray-900">{String(label)}</span>
                           </div>
@@ -556,24 +616,97 @@ export default function AdDetails() {
             {/* Localização */}
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Localização</h3>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-gray-500" />
-                  <span className="text-gray-700">{ad.city}, {ad.state}</span>
+              
+              {/* Informações de endereço */}
+              <div className="space-y-3 mb-6">
+                {/* Cidade e Estado - Principal */}
+                <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                    <MapPin className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">{ad.city}, {ad.state}</p>
+                    <p className="text-xs text-blue-600">Localização principal</p>
+                  </div>
                 </div>
-                {ad.neighborhood && (
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4"></div>
-                    <span className="text-sm text-gray-600">Bairro: {ad.neighborhood}</span>
-                  </div>
-                )}
-                {ad.postal_code && (
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4"></div>
-                    <span className="text-sm text-gray-600">CEP: {ad.postal_code}</span>
-                  </div>
-                )}
+
+                {/* Detalhes do endereço */}
+                <div className="space-y-2">
+                  {ad.neighborhood && (
+                    <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                      <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <Home className="w-3 h-3 text-green-600" />
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-700">Bairro:</span>
+                        <span className="ml-2 text-gray-600">{ad.neighborhood}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {ad.specifications?.address && (
+                    <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                      <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <MapPin className="w-3 h-3 text-purple-600" />
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-700">Endereço:</span>
+                        <span className="ml-2 text-gray-600">{ad.specifications.address}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {ad.postal_code && (
+                    <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                      <div className="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <Navigation className="w-3 h-3 text-indigo-600" />
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-700">CEP:</span>
+                        <span className="ml-2 text-gray-600 font-mono">{ad.postal_code}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {ad.specifications?.reference_point && (
+                    <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                      <div className="w-6 h-6 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <Navigation className="w-3 h-3 text-orange-600" />
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-700">Referência:</span>
+                        <span className="ml-2 text-gray-600">{ad.specifications.reference_point}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
+
+              {/* Mapa ou fallback */}
+              {isGeocodingLoading ? (
+                <div className="bg-gray-100 rounded-lg p-8 text-center">
+                  <div className="animate-pulse">
+                    <div className="w-16 h-16 bg-gray-200 rounded-full mx-auto mb-4"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto mb-2"></div>
+                    <div className="h-3 bg-gray-200 rounded w-1/3 mx-auto"></div>
+                  </div>
+                  <p className="text-sm text-gray-600 mt-4">Carregando localização no mapa...</p>
+                </div>
+              ) : coordinates ? (
+                <LocationMap
+                  latitude={coordinates.lat}
+                  longitude={coordinates.lng}
+                  title={ad.title}
+                  address={`${ad.neighborhood ? ad.neighborhood + ', ' : ''}${ad.city}, ${ad.state}`}
+                  height="300px"
+                />
+              ) : (
+                <LocationFallback
+                  city={ad.city}
+                  state={ad.state}
+                  neighborhood={ad.neighborhood}
+                />
+              )}
             </div>
           </div>
 
@@ -599,6 +732,58 @@ export default function AdDetails() {
                   Ligar
                 </button>
               </div>
+
+              {/* Redes Sociais */}
+              {(ad.contact_instagram || ad.contact_facebook) && (
+                <div className="mb-6">
+                  <h4 className="font-medium text-gray-900 mb-3">🌐 Redes Sociais</h4>
+                  <div className="grid grid-cols-1 gap-2">
+                    {ad.contact_instagram && (
+                      <a
+                        href={ad.contact_instagram.startsWith('@') 
+                          ? `https://instagram.com/${ad.contact_instagram.substring(1)}`
+                          : ad.contact_instagram.startsWith('http') 
+                          ? ad.contact_instagram
+                          : `https://instagram.com/${ad.contact_instagram}`
+                        }
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 py-3 px-4 bg-gradient-to-r from-pink-50 to-purple-50 border border-pink-200 text-pink-700 rounded-lg hover:from-pink-100 hover:to-purple-100 hover:border-pink-300 transition-all duration-200 group"
+                        onClick={() => incrementContacts(ad.id)}
+                      >
+                        <div className="w-8 h-8 bg-pink-100 rounded-full flex items-center justify-center group-hover:bg-pink-200 transition-colors">
+                          <Instagram className="w-4 h-4 text-pink-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium">Instagram</p>
+                          <p className="text-xs text-pink-600">@{ad.contact_instagram.replace('@', '')}</p>
+                        </div>
+                      </a>
+                    )}
+                    
+                    {ad.contact_facebook && (
+                      <a
+                        href={ad.contact_facebook.startsWith('http') 
+                          ? ad.contact_facebook
+                          : `https://facebook.com/${ad.contact_facebook}`
+                        }
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 py-3 px-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 text-blue-700 rounded-lg hover:from-blue-100 hover:to-indigo-100 hover:border-blue-300 transition-all duration-200 group"
+                        onClick={() => incrementContacts(ad.id)}
+                      >
+                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                          <Facebook className="w-4 h-4 text-blue-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium">Facebook</p>
+                          <p className="text-xs text-blue-600">{ad.contact_facebook.replace('facebook.com/', '').replace('https://', '').replace('http://', '')}</p>
+                        </div>
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
 
               <div className="border-t pt-4">
                 <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
