@@ -20,6 +20,7 @@ import {
   Crown,
   ArrowLeft
 } from 'lucide-react'
+import Tooltip from '@/components/ui/Tooltip'
 
 export default function MyAds() {
   const { user, profile } = useAuth()
@@ -214,7 +215,7 @@ export default function MyAds() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Total Visualizações</p>
-                <p className="text-2xl font-bold text-purple-600">{userAds.reduce((sum, ad) => sum + ad.views_count, 0)}</p>
+                <p className="text-2xl font-bold text-purple-600">{userAds.reduce((sum, ad) => sum + (ad.views_count || 0), 0)}</p>
               </div>
               <div className="bg-purple-100 p-2 rounded-lg">
                 <Eye className="w-5 h-5 text-purple-600" />
@@ -225,7 +226,7 @@ export default function MyAds() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Total Contatos</p>
-                <p className="text-2xl font-bold text-orange-600">{userAds.reduce((sum, ad) => sum + Math.floor(ad.views_count * 0.08), 0)}</p>
+                <p className="text-2xl font-bold text-orange-600">{userAds.reduce((sum, ad) => sum + Math.floor((ad.views_count || 0) * 0.08), 0)}</p>
               </div>
               <div className="bg-orange-100 p-2 rounded-lg">
                 <MessageCircle className="w-5 h-5 text-orange-600" />
@@ -290,11 +291,11 @@ export default function MyAds() {
                       <div className="flex items-center gap-6 text-sm">
                         <div className="flex items-center gap-1">
                           <Eye className="w-4 h-4 text-gray-400" />
-                          <span className="font-medium">{ad.views_count}</span> visualizações
+                          <span className="font-medium">{ad.views_count || 0}</span> visualizações
                         </div>
                         <div className="flex items-center gap-1">
                           <MessageCircle className="w-4 h-4 text-gray-400" />
-                          <span className="font-medium">{Math.floor(ad.views_count * 0.08)}</span> contatos
+                          <span className="font-medium">{Math.floor((ad.views_count || 0) * 0.08)}</span> contatos
                         </div>
                         <div className="flex items-center gap-1">
                           <TrendingUp className="w-4 h-4 text-gray-400" />
@@ -304,42 +305,46 @@ export default function MyAds() {
                     </div>
                     
                     <div className="flex items-center gap-2 ml-4">
-                      <Link
-                        to={`/dashboard/anuncios/${ad.id}/editar`}
-                        className="bg-gray-100 hover:bg-gray-200 text-gray-700 p-2 rounded-lg transition-colors"
-                        title="Editar anúncio"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Link>
+                      <Tooltip content="Editar anúncio">
+                        <Link
+                          to={`/dashboard/anuncios/${ad.id}/editar`}
+                          className="bg-gray-100 hover:bg-gray-200 text-gray-700 p-2 rounded-lg transition-colors"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Link>
+                      </Tooltip>
                       
-                      <button
-                        onClick={() => handleToggleStatus(ad.id, ad.status)}
-                        className={`p-2 rounded-lg transition-colors ${
-                          ad.status === 'active' 
-                            ? 'bg-yellow-100 hover:bg-yellow-200 text-yellow-700' 
-                            : 'bg-green-100 hover:bg-green-200 text-green-700'
-                        }`}
-                        title={ad.status === 'active' ? 'Pausar anúncio' : 'Ativar anúncio'}
-                      >
-                        {ad.status === 'active' ? (
-                          <Pause className="w-4 h-4" />
-                        ) : (
-                          <Play className="w-4 h-4" />
-                        )}
-                      </button>
+                      <Tooltip content={ad.status === 'active' ? 'Pausar anúncio' : 'Ativar anúncio'}>
+                        <button
+                          onClick={() => handleToggleStatus(ad.id, ad.status)}
+                          className={`p-2 rounded-lg transition-colors ${
+                            ad.status === 'active' 
+                              ? 'bg-yellow-100 hover:bg-yellow-200 text-yellow-700' 
+                              : 'bg-green-100 hover:bg-green-200 text-green-700'
+                          }`}
+                        >
+                          {ad.status === 'active' ? (
+                            <Pause className="w-4 h-4" />
+                          ) : (
+                            <Play className="w-4 h-4" />
+                          )}
+                        </button>
+                      </Tooltip>
                       
-                      <button
-                        onClick={() => handleDeleteAd(ad.id)}
-                        className="bg-red-100 hover:bg-red-200 text-red-700 p-2 rounded-lg transition-colors"
-                        title="Excluir anúncio"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      <Tooltip content="Excluir anúncio (irreversível)">
+                        <button
+                          onClick={() => handleDeleteAd(ad.id)}
+                          className="bg-red-100 hover:bg-red-200 text-red-700 p-2 rounded-lg transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </Tooltip>
 
-                      
-                      <button className="bg-gray-100 hover:bg-gray-200 text-gray-700 p-2 rounded-lg transition-colors">
-                        <MoreVertical className="w-4 h-4" />
-                      </button>
+                      <Tooltip content="Mais opções">
+                        <button className="bg-gray-100 hover:bg-gray-200 text-gray-700 p-2 rounded-lg transition-colors">
+                          <MoreVertical className="w-4 h-4" />
+                        </button>
+                      </Tooltip>
                     </div>
                   </div>
                 </div>

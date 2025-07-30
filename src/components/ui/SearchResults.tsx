@@ -2,6 +2,7 @@ import { MapPin, Star, Phone, MessageCircle, Eye } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import PremiumBadge from '@/components/ui/PremiumBadge'
 import type { SearchResult } from '@/lib/api/search'
+import { realTimeService } from '@/services/realTimeService'
 
 interface SearchResultsProps {
   results: SearchResult[]
@@ -75,7 +76,19 @@ export default function SearchResults({
     return `${formatted}/${priceType === 'daily' ? 'dia' : priceType === 'hourly' ? 'hora' : 'evento'}`
   }
 
-  const handleContactClick = (type: 'whatsapp' | 'phone', contact: string, adTitle: string) => {
+  const handleContactClick = async (type: 'whatsapp' | 'phone', contact: string, adTitle: string, listingId: string) => {
+    // Track the contact event first
+    try {
+      if (type === 'whatsapp') {
+        await realTimeService.trackWhatsAppContact(listingId)
+      } else {
+        await realTimeService.trackPhoneContact(listingId)
+      }
+    } catch (error) {
+      console.error('Error tracking contact:', error)
+    }
+    
+    // Then open the contact method
     if (type === 'whatsapp') {
       const message = encodeURIComponent(`Olá! Tenho interesse no anúncio: ${adTitle}`)
       window.open(`https://wa.me/55${contact.replace(/\D/g, '')}?text=${message}`, '_blank')
@@ -179,7 +192,7 @@ export default function SearchResults({
                 <div className="flex gap-1">
                   {result.contact_whatsapp && (
                     <button
-                      onClick={() => handleContactClick('whatsapp', result.contact_whatsapp!, result.title)}
+                      onClick={() => handleContactClick('whatsapp', result.contact_whatsapp!, result.title, result.id)}
                       className="bg-green-600 text-white p-2 rounded-lg hover:bg-green-700 transition-colors"
                       title="Contato via WhatsApp"
                     >
@@ -188,7 +201,7 @@ export default function SearchResults({
                   )}
                   {result.contact_phone && (
                     <button
-                      onClick={() => handleContactClick('phone', result.contact_phone!, result.title)}
+                      onClick={() => handleContactClick('phone', result.contact_phone!, result.title, result.id)}
                       className="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 transition-colors"
                       title="Ligar diretamente"
                     >

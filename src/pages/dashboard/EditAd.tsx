@@ -24,6 +24,7 @@ import ImageUpload from '@/components/forms/ImageUpload'
 import AmenitiesSelector from '@/components/forms/AmenitiesSelector'
 import { getBrazilianStates } from '@/lib/api/search'
 import { getMaxImagesForPlan } from '@/lib/planLimits'
+import Tooltip from '@/components/ui/Tooltip'
 
 // Mapas de tradução das comodidades
 const AMENITIES_LABELS = {
@@ -301,6 +302,13 @@ export default function EditAd() {
       setValue('category_id', undefined)
     }
   }, [watchedCategoryType, setValue])
+
+  // Definir featured como true automaticamente para usuários premium
+  useEffect(() => {
+    if (profile?.plan_type === 'premium') {
+      setValue('featured', true)
+    }
+  }, [profile?.plan_type, setValue])
 
   useEffect(() => {
     return () => {
@@ -1075,16 +1083,13 @@ export default function EditAd() {
               <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg p-6">
                 <div className="flex items-start gap-4">
                   <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id="featured"
-                      className="w-4 h-4 text-yellow-600 border-gray-300 rounded focus:ring-yellow-500"
-                      {...register('featured')}
-                    />
-                    <label htmlFor="featured" className="flex items-center gap-2 text-sm font-medium text-gray-900">
+                    <div className="w-5 h-5 bg-yellow-500 rounded-full flex items-center justify-center">
+                      <Crown className="w-3 h-3 text-white fill-current" />
+                    </div>
+                    <div className="flex items-center gap-2 text-sm font-medium text-gray-900">
                       <Crown className="w-4 h-4 text-yellow-600" />
-                      Destacar este anúncio
-                    </label>
+                      <span>Seu anúncio será destacado automaticamente</span>
+                    </div>
                   </div>
                 </div>
                 <div className="mt-3">
@@ -1132,12 +1137,14 @@ export default function EditAd() {
       <div className="max-w-4xl mx-auto py-6 px-4">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
-            <Link
-              to="/dashboard/meus-anuncios"
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5 text-gray-600" />
-            </Link>
+            <Tooltip content="Voltar aos meus anúncios">
+              <Link
+                to="/dashboard/meus-anuncios"
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5 text-gray-600" />
+              </Link>
+            </Tooltip>
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Editar Anúncio</h1>
               <p className="text-gray-600">Etapa {currentStep} de {STEPS.length}</p>

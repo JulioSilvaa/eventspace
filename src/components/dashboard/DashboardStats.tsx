@@ -40,7 +40,18 @@ export default function DashboardStats({
     lastMonthContacts: 8
   }
   
-  const statsData = data || mockData
+  // Ensure all numeric values are valid and not NaN
+  const safeData = data ? {
+    ...data,
+    totalViews: isNaN(data.totalViews) ? 0 : data.totalViews,
+    totalContacts: isNaN(data.totalContacts) ? 0 : data.totalContacts,
+    thisMonthViews: isNaN(data.thisMonthViews) ? 0 : data.thisMonthViews,
+    lastMonthViews: isNaN(data.lastMonthViews) ? 0 : data.lastMonthViews,
+    thisMonthContacts: isNaN(data.thisMonthContacts) ? 0 : data.thisMonthContacts,
+    lastMonthContacts: isNaN(data.lastMonthContacts) ? 0 : data.lastMonthContacts
+  } : mockData
+  
+  const statsData = safeData
   
   // Calculate trends with protection against division by zero
   const calculateTrend = (current: number, previous: number) => {
@@ -66,14 +77,14 @@ export default function DashboardStats({
   const stats = [
     {
       title: 'Total de Anúncios',
-      value: statsData.totalAds,
-      description: `${statsData.activeAds} ativos`,
+      value: statsData.totalAds || 0,
+      description: `${statsData.activeAds || 0} ativos`,
       icon: Package,
       iconColor: 'text-blue-600'
     },
     {
       title: 'Visualizações',
-      value: statsData.totalViews.toLocaleString(),
+      value: (statsData.totalViews || 0).toLocaleString(),
       description: 'Total de visualizações',
       icon: Eye,
       iconColor: 'text-green-600',
@@ -81,7 +92,7 @@ export default function DashboardStats({
     },
     {
       title: 'Contatos Recebidos',
-      value: statsData.totalContacts,
+      value: statsData.totalContacts || 0,
       description: 'WhatsApp e ligações',
       icon: MessageCircle,
       iconColor: 'text-purple-600',

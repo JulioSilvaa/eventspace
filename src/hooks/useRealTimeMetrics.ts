@@ -39,7 +39,7 @@ export function useRealTimeMetrics(options: UseRealTimeMetricsOptions = {}): Use
 
   // Refs para controle de intervalos e subscriptions
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null)
-  const realtimeSubscriptionRef = useRef<any>(null)
+  const realtimeSubscriptionRef = useRef<any>(null) // eslint-disable-line @typescript-eslint/no-explicit-any
   const isActiveRef = useRef(true)
 
   // Função para buscar métricas
@@ -99,7 +99,7 @@ export function useRealTimeMetrics(options: UseRealTimeMetricsOptions = {}): Use
       await realTimeService.trackEvent({
         listing_id: listingId,
         user_id: user?.id,
-        event_type: eventType as any,
+        event_type: eventType as any, // eslint-disable-line @typescript-eslint/no-explicit-any
         metadata
       })
 

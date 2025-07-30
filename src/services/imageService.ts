@@ -168,6 +168,7 @@ export async function uploadOptimizedAdImages(
       })
 
       if (process.env.NODE_ENV === 'development') {
+        console.log('Imagem processada em modo desenvolvimento')
       }
 
     } catch (error) {

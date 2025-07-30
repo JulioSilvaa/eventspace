@@ -415,11 +415,8 @@ export default function RecentActivity({
 
     const sortedActivities = uniqueActivities
       .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
-    
-    // Manter apenas as 8 atividades mais recentes
-    const limitedActivities = sortedActivities.slice(0, 8)
 
-    setActivities(limitedActivities)
+    setActivities(sortedActivities)
   }, [metrics, userAds, userPlan])
 
   // Fallback quando não há dados
@@ -698,13 +695,6 @@ export default function RecentActivity({
             </div>
           ))}
           
-          {activities.length === 8 && (
-            <div className="pt-2 text-center">
-              <p className="text-xs text-gray-400">
-                Mostrando as 8 atividades mais recentes
-              </p>
-            </div>
-          )}
           
           {activities.length > 0 && userPlan !== 'premium' && (
             <div className="pt-4 border-t border-gray-100">

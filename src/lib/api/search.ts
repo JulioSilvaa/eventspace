@@ -74,7 +74,6 @@ export async function searchAds(filters: SearchFilters): Promise<SearchResponse>
         contact_whatsapp,
         contact_phone,
         featured,
-        views_count,
         created_at,
         categories:category_id (
           name,
@@ -83,9 +82,6 @@ export async function searchAds(filters: SearchFilters): Promise<SearchResponse>
         listing_images (
           image_url,
           display_order
-        ),
-        profiles:user_id (
-          plan_type
         )
       `, { count: 'exact' })
       .eq('status', 'active')
@@ -107,7 +103,6 @@ export async function searchAds(filters: SearchFilters): Promise<SearchResponse>
           contact_whatsapp,
           contact_phone,
           featured,
-          views_count,
           created_at,
           categories:category_id!inner (
             name,
@@ -116,9 +111,6 @@ export async function searchAds(filters: SearchFilters): Promise<SearchResponse>
           listing_images (
             image_url,
             display_order
-          ),
-          profiles:user_id (
-            plan_type
           )
         `, { count: 'exact' })
         .eq('status', 'active')
@@ -180,6 +172,26 @@ export async function searchAds(filters: SearchFilters): Promise<SearchResponse>
       throw error
     }
 
+    // Buscar views_count de cada listing a partir da activity_events
+    const listingIds = (data || []).map(ad => ad.id)
+    let viewsData: Record<string, number> = {}
+    
+    if (listingIds.length > 0) {
+      const { data: viewsCountData } = await supabase
+        .from('activity_events')
+        .select('listing_id')
+        .in('listing_id', listingIds)
+        .eq('event_type', 'view')
+
+      // Contar views por listing_id
+      if (viewsCountData) {
+        viewsData = viewsCountData.reduce((acc, event) => {
+          acc[event.listing_id] = (acc[event.listing_id] || 0) + 1
+          return acc
+        }, {} as Record<string, number>)
+      }
+    }
+
     // Transformar os dados para o formato esperado
     const results: SearchResult[] = (data || []).map(ad => ({
       id: ad.id,
@@ -195,9 +207,9 @@ export async function searchAds(filters: SearchFilters): Promise<SearchResponse>
       category_name: (ad.categories as { name?: string })?.name || '',
       category_type: ((ad.categories as { type?: string })?.type || 'space') as 'space' | 'advertiser',
       featured: ad.featured,
-      views_count: ad.views_count,
+      views_count: viewsData[ad.id] || 0,
       created_at: ad.created_at,
-      user_plan_type: (ad.profiles as { plan_type?: string })?.plan_type,
+      user_plan_type: undefined,
       listing_images: ad.listing_images || []
     }))
 

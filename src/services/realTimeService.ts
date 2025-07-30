@@ -163,23 +163,29 @@ class RealTimeService {
         throw eventsError
       }
 
-      // Buscar métricas consolidadas (últimos 30 dias)
-      const { data: dailyMetrics, error: metricsError } = await supabase
-        .from('metrics_summary')
-        .select('*')
+      // Calcular métricas diretamente dos activity_events (últimos 30 dias)
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+      
+      const { data: allEvents, error: allEventsError } = await supabase
+        .from('activity_events')
+        .select('event_type')
         .eq('listing_id', listingId)
-        .gte('date', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
-        .order('date', { ascending: false })
+        .gte('created_at', thirtyDaysAgo)
 
-      if (metricsError) {
-        throw metricsError
+      if (allEventsError) {
+        throw allEventsError
       }
 
-      // Calcular totais
-      const totalViews = (dailyMetrics || []).reduce((sum, day) => sum + day.views_count, 0)
-      const totalContacts = (dailyMetrics || []).reduce((sum, day) => sum + day.contacts_count, 0)
-      const totalFavorites = (dailyMetrics || []).reduce((sum, day) => sum + day.favorites_count, 0)
-      const totalReviews = (dailyMetrics || []).reduce((sum, day) => sum + day.reviews_count, 0)
+      // Calcular totais por tipo de evento
+      const totalViews = (allEvents || []).filter(e => e.event_type === 'view').length
+      const totalContacts = (allEvents || []).filter(e => 
+        e.event_type === 'contact_whatsapp' || e.event_type === 'contact_phone' || e.event_type === 'contact_email'
+      ).length
+      const totalFavorites = (allEvents || []).filter(e => e.event_type === 'favorite_add').length
+      const totalReviews = (allEvents || []).filter(e => e.event_type === 'review_add').length
+
+      // Para compatibilidade, criar métricas diárias vazias
+      const dailyMetrics: MetricsSummary[] = []
 
       return {
         totalViews,
@@ -249,22 +255,26 @@ class RealTimeService {
         throw eventsError
       }
 
-      // Buscar métricas consolidadas
-      const { data: metricsData, error: metricsError } = await supabase
-        .from('metrics_summary')
-        .select('*')
+      // Buscar todos os eventos dos últimos 30 dias para os anúncios do usuário
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+      
+      const { data: userEvents, error: userEventsError } = await supabase
+        .from('activity_events')
+        .select('event_type')
         .in('listing_id', listingIds)
-        .gte('date', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
+        .gte('created_at', thirtyDaysAgo)
 
-      if (metricsError) {
-        throw metricsError
+      if (userEventsError) {
+        throw userEventsError
       }
 
-      // Calcular totais
-      const totalViews = (metricsData || []).reduce((sum, day) => sum + day.views_count, 0)
-      const totalContacts = (metricsData || []).reduce((sum, day) => sum + day.contacts_count, 0)
-      const totalFavorites = (metricsData || []).reduce((sum, day) => sum + day.favorites_count, 0)
-      const totalReviews = (metricsData || []).reduce((sum, day) => sum + day.reviews_count, 0)
+      // Calcular totais por tipo de evento
+      const totalViews = (userEvents || []).filter(e => e.event_type === 'view').length
+      const totalContacts = (userEvents || []).filter(e => 
+        e.event_type === 'contact_whatsapp' || e.event_type === 'contact_phone' || e.event_type === 'contact_email'
+      ).length
+      const totalFavorites = (userEvents || []).filter(e => e.event_type === 'favorite_add').length
+      const totalReviews = (userEvents || []).filter(e => e.event_type === 'review_add').length
 
       return {
         totalViews,

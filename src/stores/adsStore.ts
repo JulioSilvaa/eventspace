@@ -137,14 +137,13 @@ export const useAdsStore = create<AdsState>((set, get) => ({
       return
     }
 
-    // Fetch featured ads with metrics summary for views count
+    // Fetch featured ads
     const { data, error } = await supabase
       .from('listings')
       .select(`
         *,
         categories(id, name, type),
-        listing_images(id, image_url, display_order),
-        metrics_summary(views_count, contacts_count, favorites_count, reviews_count)
+        listing_images(id, image_url, display_order)
       `)
       .eq('status', 'active')
       .eq('featured', true)
@@ -156,16 +155,31 @@ export const useAdsStore = create<AdsState>((set, get) => ({
       return
     }
 
-    // Process data to calculate total views from metrics_summary
-    const processedData = (data || []).map(ad => {
-      const totalViews = ad.metrics_summary?.reduce((sum: number, metric: any) => 
-        sum + (metric.views_count || 0), 0) || 0
-      
-      return {
-        ...ad,
-        views_count: totalViews
+    // Buscar views count de cada listing a partir da activity_events
+    const listingIds = (data || []).map(ad => ad.id)
+    let viewsData: Record<string, number> = {}
+    
+    if (listingIds.length > 0) {
+      const { data: viewsCountData } = await supabase
+        .from('activity_events')
+        .select('listing_id')
+        .in('listing_id', listingIds)
+        .eq('event_type', 'view')
+
+      // Contar views por listing_id
+      if (viewsCountData) {
+        viewsData = viewsCountData.reduce((acc, event) => {
+          acc[event.listing_id] = (acc[event.listing_id] || 0) + 1
+          return acc
+        }, {} as Record<string, number>)
       }
-    }).sort((a, b) => b.views_count - a.views_count) // Sort by total views descending
+    }
+
+    // Process data to add views count from activity_events
+    const processedData = (data || []).map(ad => ({
+      ...ad,
+      views_count: viewsData[ad.id] || 0
+    })).sort((a, b) => b.views_count - a.views_count) // Sort by total views descending
 
     set({
       featuredAds: processedData,
@@ -187,8 +201,7 @@ export const useAdsStore = create<AdsState>((set, get) => ({
       .select(`
         *,
         categories!inner(id, name, type),
-        listing_images(id, image_url, display_order),
-        metrics_summary(views_count, contacts_count, favorites_count, reviews_count)
+        listing_images(id, image_url, display_order)
       `)
       .eq('status', 'active')
       .eq('categories.type', 'space')
@@ -200,8 +213,34 @@ export const useAdsStore = create<AdsState>((set, get) => ({
       return
     }
 
+    // Buscar views count de cada listing a partir da activity_events
+    const listingIds = (data || []).map(ad => ad.id)
+    let viewsData: Record<string, number> = {}
+    
+    if (listingIds.length > 0) {
+      const { data: viewsCountData } = await supabase
+        .from('activity_events')
+        .select('listing_id')
+        .in('listing_id', listingIds)
+        .eq('event_type', 'view')
+
+      // Contar views por listing_id
+      if (viewsCountData) {
+        viewsData = viewsCountData.reduce((acc, event) => {
+          acc[event.listing_id] = (acc[event.listing_id] || 0) + 1
+          return acc
+        }, {} as Record<string, number>)
+      }
+    }
+
+    // Add views count and sort by popularity
+    const processedData = (data || []).map(ad => ({
+      ...ad,
+      views_count: viewsData[ad.id] || 0
+    })).sort((a, b) => b.views_count - a.views_count)
+
     set({
-      popularSpaces: data || [],
+      popularSpaces: processedData,
       cache: { ...state.cache, popularSpaces: now }
     })
   },
@@ -224,7 +263,6 @@ export const useAdsStore = create<AdsState>((set, get) => ({
       `)
       .eq('status', 'active')
       .eq('categories.type', 'advertiser')
-      .order('views_count', { ascending: false })
       .order('created_at', { ascending: false })
       .limit(limit)
 
@@ -233,8 +271,34 @@ export const useAdsStore = create<AdsState>((set, get) => ({
       return
     }
 
+    // Buscar views count de cada listing a partir da activity_events
+    const listingIds = (data || []).map(ad => ad.id)
+    let viewsData: Record<string, number> = {}
+    
+    if (listingIds.length > 0) {
+      const { data: viewsCountData } = await supabase
+        .from('activity_events')
+        .select('listing_id')
+        .in('listing_id', listingIds)
+        .eq('event_type', 'view')
+
+      // Contar views por listing_id
+      if (viewsCountData) {
+        viewsData = viewsCountData.reduce((acc, event) => {
+          acc[event.listing_id] = (acc[event.listing_id] || 0) + 1
+          return acc
+        }, {} as Record<string, number>)
+      }
+    }
+
+    // Add views count and sort by popularity
+    const processedData = (data || []).map(ad => ({
+      ...ad,
+      views_count: viewsData[ad.id] || 0
+    })).sort((a, b) => b.views_count - a.views_count)
+
     set({
-      popularEquipment: data || [],
+      popularEquipment: processedData,
       cache: { ...state.cache, popularEquipment: now }
     })
   },
@@ -258,8 +322,27 @@ export const useAdsStore = create<AdsState>((set, get) => ({
       return
     }
 
+    // Buscar views count do listing a partir da activity_events
+    let viewsCount = 0
+    
+    const { data: viewsCountData } = await supabase
+      .from('activity_events')
+      .select('listing_id')
+      .eq('listing_id', id)
+      .eq('event_type', 'view')
+
+    if (viewsCountData) {
+      viewsCount = viewsCountData.length
+    }
+
+    // Processar dados para adicionar views count da activity_events
+    const processedData = {
+      ...data,
+      views_count: viewsCount
+    }
+
     set({
-      currentAd: data,
+      currentAd: processedData,
       isLoading: false,
     })
   },
@@ -283,8 +366,34 @@ export const useAdsStore = create<AdsState>((set, get) => ({
       return
     }
 
+    // Buscar views count de cada listing a partir da activity_events
+    const listingIds = (data || []).map(ad => ad.id)
+    let viewsData: Record<string, number> = {}
+    
+    if (listingIds.length > 0) {
+      const { data: viewsCountData } = await supabase
+        .from('activity_events')
+        .select('listing_id')
+        .in('listing_id', listingIds)
+        .eq('event_type', 'view')
+
+      // Contar views por listing_id
+      if (viewsCountData) {
+        viewsData = viewsCountData.reduce((acc, event) => {
+          acc[event.listing_id] = (acc[event.listing_id] || 0) + 1
+          return acc
+        }, {} as Record<string, number>)
+      }
+    }
+
+    // Processar dados para adicionar views count da activity_events
+    const processedData = (data || []).map(ad => ({
+      ...ad,
+      views_count: viewsData[ad.id] || 0
+    }))
+
     set({
-      userAds: data || [],
+      userAds: processedData,
       isLoading: false,
     })
   },

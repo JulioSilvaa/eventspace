@@ -24,6 +24,7 @@ import ImageUpload from '@/components/forms/ImageUpload'
 import AmenitiesSelector from '@/components/forms/AmenitiesSelector'
 import { getBrazilianStates } from '@/lib/api/search'
 import { getMaxImagesForPlan } from '@/lib/planLimits'
+import Tooltip from '@/components/ui/Tooltip'
 
 // Import supabase for fetching categories
 import { supabase } from '@/lib/supabase'
@@ -253,6 +254,12 @@ export default function CreateListing() {
     }
   }, [watchedCategoryType, setValue])
   
+  // Definir featured como true automaticamente para usuários premium
+  useEffect(() => {
+    if (profile?.plan_type === 'premium') {
+      setValue('featured', true)
+    }
+  }, [profile?.plan_type, setValue])
 
   // Cleanup image URLs on unmount
   useEffect(() => {
@@ -971,21 +978,18 @@ export default function CreateListing() {
               )}
             </div>
 
-            {/* Opção de destacar anúncio (apenas para plano premium) */}
+            {/* Anúncio destacado (automático para plano premium) */}
             {profile?.plan_type === 'premium' && (
               <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg p-6">
                 <div className="flex items-start gap-4">
                   <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id="featured"
-                      className="w-4 h-4 text-yellow-600 border-gray-300 rounded focus:ring-yellow-500"
-                      {...register('featured')}
-                    />
-                    <label htmlFor="featured" className="flex items-center gap-2 text-sm font-medium text-gray-900">
+                    <div className="w-5 h-5 bg-yellow-500 rounded-full flex items-center justify-center">
+                      <Crown className="w-3 h-3 text-white fill-current" />
+                    </div>
+                    <div className="flex items-center gap-2 text-sm font-medium text-gray-900">
                       <Crown className="w-4 h-4 text-yellow-600" />
-                      Destacar este anúncio
-                    </label>
+                      <span>Seu anúncio será destacado automaticamente</span>
+                    </div>
                   </div>
                 </div>
                 <div className="mt-3">
@@ -1059,12 +1063,14 @@ export default function CreateListing() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
-            <Link
-              to="/dashboard"
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5 text-gray-600" />
-            </Link>
+            <Tooltip content="Voltar ao dashboard">
+              <Link
+                to="/dashboard"
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5 text-gray-600" />
+              </Link>
+            </Tooltip>
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Criar Anúncio</h1>
               <p className="text-gray-600">Etapa {currentStep} de {STEPS.length}</p>

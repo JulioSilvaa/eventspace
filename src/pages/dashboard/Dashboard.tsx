@@ -88,13 +88,13 @@ export default function Dashboard() {
       let totalContacts = 0
 
       if (realTimeMetrics) {
-        // Usar dados consolidados real-time
-        totalViews = realTimeMetrics.totalViews
-        totalContacts = realTimeMetrics.totalContacts
+        // Usar dados consolidados real-time com proteção contra NaN
+        totalViews = isNaN(realTimeMetrics.totalViews) ? 0 : (realTimeMetrics.totalViews || 0)
+        totalContacts = isNaN(realTimeMetrics.totalContacts) ? 0 : (realTimeMetrics.totalContacts || 0)
       } else {
         // Fallback para dados existentes
         totalViews = userAds.reduce((sum, ad) => {
-          const views = ad.views_count || 0
+          const views = isNaN(ad.views_count) ? 0 : (ad.views_count || 0)
           return sum + views
         }, 0)
         totalContacts = Math.floor(totalViews * 0.08) // Simulado até termos dados reais
@@ -110,16 +110,20 @@ export default function Dashboard() {
         createdAt: ad.created_at.split('T')[0]
       }))
 
+      // Garantir que todos os valores são números válidos
+      const safeTotalViews = isNaN(totalViews) ? 0 : totalViews
+      const safeTotalContacts = isNaN(totalContacts) ? 0 : totalContacts
+      
       setData({
         totalAds: userAds.length,
         activeAds: activeAds.length,
-        totalViews,
-        totalContacts,
+        totalViews: safeTotalViews,
+        totalContacts: safeTotalContacts,
         averageRating: 4.8, // Mock por enquanto
-        thisMonthViews: Math.floor(totalViews * 0.6), // Mock - 60% do total
-        lastMonthViews: Math.floor(totalViews * 0.4), // Mock - 40% do total
-        thisMonthContacts: Math.floor(totalContacts * 0.6),
-        lastMonthContacts: Math.floor(totalContacts * 0.4),
+        thisMonthViews: Math.floor(safeTotalViews * 0.6), // Mock - 60% do total
+        lastMonthViews: Math.floor(safeTotalViews * 0.4), // Mock - 40% do total
+        thisMonthContacts: Math.floor(safeTotalContacts * 0.6),
+        lastMonthContacts: Math.floor(safeTotalContacts * 0.4),
         recentAds,
         quickStats: {
           pendingMessages: Math.floor(totalContacts * 0.3), // 30% mensagens pendentes

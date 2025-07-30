@@ -53,7 +53,8 @@ class ReviewReplyService {
       }
 
       return { data: data || [] }
-    } catch (error) {
+    } catch (err) {
+      console.error('Error fetching replies:', err)
       return { data: [], error: 'Erro inesperado ao buscar respostas' }
     }
   }
@@ -114,6 +115,7 @@ class ReviewReplyService {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async getUserReviews(listingId?: string): Promise<{ data: any[]; error?: string }> {
     try {
       const { data: user } = await supabase.auth.getUser()
@@ -156,6 +158,7 @@ class ReviewReplyService {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async getReviewsWithReplies(listingId?: string): Promise<{ data: any[]; error?: string }> {
     try {
       const { data: reviews, error: reviewsError } = await this.getUserReviews(listingId)
@@ -178,6 +181,7 @@ class ReviewReplyService {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async getPendingReplies(): Promise<{ data: any[]; error?: string }> {
     try {
       const { data: reviews, error } = await this.getUserReviews()

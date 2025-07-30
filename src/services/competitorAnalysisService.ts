@@ -72,16 +72,7 @@ class CompetitorAnalysisService {
       // Buscar todos os anúncios da categoria (excluindo o anúncio atual)
       let query = supabase
         .from('listings')
-        .select(`
-          id,
-          created_at,
-          metrics_summary (
-            views_count,
-            contacts_count,
-            favorites_count,
-            reviews_count
-          )
-        `)
+        .select('id, created_at')
         .eq('category_id', categoryId)
         .eq('status', 'active')
 
@@ -106,26 +97,31 @@ class CompetitorAnalysisService {
         }
       }
 
-      // Calcular médias baseadas nos últimos 30 dias
-      const totalViews = listings.reduce((sum, listing) => {
-        const metrics = listing.metrics_summary || []
-        return sum + metrics.reduce((s: number, m: Record<string, any>) => s + (m.views_count || 0), 0)
-      }, 0)
+      // Buscar eventos dos últimos 30 dias para todos os anúncios da categoria
+      const listingIds = listings.map(listing => listing.id)
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+      
+      let totalViews = 0
+      let totalContacts = 0
+      let totalFavorites = 0
+      let totalReviews = 0
+      
+      if (listingIds.length > 0) {
+        const { data: events, error: eventsError } = await supabase
+          .from('activity_events')
+          .select('event_type')
+          .in('listing_id', listingIds)
+          .gte('created_at', thirtyDaysAgo)
 
-      const totalContacts = listings.reduce((sum, listing) => {
-        const metrics = listing.metrics_summary || []
-        return sum + metrics.reduce((s: number, m: Record<string, any>) => s + (m.contacts_count || 0), 0)
-      }, 0)
-
-      const totalFavorites = listings.reduce((sum, listing) => {
-        const metrics = listing.metrics_summary || []
-        return sum + metrics.reduce((s: number, m: Record<string, any>) => s + (m.favorites_count || 0), 0)
-      }, 0)
-
-      const totalReviews = listings.reduce((sum, listing) => {
-        const metrics = listing.metrics_summary || []
-        return sum + metrics.reduce((s: number, m: Record<string, any>) => s + (m.reviews_count || 0), 0)
-      }, 0)
+        if (!eventsError && events) {
+          totalViews = events.filter(e => e.event_type === 'view').length
+          totalContacts = events.filter(e => 
+            e.event_type === 'contact_whatsapp' || e.event_type === 'contact_phone' || e.event_type === 'contact_email'
+          ).length
+          totalFavorites = events.filter(e => e.event_type === 'favorite_add').length
+          totalReviews = events.filter(e => e.event_type === 'review_add').length
+        }
+      }
 
       const totalListings = listings.length
 
@@ -241,7 +237,7 @@ class CompetitorAnalysisService {
   /**
    * Gerar insights de mercado
    */
-  private generateMarketTrends(categoryName: string, metrics: CompetitorMetrics): any[] {
+  private generateMarketTrends(categoryName: string, metrics: CompetitorMetrics): Array<{description: string, impact: 'positive' | 'negative' | 'neutral', actionable: boolean}> {
     const trends = []
 
     if (metrics.averageViews > 100) {
@@ -311,12 +307,6 @@ class CompetitorAnalysisService {
           categories (
             id,
             name
-          ),
-          metrics_summary (
-            views_count,
-            contacts_count,
-            favorites_count,
-            reviews_count
           )
         `)
         .eq('id', listingId)
@@ -326,18 +316,39 @@ class CompetitorAnalysisService {
         throw listingError || new Error('Anúncio não encontrado')
       }
 
-      const category = listing.categories
+      const category = (listing.categories as unknown) as { id: string; name: string } | null
       if (!category) {
         throw new Error('Categoria não encontrada')
       }
+      
+      // Type guard to ensure category has required properties
+      if (!category.id || !category.name) {
+        throw new Error('Dados da categoria incompletos')
+      }
+
+      // Buscar métricas do usuário dos últimos 30 dias via activity_events
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+      
+      const { data: userEvents, error: eventsError } = await supabase
+        .from('activity_events')
+        .select('event_type')
+        .eq('listing_id', listingId)
+        .gte('created_at', thirtyDaysAgo)
+
+      if (eventsError) {
+        throw eventsError
+      }
 
       // Calcular métricas do usuário
-      const userMetrics = listing.metrics_summary?.reduce((acc: Record<string, any>, metric: Record<string, any>) => ({
-        views: acc.views + (metric.views_count || 0),
-        contacts: acc.contacts + (metric.contacts_count || 0),
-        favorites: acc.favorites + (metric.favorites_count || 0),
-        reviews: acc.reviews + (metric.reviews_count || 0)
-      }), { views: 0, contacts: 0, favorites: 0, reviews: 0 }) || { views: 0, contacts: 0, favorites: 0, reviews: 0 }
+      const userMetrics = {
+        views: (userEvents || []).filter(e => e.event_type === 'view').length,
+        contacts: (userEvents || []).filter(e => 
+          e.event_type === 'contact_whatsapp' || e.event_type === 'contact_phone' || e.event_type === 'contact_email'
+        ).length,
+        favorites: (userEvents || []).filter(e => e.event_type === 'favorite_add').length,
+        reviews: (userEvents || []).filter(e => e.event_type === 'review_add').length,
+        engagementRate: 0
+      }
 
       userMetrics.engagementRate = this.calculateEngagementRate(
         userMetrics.views, 
