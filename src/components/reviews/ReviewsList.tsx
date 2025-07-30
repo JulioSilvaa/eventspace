@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import StarRating from './StarRating'
+import ReviewReply from './ReviewReply'
+import { reviewReplyService, type ReviewReply as ReviewReplyType } from '@/services/reviewReplyService'
 import { User } from 'lucide-react'
 
 interface Review {
@@ -19,8 +21,10 @@ interface ReviewsListProps {
 
 export default function ReviewsList({ listingId, refreshTrigger }: ReviewsListProps) {
   const [reviews, setReviews] = useState<Review[]>([])
+  const [replies, setReplies] = useState<ReviewReplyType[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [averageRating, setAverageRating] = useState(0)
+  const [isOwner, setIsOwner] = useState(false)
 
   const fetchReviews = useCallback(async () => {
     try {
@@ -49,8 +53,14 @@ export default function ReviewsList({ listingId, refreshTrigger }: ReviewsListPr
       if (reviewsData.length > 0) {
         const average = reviewsData.reduce((sum, review) => sum + review.rating, 0) / reviewsData.length
         setAverageRating(Number(average.toFixed(1)))
+
+        // Buscar respostas para as avaliações
+        const reviewIds = reviewsData.map(review => review.id)
+        const { data: repliesData } = await reviewReplyService.getRepliesByReviewIds(reviewIds)
+        setReplies(repliesData)
       } else {
         setAverageRating(0)
+        setReplies([])
       }
 
     } catch (err) {
@@ -60,9 +70,33 @@ export default function ReviewsList({ listingId, refreshTrigger }: ReviewsListPr
     }
   }, [listingId])
 
+  const checkOwnership = useCallback(async () => {
+    const isListingOwner = await reviewReplyService.checkIfUserOwnsListing(listingId)
+    setIsOwner(isListingOwner)
+  }, [listingId])
+
   useEffect(() => {
     fetchReviews()
-  }, [listingId, refreshTrigger, fetchReviews])
+    checkOwnership()
+  }, [listingId, refreshTrigger, fetchReviews, checkOwnership])
+
+  const handleReplyCreated = (newReply: ReviewReplyType) => {
+    setReplies(prev => [...prev, newReply])
+  }
+
+  const handleReplyUpdated = (updatedReply: ReviewReplyType) => {
+    setReplies(prev => prev.map(reply => 
+      reply.id === updatedReply.id ? updatedReply : reply
+    ))
+  }
+
+  const handleReplyDeleted = (replyId: string) => {
+    setReplies(prev => prev.filter(reply => reply.id !== replyId))
+  }
+
+  const getReplyForReview = (reviewId: string): ReviewReplyType | undefined => {
+    return replies.find(reply => reply.review_id === reviewId)
+  }
 
   if (isLoading) {
     return (
@@ -124,6 +158,17 @@ export default function ReviewsList({ listingId, refreshTrigger }: ReviewsListPr
                       {review.comment}
                     </p>
                   )}
+
+                  {/* Componente de resposta */}
+                  <ReviewReply
+                    reviewId={review.id}
+                    listingId={listingId}
+                    existingReply={getReplyForReview(review.id)}
+                    isOwner={isOwner}
+                    onReplyCreated={handleReplyCreated}
+                    onReplyUpdated={handleReplyUpdated}
+                    onReplyDeleted={handleReplyDeleted}
+                  />
                 </div>
               </div>
             </div>

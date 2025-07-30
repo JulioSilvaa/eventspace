@@ -20,6 +20,7 @@ import Dashboard from './pages/dashboard/Dashboard'
 import MyAds from './pages/dashboard/MyAds'
 import CreateAd from './pages/dashboard/CreateAd'
 import EditAd from './pages/dashboard/EditAd'
+import ReviewsManagement from './pages/dashboard/ReviewsManagement'
 
 // Checkout pages
 import Checkout from './pages/checkout/Checkout'
@@ -155,6 +156,11 @@ function App() {
         <Route path="/dashboard/anuncios/:id/editar" element={
           <ProtectedRoute requiresPaidPlan={true}>
             <EditAd />
+          </ProtectedRoute>
+        } />
+        <Route path="/dashboard/avaliacoes" element={
+          <ProtectedRoute requiresPaidPlan={true}>
+            <ReviewsManagement />
           </ProtectedRoute>
         } />
         <Route path="/dashboard/analytics" element={

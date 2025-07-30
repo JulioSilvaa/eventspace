@@ -1,6 +1,7 @@
 import { formatDistanceToNow } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { 
   Eye, MessageCircle, Star, Package, TrendingUp, MapPin, 
   Clock, Users, Crown, Lock, BarChart3, Zap, Target
@@ -42,6 +43,7 @@ interface ActivityDisplayProps {
     insight_type?: string
     performance_change?: number
     engagement_score?: number
+    listingId?: string
   }
 }
 
@@ -165,7 +167,8 @@ export default function RecentActivity({
                   isPremium: false,
                   metadata: {
                     adTitle: ad.title,
-                    growth: views > 10 ? Math.floor(views * 0.2) : 0
+                    growth: views > 10 ? Math.floor(views * 0.2) : 0,
+                    listingId: ad.id
                   }
                 })
               }
@@ -181,7 +184,8 @@ export default function RecentActivity({
                   isPremium: false,
                   metadata: {
                     adTitle: ad.title,
-                    contactType: 'whatsapp' as const
+                    contactType: 'whatsapp' as const,
+                    listingId: ad.id
                   }
                 })
               }
@@ -538,9 +542,19 @@ export default function RecentActivity({
                 </p>
                 
                 {activity.metadata?.adTitle && !activity.locked && (
-                  <p className="text-xs text-gray-500 mt-1">
-                    Anúncio: {activity.metadata.adTitle}
-                  </p>
+                  <div className="flex items-center justify-between mt-1">
+                    <p className="text-xs text-gray-500">
+                      Anúncio: {activity.metadata.adTitle}
+                    </p>
+                    {activity.metadata?.listingId && (activity.type === 'view' || activity.type === 'contact') && (
+                      <Link
+                        to={`/dashboard/avaliacoes?listing=${activity.metadata.listingId}`}
+                        className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                      >
+                        Ver avaliações →
+                      </Link>
+                    )}
+                  </div>
                 )}
                 
                 {activity.metadata?.growth && (
