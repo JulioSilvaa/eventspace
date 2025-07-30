@@ -8,6 +8,7 @@ import { useUpgradeModal } from '@/hooks/useUpgradeModal'
 import UpgradeModal from '@/components/modals/UpgradeModal'
 import { useAdsStore } from '@/stores/adsStore'
 import { uploadAdImages, saveImageRecords } from '@/services/imageService'
+import { useToast } from '@/contexts/ToastContext'
 import { 
   ArrowLeft, 
   ArrowRight, 
@@ -176,6 +177,7 @@ export default function CreateListing() {
   const { user, profile, canCreateAd } = useAuth()
   const { isOpen, context, openModal, closeModal } = useUpgradeModal()
   const { createAd } = useAdsStore()
+  const toast = useToast()
   const [brazilianStates, setBrazilianStates] = useState<Array<{code: string, name: string, region: string}>>([])
   const [categories, setCategories] = useState<Array<{id: number, name: string, type: 'space' | 'advertiser', parent_id?: number}>>([])
   const [error, setError] = useState<string | null>(null)
@@ -201,7 +203,7 @@ export default function CreateListing() {
         .order('name')
       
       if (error) {
-        console.error('Error fetching categories:', error)
+        toast.error('Erro ao carregar categorias', 'Não foi possível carregar as categorias. Tente recarregar a página.')
       } else {
         const allCategories = data || []
         setCategories(allCategories)
@@ -214,15 +216,7 @@ export default function CreateListing() {
 
   // Check if user can create ads on component mount - only run once when component mounts
   useEffect(() => {
-    console.log('🔍 useEffect check:', {
-      profile: !!profile,
-      canCreateAd: canCreateAd(),
-      modalShownRef: modalShownRef.current,
-      planType: profile?.plan_type
-    })
-    
     if (profile && !canCreateAd() && !modalShownRef.current) {
-      console.log('🚀 About to show modal, setting ref to true')
       modalShownRef.current = true // Mark that we've shown the modal
       // If user has free plan, show no_plan modal
       if (profile.plan_type === 'free') {
@@ -250,7 +244,6 @@ export default function CreateListing() {
   })
 
   const watchedCategoryType = watch('categoryType')
-  const watchedCategoryId = watch('category_id')
   const allValues = watch()
   
   // Reset category when changing type
@@ -260,12 +253,6 @@ export default function CreateListing() {
     }
   }, [watchedCategoryType, setValue])
   
-  // Debug log - remover em produção
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Category ID value:', watchedCategoryId, typeof watchedCategoryId)
-    }
-  }, [watchedCategoryId])
 
   // Cleanup image URLs on unmount
   useEffect(() => {
@@ -377,12 +364,13 @@ export default function CreateListing() {
         specifications: Object.keys(specifications).length > 0 ? specifications : undefined
       }
 
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Dados sendo enviados para o Supabase:', listingData)
-      }
+      const loadingToastId = toast.loading('Criando anúncio...', 'Aguarde enquanto processamos seus dados')
+      
       const result = await createAd(listingData)
       
       if (result.error) {
+        toast.removeToast(loadingToastId)
+        toast.error('Erro ao criar anúncio', result.error)
         setError(result.error)
         return
       }
@@ -390,11 +378,12 @@ export default function CreateListing() {
       // Upload de imagens se houver
       if (images.length > 0 && result.data?.id) {
         try {
+          toast.updateToast(loadingToastId, { title: 'Enviando imagens...', message: `Carregando ${images.length} imagem${images.length > 1 ? 's' : ''}` })
           const uploadedImages = await uploadAdImages(result.data.id, images)
           await saveImageRecords(result.data.id, uploadedImages)
-        } catch (imageError) {
-          console.error('Erro no upload das imagens:', imageError)
-          // Anúncio já foi criado, apenas avisa sobre as imagens
+        } catch {
+          toast.removeToast(loadingToastId)
+          toast.warning('Anúncio criado com limitações', 'Anúncio criado com sucesso, mas houve erro no upload das imagens. Você pode editá-las depois.')
           setError('Anúncio criado com sucesso, mas houve erro no upload das imagens. Você pode editá-las depois.')
           setTimeout(() => navigate('/dashboard?newListing=true'), 3000)
           return
@@ -402,10 +391,14 @@ export default function CreateListing() {
       }
       
       // Redirecionar para dashboard com mensagem de sucesso
+      toast.removeToast(loadingToastId)
+      toast.success('Anúncio criado com sucesso!', 'Seu anúncio foi publicado e já está disponível para visualização.')
       navigate('/dashboard?newListing=true')
     } catch (error) {
-      console.error('Erro ao criar anúncio:', error)
-      setError(error instanceof Error ? error.message : 'Erro inesperado ao criar anúncio')
+      toast.removeToast(loadingToastId)
+      const errorMessage = error instanceof Error ? error.message : 'Erro inesperado ao criar anúncio'
+      toast.error('Erro ao criar anúncio', errorMessage)
+      setError(errorMessage)
     } finally {
       setIsSubmitting(false)
     }
@@ -703,15 +696,12 @@ export default function CreateListing() {
               customFeatures={customFeatures}
               customServices={customServices}
               onCustomAmenitiesChange={(amenities) => {
-                console.log('CreateAd: Setting custom amenities:', amenities)
                 setCustomAmenities(amenities)
               }}
               onCustomFeaturesChange={(features) => {
-                console.log('CreateAd: Setting custom features:', features)
                 setCustomFeatures(features)
               }}
               onCustomServicesChange={(services) => {
-                console.log('CreateAd: Setting custom services:', services)
                 setCustomServices(services)
               }}
             />
@@ -1187,7 +1177,6 @@ export default function CreateListing() {
       <UpgradeModal
         isOpen={isOpen}
         onClose={() => {
-          console.log('🔐 Modal closing, resetting ref to false')
           modalShownRef.current = false // Reset the flag when modal is closed
           closeModal()
         }}

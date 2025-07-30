@@ -7,6 +7,7 @@ import { FormField, FormButton, FormSelect } from '@/components/forms'
 import { getBrazilianStates, getRegionFromState } from '@/lib/brazilian-regions'
 import { paymentService, type CreateCheckoutSessionParams } from '@/services/paymentService'
 import { Crown, Check, ArrowLeft, ArrowRight } from 'lucide-react'
+import { useToast } from '@/contexts/ToastContext'
 import { DOCUMENT_VERSIONS } from '@/types'
 
 // Schema para Step 1 - Dados Pessoais
@@ -81,6 +82,8 @@ export default function RegisterForm() {
     }
   })
 
+  const toast = useToast()
+
   useEffect(() => {
     getBrazilianStates().then(setBrazilianStates)
   }, [])
@@ -105,25 +108,23 @@ export default function RegisterForm() {
   }
 
   const handleFinalSubmit = async () => {
-    console.log('🚀 handleFinalSubmit iniciado')
     
     if (!personalData || !planData) {
-      console.error('❌ Dados incompletos:', { personalData: !!personalData, planData: !!planData })
       setError('Dados incompletos. Tente novamente.')
       return
     }
 
     // Previne duplo clique
     if (isLoading) {
-      console.log('⚠️ Já está carregando, ignorando duplo clique')
       return
     }
 
     setIsLoading(true)
     setError(null)
+    
+    const loadingToast = toast.loading('Processando cadastro...', 'Preparando seu plano')
 
     try {
-      console.log('📋 Preparando dados para checkout...')
       
       // Capturar informações para consentimento LGPD
       const userAgent = navigator.userAgent
@@ -157,29 +158,30 @@ export default function RegisterForm() {
         }
       }
 
-      console.log('💾 Salvando dados no localStorage...')
       // Salvar dados temporariamente para recuperação
       localStorage.setItem('pending-signup', JSON.stringify(checkoutParams))
 
-      console.log('🔄 Chamando paymentService.createCheckoutSessionWithSignup...')
       // Redirecionar para Stripe Checkout
       await paymentService.createCheckoutSessionWithSignup(checkoutParams)
       
-      console.log('✅ Checkout iniciado com sucesso!')
+      toast.updateToast(loadingToast, { 
+        type: 'success', 
+        title: 'Redirecionando...', 
+        message: 'Você será redirecionado para o pagamento' 
+      })
       
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido'
-      console.error('💥 Erro no checkout:', err)
-      console.error('📋 Error details:', {
-        message: errorMessage,
-        stack: err instanceof Error ? err.stack : undefined,
-        personalData: !!personalData,
-        planData: !!planData
+      
+      toast.updateToast(loadingToast, { 
+        type: 'error', 
+        title: 'Erro no cadastro', 
+        message: errorMessage || 'Erro ao processar. Tente novamente.' 
       })
+      
       setError(errorMessage || 'Erro ao processar. Tente novamente.')
     } finally {
       setIsLoading(false)
-      console.log('🏁 handleFinalSubmit finalizado')
     }
   }
 

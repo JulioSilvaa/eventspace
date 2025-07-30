@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabase'
 import StarRating from './StarRating'
 import ReviewReply from './ReviewReply'
 import { reviewReplyService, type ReviewReply as ReviewReplyType } from '@/services/reviewReplyService'
-import { User } from 'lucide-react'
+import { useToast } from '@/contexts/ToastContext'
 
 interface Review {
   id: string
@@ -25,6 +25,7 @@ export default function ReviewsList({ listingId, refreshTrigger }: ReviewsListPr
   const [isLoading, setIsLoading] = useState(true)
   const [averageRating, setAverageRating] = useState(0)
   const [isOwner, setIsOwner] = useState(false)
+  const toast = useToast()
 
   const fetchReviews = useCallback(async () => {
     try {
@@ -42,7 +43,7 @@ export default function ReviewsList({ listingId, refreshTrigger }: ReviewsListPr
         .order('created_at', { ascending: false })
 
       if (error) {
-        console.error('Erro ao buscar avaliações:', error)
+        toast.error('Erro ao carregar avaliações', 'Não foi possível carregar as avaliações. Tente recarregar a página.')
         return
       }
 
@@ -63,12 +64,12 @@ export default function ReviewsList({ listingId, refreshTrigger }: ReviewsListPr
         setReplies([])
       }
 
-    } catch (err) {
-      console.error('Erro ao carregar avaliações:', err)
+    } catch {
+      toast.error('Erro inesperado', 'Ocorreu um erro ao carregar as avaliações.')
     } finally {
       setIsLoading(false)
     }
-  }, [listingId])
+  }, [listingId, toast])
 
   const checkOwnership = useCallback(async () => {
     const isListingOwner = await reviewReplyService.checkIfUserOwnsListing(listingId)

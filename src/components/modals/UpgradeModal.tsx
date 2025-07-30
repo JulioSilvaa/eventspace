@@ -65,7 +65,6 @@ export default function UpgradeModal({
   const navigate = useNavigate()
   const [selectedPlan, setSelectedPlan] = useState<'basic' | 'premium'>('basic')
   
-  console.log('🔍 UpgradeModal render - isOpen:', isOpen)
   
   // Handle ESC key to close modal
   useEffect(() => {

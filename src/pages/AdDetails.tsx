@@ -7,6 +7,7 @@ import FavoriteButton from '@/components/favorites/FavoriteButton'
 import PremiumBadge from '@/components/ui/PremiumBadge'
 import LocationMap, { LocationFallback } from '@/components/maps/LocationMap'
 import { geocodingService } from '@/services/geocodingService'
+import { useToast } from '@/contexts/ToastContext'
 
 interface ImageData {
   url?: string
@@ -149,6 +150,7 @@ export default function AdDetails() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { ads, fetchAds, incrementViews, incrementContacts } = useAdsStore()
+  const toast = useToast()
   // const [currentImageIndex, setCurrentImageIndex] = useState(0) // Removido - não usado na galeria
   const [isLoading, setIsLoading] = useState(true)
   const [reviewsRefreshTrigger, setReviewsRefreshTrigger] = useState(0)
@@ -199,7 +201,7 @@ export default function AdDetails() {
             setCoordinates({ lat: result.latitude, lng: result.longitude })
           }
         } catch (error) {
-          console.error('Erro ao geocodificar localização:', error)
+          // Erro silencioso para geocoding - não precisa mostrar toast pois não afeta a funcionalidade principal
         } finally {
           setIsGeocodingLoading(false)
         }
@@ -286,10 +288,14 @@ export default function AdDetails() {
 
   const openWhatsApp = () => {
     const phone = ad.contact_whatsapp || ad.contact_phone
-    if (!phone) return
+    if (!phone) {
+      toast.warning('WhatsApp não disponível', 'Este anúncio não possui um número de WhatsApp cadastrado.')
+      return
+    }
     
     // Track the contact before opening WhatsApp
     incrementContacts(ad.id)
+    toast.success('Redirecionando para WhatsApp...', 'Você será redirecionado para conversar com o anunciante.')
     
     const cleanPhone = phone.replace(/\D/g, '')
     const message = encodeURIComponent(`Olá! Tenho interesse no seu anúncio: ${ad.title}`)
@@ -300,20 +306,32 @@ export default function AdDetails() {
     if (ad.contact_phone) {
       // Track the contact before making the call
       incrementContacts(ad.id)
+      toast.success('Ligando...', 'Você será redirecionado para ligar para o anunciante.')
       window.open(`tel:${ad.contact_phone}`, '_self')
+    } else {
+      toast.warning('Telefone não disponível', 'Este anúncio não possui um número de telefone cadastrado.')
     }
   }
 
-  const shareAd = () => {
+  const shareAd = async () => {
     if (navigator.share) {
-      navigator.share({
-        title: ad.title,
-        text: `${ad.title} - ${formatPrice(ad.price, ad.price_type)}`,
-        url: window.location.href,
-      })
+      try {
+        await navigator.share({
+          title: ad.title,
+          text: `${ad.title} - ${formatPrice(ad.price, ad.price_type)}`,
+          url: window.location.href,
+        })
+        toast.success('Compartilhado!', 'Anúncio compartilhado com sucesso.')
+      } catch (error) {
+        // User cancelled sharing - no need to show error
+      }
     } else {
-      navigator.clipboard.writeText(window.location.href)
-      alert('Link copiado para a área de transferência!')
+      try {
+        await navigator.clipboard.writeText(window.location.href)
+        toast.success('Link copiado!', 'Link do anúncio copiado para a área de transferência.')
+      } catch (error) {
+        toast.error('Erro ao copiar', 'Não foi possível copiar o link. Tente novamente.')
+      }
     }
   }
 

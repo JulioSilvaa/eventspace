@@ -196,7 +196,6 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
               console.error('Erro ao verificar profile:', profileError.message)
               // If profile doesn't exist, sign out the user
               if (profileError.code === 'PGRST116') {
-                console.log('Profile não existe, fazendo logout...')
                 await supabase.auth.signOut()
                 set({
                   user: null,

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
-import { ArrowLeft, MessageSquareReply, Star, ChevronDown, ChevronUp, Eye, Calendar, User } from 'lucide-react'
+import { ArrowLeft, MessageSquareReply, Star, ChevronDown, ChevronUp, Eye, User } from 'lucide-react'
 import { reviewReplyService } from '@/services/reviewReplyService'
 import ReviewReply from '@/components/reviews/ReviewReply'
 import { type ReviewReply as ReviewReplyType } from '@/services/reviewReplyService'

@@ -75,7 +75,6 @@ export async function recordConsent(
       return { success: false, error: error.message }
     }
 
-    console.log(`✅ Consent recorded: ${consentType} = ${consentGiven} for user ${userId}`)
     return { success: true }
   } catch (error) {
     console.error('Exception recording consent:', error)
@@ -132,7 +131,6 @@ export async function recordRegistrationConsent(
       return { success: false, error: error.message }
     }
 
-    console.log(`✅ Registration consent recorded for user ${userId}`)
     return { success: true }
   } catch (error) {
     console.error('Exception recording registration consent:', error)
@@ -185,7 +183,6 @@ export async function withdrawConsent(
       return { success: false, error: updateError.message }
     }
 
-    console.log(`✅ Consent withdrawn: ${consentType} for user ${userId}`)
     return { success: true }
   } catch (error) {
     console.error('Exception withdrawing consent:', error)

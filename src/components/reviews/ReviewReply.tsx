@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { reviewReplyService, type ReviewReply, type CreateReplyData } from '@/services/reviewReplyService'
 import { MessageCircle, Send, Edit2, Trash2, X } from 'lucide-react'
+import { useToast } from '@/contexts/ToastContext'
 
 interface ReviewReplyProps {
   reviewId: string
@@ -25,6 +26,7 @@ export default function ReviewReply({
   const [isEditing, setIsEditing] = useState(false)
   const [replyText, setReplyText] = useState(existingReply?.reply_text || '')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const toast = useToast()
 
   const handleCreateReply = async () => {
     if (!replyText.trim() || isSubmitting) return
@@ -40,9 +42,9 @@ export default function ReviewReply({
     const { data, error } = await reviewReplyService.createReply(createData)
     
     if (error) {
-      console.error('Erro ao criar resposta:', error)
-      alert('Erro ao enviar resposta. Tente novamente.')
+      toast.error('Erro ao enviar resposta', error)
     } else if (data) {
+      toast.success('Resposta enviada!', 'Sua resposta foi publicada com sucesso.')
       onReplyCreated(data)
       setReplyText('')
       setIsReplying(false)
@@ -59,9 +61,9 @@ export default function ReviewReply({
     const { error } = await reviewReplyService.updateReply(existingReply.id, replyText.trim())
     
     if (error) {
-      console.error('Erro ao atualizar resposta:', error)
-      alert('Erro ao atualizar resposta. Tente novamente.')
+      toast.error('Erro ao atualizar resposta', error)
     } else {
+      toast.success('Resposta atualizada!', 'Suas alterações foram salvas.')
       const updatedReply: ReviewReply = {
         ...existingReply,
         reply_text: replyText.trim(),
@@ -84,9 +86,9 @@ export default function ReviewReply({
     const { error } = await reviewReplyService.deleteReply(existingReply.id)
     
     if (error) {
-      console.error('Erro ao deletar resposta:', error)
-      alert('Erro ao excluir resposta. Tente novamente.')
+      toast.error('Erro ao excluir resposta', error)
     } else {
+      toast.success('Resposta excluída!', 'A resposta foi removida com sucesso.')
       onReplyDeleted(existingReply.id)
     }
     

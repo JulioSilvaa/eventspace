@@ -41,6 +41,10 @@ import LoadingSpinner from './components/ui/LoadingSpinner'
 import { useAuth } from './hooks/useAuth'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 
+// Toast system
+import { ToastProvider } from './contexts/ToastContext'
+import ToastContainer from './components/ui/ToastContainer'
+
 // Simple auth-only protected route (for checkout, admin, etc)
 function SimpleProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth()
@@ -81,8 +85,9 @@ function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
 
 function App() {
   return (
-    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-      <Routes>
+    <ToastProvider>
+      <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <Routes>
         {/* Public routes */}
         <Route path="/" element={<Home />} />
         <Route path="/home" element={<Home />} />
@@ -184,7 +189,9 @@ function App() {
         {/* 404 */}
         <Route path="*" element={<div className="min-h-screen flex items-center justify-center"><h1 className="text-2xl">Página não encontrada</h1></div>} />
       </Routes>
+      <ToastContainer />
     </Router>
+    </ToastProvider>
   )
 }
 

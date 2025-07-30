@@ -35,14 +35,6 @@ export async function uploadAdImages(
       throw new Error(`Arquivo inválido na posição ${i + 1}`)
     }
     
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`Uploading image ${i + 1}:`, {
-        fileName,
-        fileType: image.file.type,
-        fileSize: image.file.size,
-        filePath
-      })
-    }
     
     try {
       // Upload para o Storage (usando bucket existente 'ad-images')  
@@ -176,7 +168,6 @@ export async function uploadOptimizedAdImages(
       })
 
       if (process.env.NODE_ENV === 'development') {
-        console.log(`✅ Imagem otimizada ${i + 1} enviada com sucesso`)
       }
 
     } catch (error) {
@@ -198,11 +189,8 @@ export async function saveImageRecords(
     display_order: image.display_order
   }))
   
-  if (process.env.NODE_ENV === 'development') {
-    console.log('Tentando salvar registros de imagem:', imageRecords)
-  }
 
-  const { error, data } = await supabase
+  const { error } = await supabase
     .from('listing_images')
     .insert(imageRecords)
     .select()
@@ -212,9 +200,6 @@ export async function saveImageRecords(
     throw new Error(`Erro ao salvar imagens no banco de dados: ${error.message}`)
   }
 
-  if (process.env.NODE_ENV === 'development') {
-    console.log('Registros de imagem salvos com sucesso:', data)
-  }
 }
 
 export async function deleteAdImages(adId: string): Promise<void> {

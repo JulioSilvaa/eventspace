@@ -6,6 +6,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { useAdsStore } from '@/stores/adsStore'
 import { uploadAdImages, saveImageRecords, deleteSpecificAdImages } from '@/services/imageService'
+import { useToast } from '@/contexts/ToastContext'
 import { 
   ArrowLeft, 
   ArrowRight, 
@@ -187,6 +188,7 @@ export default function EditAd() {
   const navigate = useNavigate()
   const { user, profile } = useAuth()
   const { currentAd, fetchAdById, updateAd } = useAdsStore()
+  const toast = useToast()
   const [brazilianStates, setBrazilianStates] = useState<Array<{code: string, name: string, region: string}>>([])
   const [error, setError] = useState<string | null>(null)
   const [images, setImages] = useState<Array<{id: string, file: File, preview: string}>>([])
@@ -437,9 +439,13 @@ export default function EditAd() {
         specifications: Object.keys(specifications).length > 0 ? specifications : undefined
       }
 
+      const loadingToastId = toast.loading('Atualizando anúncio...', 'Salvando suas alterações')
+      
       const result = await updateAd(id, updateData)
       
       if (result.error) {
+        toast.removeToast(loadingToastId)
+        toast.error('Erro ao atualizar anúncio', result.error)
         setError(result.error)
         return
       }
@@ -448,25 +454,32 @@ export default function EditAd() {
       try {
         // Delete removed existing images
         if (removedExistingImageIds.length > 0) {
+          toast.updateToast(loadingToastId, { title: 'Atualizando imagens...', message: 'Processando alterações de imagens' })
           await deleteSpecificAdImages(removedExistingImageIds)
         }
 
         // Upload new images if any
         if (images.length > 0) {
+          toast.updateToast(loadingToastId, { title: 'Enviando novas imagens...', message: `Carregando ${images.length} nova${images.length > 1 ? 's' : ''} imagem${images.length > 1 ? 's' : ''}` })
           const uploadedImages = await uploadAdImages(id, images)
           await saveImageRecords(id, uploadedImages)
         }
       } catch (imageError) {
-        console.error('Erro no processamento das imagens:', imageError)
+        toast.removeToast(loadingToastId)
+        toast.warning('Anúncio atualizado com limitações', 'Anúncio atualizado com sucesso, mas houve erro no processamento das imagens.')
         setError('Anúncio atualizado com sucesso, mas houve erro no processamento das imagens.')
         setTimeout(() => navigate('/dashboard/meus-anuncios'), 3000)
         return
       }
       
+      toast.removeToast(loadingToastId)
+      toast.success('Anúncio atualizado com sucesso!', 'Suas alterações foram salvas e já estão disponíveis.')
       navigate('/dashboard/meus-anuncios?updated=true')
     } catch (error) {
-      console.error('Erro ao atualizar anúncio:', error)
-      setError(error instanceof Error ? error.message : 'Erro inesperado ao atualizar anúncio')
+      toast.removeToast(loadingToastId)
+      const errorMessage = error instanceof Error ? error.message : 'Erro inesperado ao atualizar anúncio'
+      toast.error('Erro ao atualizar anúncio', errorMessage)
+      setError(errorMessage)
     } finally {
       setIsSubmitting(false)
     }

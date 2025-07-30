@@ -71,18 +71,15 @@ export default function Dashboard() {
   // Calcular estatísticas baseadas nos anúncios reais
   useEffect(() => {
     if (userAds.length > 0) {
-      console.log('📊 Dashboard calculating stats for ads:', userAds)
       const activeAds = userAds.filter(ad => ad.status === 'active')
       const totalViews = userAds.reduce((sum, ad) => {
         const views = ad.views_count || 0 // Default to 0 if views_count is undefined/null
-        console.log(`📊 Ad "${ad.title}" has ${views} views`)
         return sum + views
       }, 0)
       
       // Para contatos, usaremos um valor simulado baseado nas visualizações
       // Idealmente, isso viria de uma tabela de contatos/mensagens
       const totalContacts = Math.floor(totalViews * 0.08) // ~8% conversion rate
-      console.log('📊 Calculated totals:', { totalViews, totalContacts })
       
       const recentAds = userAds.slice(0, 3).map(ad => ({
         id: ad.id,

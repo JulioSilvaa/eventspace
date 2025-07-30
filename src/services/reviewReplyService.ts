@@ -31,13 +31,11 @@ class ReviewReplyService {
         .single()
 
       if (error) {
-        console.error('Erro ao criar resposta:', error)
         return { error: 'Erro ao criar resposta' }
       }
 
       return { data: replyData }
     } catch (error) {
-      console.error('Erro no serviço de resposta:', error)
       return { error: 'Erro inesperado ao criar resposta' }
     }
   }
@@ -51,13 +49,11 @@ class ReviewReplyService {
         .order('created_at', { ascending: true })
 
       if (error) {
-        console.error('Erro ao buscar respostas:', error)
         return { data: [], error: 'Erro ao buscar respostas' }
       }
 
       return { data: data || [] }
     } catch (error) {
-      console.error('Erro no serviço de busca de respostas:', error)
       return { data: [], error: 'Erro inesperado ao buscar respostas' }
     }
   }
@@ -73,13 +69,11 @@ class ReviewReplyService {
         .eq('id', replyId)
 
       if (error) {
-        console.error('Erro ao atualizar resposta:', error)
         return { error: 'Erro ao atualizar resposta' }
       }
 
       return {}
     } catch (error) {
-      console.error('Erro no serviço de atualização:', error)
       return { error: 'Erro inesperado ao atualizar resposta' }
     }
   }
@@ -92,13 +86,11 @@ class ReviewReplyService {
         .eq('id', replyId)
 
       if (error) {
-        console.error('Erro ao deletar resposta:', error)
         return { error: 'Erro ao deletar resposta' }
       }
 
       return {}
     } catch (error) {
-      console.error('Erro no serviço de deleção:', error)
       return { error: 'Erro inesperado ao deletar resposta' }
     }
   }
@@ -118,7 +110,6 @@ class ReviewReplyService {
 
       return data.user_id === user.user.id
     } catch (error) {
-      console.error('Erro ao verificar propriedade do anúncio:', error)
       return false
     }
   }
@@ -156,13 +147,11 @@ class ReviewReplyService {
       const { data, error } = await query
 
       if (error) {
-        console.error('Erro ao buscar avaliações do usuário:', error)
         return { data: [], error: 'Erro ao buscar avaliações' }
       }
 
       return { data: data || [] }
     } catch (error) {
-      console.error('Erro no serviço de busca de avaliações:', error)
       return { data: [], error: 'Erro inesperado ao buscar avaliações' }
     }
   }
@@ -185,7 +174,6 @@ class ReviewReplyService {
 
       return { data: reviewsWithReplies }
     } catch (error) {
-      console.error('Erro ao buscar avaliações com respostas:', error)
       return { data: [], error: 'Erro inesperado' }
     }
   }
@@ -209,7 +197,6 @@ class ReviewReplyService {
 
       return { data: pendingReviews }
     } catch (error) {
-      console.error('Erro ao buscar avaliações pendentes:', error)
       return { data: [], error: 'Erro inesperado' }
     }
   }

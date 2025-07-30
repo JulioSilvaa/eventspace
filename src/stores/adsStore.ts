@@ -281,18 +281,12 @@ export const useAdsStore = create<AdsState>((set, get) => ({
   },
 
   createAd: async (adData: Partial<Ad>) => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('adsStore.createAd - dados recebidos:', adData)
-    }
     
     // Filtrar campos undefined para evitar problemas no Supabase
     const cleanData = Object.fromEntries(
       Object.entries(adData).filter(([, value]) => value !== undefined)
     )
     
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Dados limpos enviados ao Supabase:', cleanData)
-    }
     
     const { data, error } = await supabase
       .from('listings')
@@ -536,7 +530,6 @@ export const useAdsStore = create<AdsState>((set, get) => ({
           if (fallbackError) return
           
           // For now, just log the contact attempt since we can't store it
-          console.log(`📞 Contact tracked for ad ${id} (contacts_count field not available)`)
           return
         } catch {
           return
@@ -558,11 +551,9 @@ export const useAdsStore = create<AdsState>((set, get) => ({
             ? { ...state.currentAd, contacts_count: newContactsCount }
             : state.currentAd,
         }))
-        console.log(`📞 Contact recorded for ad ${id}: ${newContactsCount} total contacts`)
       } else {
         // If contacts_count field doesn't exist, try alternative approach
         if (updateError.message?.includes('column "contacts_count" of relation "listings" does not exist')) {
-          console.log(`📞 Contact tracked for ad ${id} (using alternative method - contacts_count field not in database)`)
           // Could implement alternative tracking here (separate table, etc.)
           return
         }

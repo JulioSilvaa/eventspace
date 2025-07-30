@@ -92,22 +92,6 @@ export async function optimizeImage(
     
     const [renamedThumbnail, renamedMedium, renamedLarge] = renamedFiles
 
-    // Log de otimização para desenvolvimento
-    if (process.env.NODE_ENV === 'development') {
-      const originalSize = (file.size / 1024).toFixed(1)
-      const thumbSize = (renamedThumbnail.size / 1024).toFixed(1)
-      const mediumSize = (renamedMedium.size / 1024).toFixed(1)
-      const largeSize = (renamedLarge.size / 1024).toFixed(1)
-      const totalOptimized = renamedThumbnail.size + renamedMedium.size + renamedLarge.size
-      const savings = ((file.size - totalOptimized) / file.size * 100).toFixed(1)
-      
-      console.log(`📸 Imagem otimizada:`)
-      console.log(`   Original: ${originalSize}KB`)
-      console.log(`   Thumbnail: ${thumbSize}KB (150px)`)
-      console.log(`   Medium: ${mediumSize}KB (600px)`)
-      console.log(`   Large: ${largeSize}KB (1200px)`)
-      console.log(`   💾 Economia: ${savings}%`)
-    }
 
     return {
       thumbnail: renamedThumbnail,
