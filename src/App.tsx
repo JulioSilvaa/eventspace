@@ -8,7 +8,6 @@ import Anunciantes from './pages/public/Anunciantes'
 import Spaces from './pages/public/Spaces'
 import Pricing from './pages/Pricing'
 import AdDetails from './pages/AdDetails'
-import Favorites from './pages/Favorites'
 
 // Auth pages
 import Login from './pages/auth/Login'
@@ -27,6 +26,12 @@ import Settings from './pages/dashboard/Settings'
 import Checkout from './pages/checkout/Checkout'
 import CheckoutSuccess from './pages/checkout/CheckoutSuccess'
 import CheckoutError from './pages/checkout/CheckoutError'
+import CancelSubscription from './pages/checkout/CancelSubscription'
+import CancelSuccess from './pages/checkout/CancelSuccess'
+import UpgradeSubscription from './pages/checkout/UpgradeSubscription'
+import UpgradeSuccess from './pages/checkout/UpgradeSuccess'
+import DowngradeSubscription from './pages/checkout/DowngradeSubscription'
+import DowngradeSuccess from './pages/checkout/DowngradeSuccess'
 
 // Admin pages
 import AdminDashboard from './pages/admin/AdminDashboard'
@@ -101,7 +106,6 @@ function App() {
         <Route path="/equipamentos/:id" element={<AdDetails />} />
         <Route path="/anunciantes/:id" element={<AdDetails />} />
         <Route path="/espacos/:id" element={<AdDetails />} />
-        <Route path="/favoritos" element={<Favorites />} />
         
         {/* Legal pages */}
         <Route path="/como-funciona" element={<HowItWorks />} />
@@ -140,6 +144,36 @@ function App() {
         <Route path="/checkout/error" element={
           <SimpleProtectedRoute>
             <CheckoutError />
+          </SimpleProtectedRoute>
+        } />
+        <Route path="/checkout/cancel" element={
+          <SimpleProtectedRoute>
+            <CancelSubscription />
+          </SimpleProtectedRoute>
+        } />
+        <Route path="/checkout/cancel-success" element={
+          <SimpleProtectedRoute>
+            <CancelSuccess />
+          </SimpleProtectedRoute>
+        } />
+        <Route path="/checkout/upgrade" element={
+          <SimpleProtectedRoute>
+            <UpgradeSubscription />
+          </SimpleProtectedRoute>
+        } />
+        <Route path="/checkout/upgrade-success" element={
+          <SimpleProtectedRoute>
+            <UpgradeSuccess />
+          </SimpleProtectedRoute>
+        } />
+        <Route path="/checkout/downgrade" element={
+          <SimpleProtectedRoute>
+            <DowngradeSubscription />
+          </SimpleProtectedRoute>
+        } />
+        <Route path="/checkout/downgrade-success" element={
+          <SimpleProtectedRoute>
+            <DowngradeSuccess />
           </SimpleProtectedRoute>
         } />
         

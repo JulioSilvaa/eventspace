@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Crown, CreditCard, AlertTriangle, CheckCircle, XCircle } from 'lucide-react'
 import { subscriptionService, type Subscription } from '@/services/subscriptionService'
 import { useAuth } from '@/hooks/useAuth'
@@ -16,15 +17,21 @@ interface Payment {
 
 export default function SubscriptionCard() {
   const { profile } = useAuth()
+  const navigate = useNavigate()
   const [subscription, setSubscription] = useState<Subscription | null>(null)
   const [payments, setPayments] = useState<Payment[]>([])
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState(false)
 
   const loadSubscription = useCallback(async () => {
-    if (!profile?.id) return
+    if (!profile?.id) {
+      setLoading(false)
+      return
+    }
     
     try {
+      setLoading(true)
+      
       // Try to load subscription data
       const activeSubscription = await subscriptionService.getUserActiveSubscription(profile.id)
       setSubscription(activeSubscription)
@@ -37,11 +44,15 @@ export default function SubscriptionCard() {
         .order('created_at', { ascending: false })
         .limit(5)
 
-      if (!paymentError && paymentData) {
+      if (paymentError) {
+        console.warn('Error loading payment history:', paymentError)
+        // Continue sem histórico de pagamentos se houver erro
+      } else if (paymentData) {
         setPayments(paymentData)
       }
     } catch (error) {
-      console.error('Error loading subscription:', error)
+      console.error('Error loading subscription data:', error)
+      // Não impedir a renderização por causa de erros de dados
     } finally {
       setLoading(false)
     }
@@ -53,28 +64,11 @@ export default function SubscriptionCard() {
     }
   }, [profile?.id, loadSubscription])
 
-  const handleCancelSubscription = async () => {
+  const handleCancelSubscription = () => {
     if (!subscription) return
     
-    if (!confirm('Tem certeza que deseja cancelar sua assinatura? Ela permanecerá ativa até o final do período atual.')) {
-      return
-    }
-
-    setActionLoading(true)
-    try {
-      const success = await subscriptionService.cancelSubscription(subscription.id)
-      if (success) {
-        await loadSubscription() // Reload to get updated data
-        alert('Assinatura cancelada com sucesso. Ela permanecerá ativa até o final do período.')
-      } else {
-        alert('Erro ao cancelar assinatura. Tente novamente.')
-      }
-    } catch (error) {
-      console.error('Error canceling subscription:', error)
-      alert('Erro ao cancelar assinatura. Tente novamente.')
-    } finally {
-      setActionLoading(false)
-    }
+    // Redirecionar para a página de cancelamento
+    navigate(`/checkout/cancel?subscription_id=${subscription.id}`)
   }
 
   const handleReactivateSubscription = async () => {
@@ -156,19 +150,55 @@ export default function SubscriptionCard() {
               </div>
             </div>
 
-            <div className="flex gap-3">
-              <button
-                onClick={() => window.open('/contato', '_blank')}
-                className="flex-1 bg-primary-600 text-white py-2 px-4 rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium"
-              >
-                Contatar Suporte
-              </button>
-              <button
-                onClick={() => window.open('/planos', '_blank')}
-                className="flex-1 border border-primary-600 text-primary-600 py-2 px-4 rounded-lg hover:bg-primary-50 transition-colors text-sm font-medium"
-              >
-                Ver Planos
-              </button>
+            {/* Plan Actions */}
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row gap-3">
+                {profile.plan_type === 'basic' ? (
+                  <button
+                    onClick={() => navigate('/checkout/upgrade')}
+                    className="flex-1 bg-primary-600 text-white py-2 px-4 rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium flex items-center justify-center gap-2"
+                  >
+                    <Crown className="w-4 h-4" />
+                    Fazer Upgrade para Premium
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => navigate('/checkout/downgrade')}
+                    className="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
+                  >
+                    Downgrade para Básico
+                  </button>
+                )}
+                
+                <button
+                  onClick={() => navigate('/planos')}
+                  className="flex-1 border border-primary-600 text-primary-600 py-2 px-4 rounded-lg hover:bg-primary-50 transition-colors text-sm font-medium"
+                >
+                  Comparar Planos
+                </button>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => window.open('/contato', '_blank')}
+                  className="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
+                >
+                  Contatar Suporte
+                </button>
+              </div>
+
+              {/* Cancel button for users with active plan but no Stripe subscription data */}
+              <div className="border-t pt-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Gerenciar assinatura:</span>
+                  <button
+                    onClick={() => navigate('/checkout/cancel')}
+                    className="text-sm text-red-600 hover:text-red-700 font-medium"
+                  >
+                    Cancelar Assinatura
+                  </button>
+                </div>
+              </div>
             </div>
 
             {/* Payment History */}
@@ -250,12 +280,20 @@ export default function SubscriptionCard() {
               Ver Planos
             </a>
             {payments.length > 0 && (
-              <button
-                onClick={() => window.open('/contato', '_blank')}
-                className="inline-flex items-center gap-2 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors text-sm"
-              >
-                Contatar Suporte
-              </button>
+              <>
+                <button
+                  onClick={() => window.open('/contato', '_blank')}
+                  className="inline-flex items-center gap-2 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+                >
+                  Contatar Suporte
+                </button>
+                <button
+                  onClick={() => navigate('/checkout/cancel')}
+                  className="inline-flex items-center gap-2 border border-red-300 text-red-700 px-4 py-2 rounded-lg hover:bg-red-50 transition-colors text-sm"
+                >
+                  Cancelar Assinatura
+                </button>
+              </>
             )}
           </div>
         </div>
@@ -352,32 +390,54 @@ export default function SubscriptionCard() {
           </div>
         )}
 
-        {/* Actions */}
-        <div className="flex items-center justify-between pt-4 border-t">
-          {subscription.cancel_at_period_end ? (
+        {/* Plan Actions */}
+        <div className="space-y-4 pt-4 border-t">
+          {/* Plan Change Options */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            {subscription.plan_type === 'basic' ? (
+              <button
+                onClick={() => navigate('/checkout/upgrade')}
+                className="flex-1 bg-primary-600 text-white py-2 px-4 rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium flex items-center justify-center gap-2"
+              >
+                <Crown className="w-4 h-4" />
+                Fazer Upgrade para Premium
+              </button>
+            ) : (
+              <button
+                onClick={() => navigate('/checkout/downgrade')}
+                className="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
+              >
+                Downgrade para Básico
+              </button>
+            )}
+            
             <button
-              onClick={handleReactivateSubscription}
-              disabled={actionLoading}
-              className="text-sm text-green-600 hover:text-green-700 disabled:opacity-50"
+              onClick={() => navigate('/planos')}
+              className="flex-1 border border-primary-600 text-primary-600 py-2 px-4 rounded-lg hover:bg-primary-50 transition-colors text-sm font-medium"
             >
-              {actionLoading ? 'Reativando...' : 'Reativar Assinatura'}
+              Comparar Planos
             </button>
-          ) : (
-            <button
-              onClick={handleCancelSubscription}
-              disabled={actionLoading}
-              className="text-sm text-red-600 hover:text-red-700 disabled:opacity-50"
-            >
-              {actionLoading ? 'Cancelando...' : 'Cancelar Assinatura'}
-            </button>
-          )}
-          
-          <a
-            href="/pricing"
-            className="text-sm text-blue-600 hover:text-blue-700"
-          >
-            Alterar Plano
-          </a>
+          </div>
+
+          {/* Subscription Management */}
+          <div className="flex items-center justify-between text-sm">
+            {subscription.cancel_at_period_end ? (
+              <button
+                onClick={handleReactivateSubscription}
+                disabled={actionLoading}
+                className="text-green-600 hover:text-green-700 disabled:opacity-50"
+              >
+                {actionLoading ? 'Reativando...' : 'Reativar Assinatura'}
+              </button>
+            ) : (
+              <button
+                onClick={handleCancelSubscription}
+                className="text-red-600 hover:text-red-700"
+              >
+                Cancelar Assinatura
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -187,12 +187,22 @@ export function useRealTimeMetrics(options: UseRealTimeMetricsOptions = {}): Use
               }
             }
           )
-          .subscribe()
+          .subscribe((status, err) => {
+            if (status === 'SUBSCRIBED') {
+              console.log('Supabase Realtime connected successfully')
+            } else if (status === 'CHANNEL_ERROR') {
+              console.warn('Supabase Realtime connection failed, falling back to polling only:', err)
+              // Continue usando polling mesmo se WebSocket falhar
+            } else if (status === 'TIMED_OUT') {
+              console.warn('Supabase Realtime connection timed out, using polling only')
+            }
+          })
 
         realtimeSubscriptionRef.current = channel
 
       } catch (err) {
-        console.error('Erro ao configurar Supabase Realtime:', err)
+        console.warn('Erro ao configurar Supabase Realtime, continuando com polling:', err)
+        // Não é um erro crítico - o polling ainda funciona
       }
     }
 
@@ -201,7 +211,11 @@ export function useRealTimeMetrics(options: UseRealTimeMetricsOptions = {}): Use
     // Cleanup
     return () => {
       if (realtimeSubscriptionRef.current) {
-        supabase.removeChannel(realtimeSubscriptionRef.current)
+        try {
+          supabase.removeChannel(realtimeSubscriptionRef.current)
+        } catch (err) {
+          console.warn('Error removing realtime channel:', err)
+        }
       }
     }
   }, [enableRealTime, enabled, listingId, userId, fetchMetrics])

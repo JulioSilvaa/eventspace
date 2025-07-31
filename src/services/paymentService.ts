@@ -252,6 +252,156 @@ class PaymentService {
     return expirationDate.toISOString()
   }
 
+  // Create checkout session for upgrading existing subscription
+  async createUpgradeCheckoutSession(params: {
+    currentSubscriptionId: string
+    newPlanType: PlanType
+    billingCycle: BillingCycle
+    userId: string
+    userEmail: string
+    proRatedAmount: number
+  }): Promise<string> {
+    const { currentSubscriptionId, newPlanType, billingCycle, userId, userEmail, proRatedAmount } = params
+    
+    try {
+      // Get the price ID for the new plan
+      const priceId = PLAN_PRICES[newPlanType][billingCycle]
+      
+      if (!priceId) {
+        throw new Error(`Price ID not configured for ${newPlanType}/${billingCycle}`)
+      }
+
+      // Create payment record for the upgrade
+      const { data: payment, error: paymentError } = await supabase
+        .from('payments')
+        .insert({
+          user_id: userId,
+          plan_type: newPlanType,
+          amount: proRatedAmount,
+          currency: 'BRL',
+          payment_status: 'pending',
+          payment_method: 'credit_card',
+          starts_at: new Date().toISOString(),
+          expires_at: this.calculateExpirationDate(billingCycle)
+        })
+        .select()
+        .single()
+
+      if (paymentError) {
+        throw new Error(`Failed to create payment record: ${paymentError.message}`)
+      }
+
+      // Prepare metadata for Stripe
+      const metadata = {
+        planType: newPlanType,
+        billingCycle,
+        userId,
+        userEmail,
+        paymentId: payment.id,
+        isUpgrade: 'true',
+        currentSubscriptionId,
+        proRatedAmount: proRatedAmount.toString()
+      }
+
+      // Call Edge Function to create Stripe checkout session
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://zdvsafxltfdzjspmsdla.supabase.co'
+      
+      const response = await fetch(`${supabaseUrl}/functions/v1/create-checkout-session`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({
+          priceId,
+          customerEmail: userEmail,
+          metadata,
+          mode: 'payment', // One-time payment for pro-rated amount
+          successUrl: `${window.location.origin}/checkout/upgrade-success?plan=${newPlanType}`,
+          cancelUrl: `${window.location.origin}/checkout/upgrade?cancelled=true`
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.text()
+        throw new Error(`Stripe checkout session creation failed: ${errorData}`)
+      }
+
+      const { url } = await response.json()
+      
+      if (!url) {
+        throw new Error('No checkout URL returned from Stripe')
+      }
+
+      return url
+    } catch (error) {
+      console.error('Error creating upgrade checkout session:', error)
+      throw error
+    }
+  }
+
+  // Schedule subscription downgrade (no payment required)
+  async scheduleDowngrade(params: {
+    subscriptionId: string
+    newPlanType: PlanType
+    userId: string
+    effectiveDate: string
+  }): Promise<boolean> {
+    const { subscriptionId, newPlanType, userId, effectiveDate } = params
+    
+    try {
+      // Record the scheduled downgrade
+      const { error: changeError } = await supabase
+        .from('subscription_changes')
+        .insert({
+          subscription_id: subscriptionId,
+          user_id: userId,
+          change_type: 'downgrade',
+          from_plan: 'premium', // Assuming downgrade is always from premium
+          to_plan: newPlanType,
+          effective_date: effectiveDate,
+          status: 'scheduled',
+          created_at: new Date().toISOString()
+        })
+
+      if (changeError) {
+        throw new Error(`Failed to schedule downgrade: ${changeError.message}`)
+      }
+
+      // Update subscription to mark for downgrade at period end
+      const { error: subscriptionError } = await supabase
+        .from('subscriptions')
+        .update({
+          cancel_at_period_end: true,
+          downgrade_to_plan: newPlanType,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', subscriptionId)
+
+      if (subscriptionError) {
+        throw new Error(`Failed to update subscription: ${subscriptionError.message}`)
+      }
+
+      return true
+    } catch (error) {
+      console.error('Error scheduling downgrade:', error)
+      return false
+    }
+  }
+
+  // Get plan pricing information
+  getPlanPricing(planType: PlanType, billingCycle: BillingCycle): {
+    amount: number
+    currency: string
+    priceId: string
+  } {
+    return {
+      amount: this.getPlanAmount(planType, billingCycle),
+      currency: 'BRL',
+      priceId: PLAN_PRICES[planType][billingCycle]
+    }
+  }
+
   // Novo método para checkout com dados de signup
   async createCheckoutSessionWithSignup(params: CreateCheckoutSessionParams & { 
     userData: {
@@ -277,12 +427,12 @@ class PaymentService {
       
       // Criptografar todos os dados sensíveis do usuário
       const { encryptedData, hash } = encryptUserData({
-        fullName: userData.fullName,
+        fullName: userData.full_name,
         email: userEmail,
-        phone: userData.phone,
+        phone: userData.phone || '',
         state: userData.state,
         city: userData.city,
-        password: userData.password
+        password: '' // Não há password neste contexto
       })
       
       // Preparar metadata com dados criptografados

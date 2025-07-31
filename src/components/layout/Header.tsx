@@ -1,12 +1,18 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { memo, useState } from 'react'
-import { useFavoritesStore } from '@/stores/favoritesStore'
 
 function Header() {
   const { isAuthenticated, signOut } = useAuth()
-  const { favorites } = useFavoritesStore()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const location = useLocation()
+  const navigate = useNavigate()
+  const isHomePage = location.pathname === '/' || location.pathname === '/home'
+
+  const handleSignOut = async () => {
+    await signOut()
+    navigate('/')
+  }
 
   return (
     <header className="bg-white shadow-sm border-b fixed top-0 left-0 right-0 z-50">
@@ -61,26 +67,22 @@ function Header() {
                 >
                   Dashboard
                 </Link>
-                <button
-                  onClick={signOut}
-                  className="text-gray-700 hover:text-primary-600 transition-colors"
-                >
-                  Sair
-                </button>
+                {!isHomePage && (
+                  <button
+                    onClick={handleSignOut}
+                    className="text-gray-700 hover:text-primary-600 transition-colors"
+                  >
+                    Sair
+                  </button>
+                )}
               </div>
             ) : (
               <div className="flex items-center space-x-4">
                 <Link
-                  to="/favoritos"
-                  className="text-gray-700 hover:text-primary-600 transition-colors font-medium"
-                >
-                  Favoritos {favorites.length > 0 && `(${favorites.length})`}
-                </Link>
-                <Link
                   to="/login"
                   className="text-gray-700 hover:text-primary-600 transition-colors font-medium"
                 >
-                  Entrar
+                  Área do Assinante
                 </Link>
                 <Link
                   to="/cadastro"
@@ -143,31 +145,26 @@ function Header() {
                     >
                       Dashboard
                     </Link>
-                    <button
-                      onClick={() => {
-                        signOut()
-                        setIsMenuOpen(false)
-                      }}
-                      className="text-left text-gray-700 hover:text-primary-600 transition-colors"
-                    >
-                      Sair
-                    </button>
+                    {!isHomePage && (
+                      <button
+                        onClick={async () => {
+                          await handleSignOut()
+                          setIsMenuOpen(false)
+                        }}
+                        className="text-left text-gray-700 hover:text-primary-600 transition-colors"
+                      >
+                        Sair
+                      </button>
+                    )}
                   </div>
                 ) : (
                   <div className="flex flex-col space-y-4">
-                    <Link
-                      to="/favoritos"
-                      className="text-gray-700 hover:text-primary-600 transition-colors font-medium"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      Favoritos {favorites.length > 0 && `(${favorites.length})`}
-                    </Link>
                     <Link
                       to="/login"
                       className="text-gray-700 hover:text-primary-600 transition-colors font-medium"
                       onClick={() => setIsMenuOpen(false)}
                     >
-                      Entrar
+                      Área do Assinante
                     </Link>
                     <Link
                       to="/cadastro"
