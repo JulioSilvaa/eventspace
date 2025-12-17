@@ -6,19 +6,19 @@ interface PremiumBadgeProps {
   className?: string
 }
 
-export default function PremiumBadge({ 
-  userPlanType, 
+export default function PremiumBadge({
+  userPlanType,
   size = 'md',
-  className = '' 
+  className = ''
 }: PremiumBadgeProps) {
-  // Só mostra badge se o usuário for premium
-  if (userPlanType !== 'premium') {
+  // Só mostra badge se o usuário for pro (ou legacy premium)
+  if (userPlanType !== 'pro' && userPlanType !== 'premium') {
     return null
   }
 
   const sizeClasses = {
     sm: 'text-xs px-2 py-1',
-    md: 'text-xs px-2.5 py-1.5', 
+    md: 'text-xs px-2.5 py-1.5',
     lg: 'text-sm px-3 py-2'
   }
 
@@ -29,19 +29,19 @@ export default function PremiumBadge({
   }
 
   return (
-    <span 
+    <span
       className={`
-        inline-flex items-center gap-1 
+        inline-flex items-center gap-1
         ${sizeClasses[size]}
-        bg-gradient-to-r from-amber-500 to-yellow-500 
-        text-white font-semibold rounded-full 
+        bg-gradient-to-r from-blue-600 to-blue-700
+        text-white font-semibold rounded-full
         shadow-sm
         ${className}
       `}
-      title="Conta Premium"
+      title="Conta Profissional"
     >
       <Crown className={`${iconSizes[size]} fill-current`} />
-      PREMIUM
+      PRO
     </span>
   )
 }

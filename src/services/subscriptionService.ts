@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase'
+import { apiClient } from '@/lib/api-client'
 
 export interface Subscription {
   id: string
@@ -6,7 +6,7 @@ export interface Subscription {
   stripe_subscription_id: string
   stripe_customer_id: string
   stripe_price_id: string
-  plan_type: 'basic' | 'premium'
+  plan_type: string
   billing_cycle: 'monthly' | 'yearly'
   status: 'active' | 'canceled' | 'past_due' | 'unpaid' | 'incomplete'
   amount: number
@@ -19,25 +19,30 @@ export interface Subscription {
   updated_at: string
 }
 
+interface SubscriptionResponse {
+  subscription: Subscription
+}
+
+interface SubscriptionsListResponse {
+  subscriptions: Subscription[]
+}
+
 class SubscriptionService {
   async getUserActiveSubscription(userId: string): Promise<Subscription | null> {
     try {
-      const { data, error } = await supabase
-        .from('subscriptions')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('status', 'active')
-        .gt('current_period_end', new Date().toISOString())
-        .order('created_at', { ascending: false })
-        .limit(1)
+      const { data, error } = await apiClient.get<SubscriptionResponse>(
+        `/api/subscription/user/${userId}`
+      )
 
       if (error) {
+        if (error.status === 404) {
+          return null
+        }
         console.error('Error fetching active subscription:', error)
         return null
       }
 
-      // Return first item or null if no results
-      return data && data.length > 0 ? data[0] : null
+      return data?.subscription || null
     } catch (error) {
       console.error('Exception in getUserActiveSubscription:', error)
       return null
@@ -45,48 +50,27 @@ class SubscriptionService {
   }
 
   async getUserSubscriptions(userId: string): Promise<Subscription[]> {
-    const { data, error } = await supabase
-      .from('subscriptions')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
+    const { data, error } = await apiClient.get<SubscriptionsListResponse>(
+      `/api/subscription/user/${userId}/all`
+    )
 
     if (error) {
       console.error('Error fetching subscriptions:', error)
       return []
     }
 
-    return data || []
+    return data?.subscriptions || []
   }
 
   async cancelSubscription(subscriptionId: string): Promise<boolean> {
     try {
-      // Get subscription data
-      const { data: subscription, error: fetchError } = await supabase
-        .from('subscriptions')
-        .select('stripe_subscription_id')
-        .eq('id', subscriptionId)
-        .single()
-
-      if (fetchError || !subscription) {
-        throw new Error('Subscription not found')
-      }
-
-      // Call Stripe API to cancel subscription
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://zdvsafxltfdzjspmsdla.supabase.co'
-      const response = await fetch(`${supabaseUrl}/functions/v1/cancel-subscription`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-        },
-        body: JSON.stringify({
-          stripeSubscriptionId: subscription.stripe_subscription_id
-        }),
+      const { error } = await apiClient.patch(`/api/subscription/${subscriptionId}`, {
+        cancel_at_period_end: true
       })
 
-      if (!response.ok) {
-        throw new Error('Failed to cancel subscription')
+      if (error) {
+        console.error('Failed to cancel subscription:', error)
+        return false
       }
 
       return true
@@ -98,32 +82,13 @@ class SubscriptionService {
 
   async reactivateSubscription(subscriptionId: string): Promise<boolean> {
     try {
-      // Get subscription data
-      const { data: subscription, error: fetchError } = await supabase
-        .from('subscriptions')
-        .select('stripe_subscription_id')
-        .eq('id', subscriptionId)
-        .single()
-
-      if (fetchError || !subscription) {
-        throw new Error('Subscription not found')
-      }
-
-      // Call Stripe API to reactivate subscription
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://zdvsafxltfdzjspmsdla.supabase.co'
-      const response = await fetch(`${supabaseUrl}/functions/v1/reactivate-subscription`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-        },
-        body: JSON.stringify({
-          stripeSubscriptionId: subscription.stripe_subscription_id
-        }),
+      const { error } = await apiClient.patch(`/api/subscription/${subscriptionId}`, {
+        cancel_at_period_end: false
       })
 
-      if (!response.ok) {
-        throw new Error('Failed to reactivate subscription')
+      if (error) {
+        console.error('Failed to reactivate subscription:', error)
+        return false
       }
 
       return true
@@ -148,7 +113,7 @@ class SubscriptionService {
     })
   }
 
-  getStatusBadge(status: Subscription['status']): { text: string; color: string; icon: React.ReactNode } {
+  getStatusBadge(status: Subscription['status']): { text: string; color: string; icon: string } {
     const statusMap = {
       active: { text: 'Ativo', color: 'green', icon: '✓' },
       canceled: { text: 'Cancelado', color: 'red', icon: '✕' },
@@ -175,46 +140,16 @@ class SubscriptionService {
     return Math.max(0, diffDays)
   }
 
-  // Upgrade subscription to a higher plan
-  async upgradeSubscription(subscriptionId: string, newPlanType: 'basic' | 'premium'): Promise<boolean> {
+  async upgradeSubscription(subscriptionId: string, newPlanType: string): Promise<boolean> {
     try {
-      // Get subscription data
-      const { data: subscription, error: fetchError } = await supabase
-        .from('subscriptions')
-        .select('*')
-        .eq('id', subscriptionId)
-        .single()
-
-      if (fetchError || !subscription) {
-        throw new Error('Subscription not found')
-      }
-
-      // Validate upgrade (can only upgrade to higher tier)
-      if (subscription.plan_type === 'premium') {
-        throw new Error('Already on highest plan')
-      }
-
-      if (newPlanType !== 'premium') {
-        throw new Error('Invalid upgrade target')
-      }
-
-      // Call Stripe API to upgrade subscription with proration
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://zdvsafxltfdzjspmsdla.supabase.co'
-      const response = await fetch(`${supabaseUrl}/functions/v1/upgrade-subscription`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-        },
-        body: JSON.stringify({
-          stripeSubscriptionId: subscription.stripe_subscription_id,
-          newPlanType,
-          prorate: true
-        }),
+      const { error } = await apiClient.patch(`/api/subscription/${subscriptionId}/upgrade`, {
+        plan_type: newPlanType,
+        prorate: true
       })
 
-      if (!response.ok) {
-        throw new Error('Failed to upgrade subscription')
+      if (error) {
+        console.error('Failed to upgrade subscription:', error)
+        return false
       }
 
       return true
@@ -224,46 +159,16 @@ class SubscriptionService {
     }
   }
 
-  // Downgrade subscription to a lower plan
-  async downgradeSubscription(subscriptionId: string, newPlanType: 'basic' | 'premium'): Promise<boolean> {
+  async downgradeSubscription(subscriptionId: string, newPlanType: string): Promise<boolean> {
     try {
-      // Get subscription data
-      const { data: subscription, error: fetchError } = await supabase
-        .from('subscriptions')
-        .select('*')
-        .eq('id', subscriptionId)
-        .single()
-
-      if (fetchError || !subscription) {
-        throw new Error('Subscription not found')
-      }
-
-      // Validate downgrade (can only downgrade to lower tier)
-      if (subscription.plan_type === 'basic') {
-        throw new Error('Already on lowest plan')
-      }
-
-      if (newPlanType !== 'basic') {
-        throw new Error('Invalid downgrade target')
-      }
-
-      // Call Stripe API to schedule downgrade at period end (no proration/refund)
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://zdvsafxltfdzjspmsdla.supabase.co'
-      const response = await fetch(`${supabaseUrl}/functions/v1/downgrade-subscription`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-        },
-        body: JSON.stringify({
-          stripeSubscriptionId: subscription.stripe_subscription_id,
-          newPlanType,
-          atPeriodEnd: true
-        }),
+      const { error } = await apiClient.patch(`/api/subscription/${subscriptionId}/downgrade`, {
+        plan_type: newPlanType,
+        at_period_end: true
       })
 
-      if (!response.ok) {
-        throw new Error('Failed to downgrade subscription')
+      if (error) {
+        console.error('Failed to downgrade subscription:', error)
+        return false
       }
 
       return true
@@ -273,44 +178,40 @@ class SubscriptionService {
     }
   }
 
-  // Calculate pro-rated amount for upgrade
   calculateProRating(
-    currentPlan: 'basic' | 'premium',
-    newPlan: 'basic' | 'premium',
+    currentPlan: string,
+    newPlan: string,
     daysRemaining: number,
     billingCycle: 'monthly' | 'yearly' = 'monthly'
   ): number {
-    const planPrices = {
+    const planPrices: Record<string, { monthly: number, yearly: number }> = {
       basic: { monthly: 49.90, yearly: 499.00 },
-      premium: { monthly: 79.90, yearly: 799.00 }
+      premium: { monthly: 79.90, yearly: 799.00 },
+      pro: { monthly: 49.90, yearly: 499.00 }
     }
 
-    const currentPrice = planPrices[currentPlan][billingCycle]
-    const newPrice = planPrices[newPlan][billingCycle]
+    const currentPrice = planPrices[currentPlan]?.[billingCycle] || 0
+    const newPrice = planPrices[newPlan]?.[billingCycle] || 0
     const priceDifference = newPrice - currentPrice
 
     if (priceDifference <= 0) return 0
 
-    // Calculate pro-rated amount based on remaining days
     const totalDaysInPeriod = billingCycle === 'monthly' ? 30 : 365
     return (priceDifference * daysRemaining) / totalDaysInPeriod
   }
 
-  // Get subscription change history
-  async getSubscriptionChanges(userId: string): Promise<any[]> {
+  async getSubscriptionChanges(userId: string): Promise<unknown[]> {
     try {
-      const { data, error } = await supabase
-        .from('subscription_changes')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
+      const { data, error } = await apiClient.get<{ changes: unknown[] }>(
+        `/api/subscription/user/${userId}/changes`
+      )
 
       if (error) {
         console.error('Error fetching subscription changes:', error)
         return []
       }
 
-      return data || []
+      return data?.changes || []
     } catch (error) {
       console.error('Exception in getSubscriptionChanges:', error)
       return []

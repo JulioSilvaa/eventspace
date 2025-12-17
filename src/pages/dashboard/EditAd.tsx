@@ -8,11 +8,11 @@ import { useAdsStore } from '@/stores/adsStore'
 import { useEventTracking } from '@/hooks/useRealTimeMetrics'
 import { uploadAdImages, saveImageRecords, deleteSpecificAdImages } from '@/services/imageService'
 import { useToast } from '@/contexts/ToastContext'
-import { 
-  ArrowLeft, 
-  ArrowRight, 
-  CheckCircle, 
-  Building2, 
+import {
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle,
+  Building2,
   Wrench,
   DollarSign,
   Star,
@@ -73,17 +73,17 @@ const SERVICES_LABELS = {
 
 // Função para traduzir comodidades/recursos/serviços
 const translateItem = (item: string) => {
-  return AMENITIES_LABELS[item as keyof typeof AMENITIES_LABELS] || 
-         FEATURES_LABELS[item as keyof typeof FEATURES_LABELS] || 
-         SERVICES_LABELS[item as keyof typeof SERVICES_LABELS] || 
-         item // fallback para o ID original se não encontrar tradução
+  return AMENITIES_LABELS[item as keyof typeof AMENITIES_LABELS] ||
+    FEATURES_LABELS[item as keyof typeof FEATURES_LABELS] ||
+    SERVICES_LABELS[item as keyof typeof SERVICES_LABELS] ||
+    item // fallback para o ID original se não encontrar tradução
 }
 
 const editAdSchema = z.object({
   categoryType: z.enum(['equipment', 'space'], {
     required_error: 'Selecione o tipo de anúncio'
   }),
-  
+
   title: z.string()
     .min(1, 'Título é obrigatório')
     .min(10, 'Título deve ter pelo menos 10 caracteres')
@@ -93,7 +93,7 @@ const editAdSchema = z.object({
     .min(50, 'Descrição deve ter pelo menos 50 caracteres')
     .max(1000, 'Descrição deve ter no máximo 1000 caracteres'),
   category_id: z.number().min(1, 'Categoria é obrigatória'),
-  
+
   capacity: z.number()
     .min(1, 'Capacidade deve ser maior que zero')
     .max(10000, 'Capacidade muito alta')
@@ -102,7 +102,7 @@ const editAdSchema = z.object({
     .min(1, 'Área deve ser maior que zero')
     .max(100000, 'Área muito grande')
     .optional(),
-  
+
   state: z.string().min(1, 'Estado é obrigatório'),
   city: z.string().min(1, 'Cidade é obrigatória'),
   neighborhood: z.string().optional(),
@@ -111,18 +111,18 @@ const editAdSchema = z.object({
     .regex(/^\d{5}-?\d{3}$/, 'CEP inválido (formato: 12345-678)')
     .optional(),
   reference_point: z.string().optional(),
-  
+
   amenities: z.array(z.string()).optional(),
   features: z.array(z.string()).optional(),
   services: z.array(z.string()).optional(),
-  
+
   price: z.number()
     .min(1, 'Preço deve ser maior que zero')
     .max(100000, 'Preço deve ser menor que R$ 100.000'),
   priceType: z.enum(['daily', 'hourly', 'event'], {
     required_error: 'Selecione o tipo de preço'
   }),
-  
+
   contactPhone: z.string()
     .min(1, 'Telefone é obrigatório')
     .max(25, 'Telefone muito longo')
@@ -137,9 +137,9 @@ const editAdSchema = z.object({
   contactFacebook: z.string()
     .max(100, 'Facebook muito longo')
     .optional(),
-  
+
   featured: z.boolean().optional(),
-  
+
   images: z.array(z.any()).optional()
 })
 
@@ -198,9 +198,9 @@ export default function EditAd() {
     trackDescriptionUpdated,
     trackContactUpdated
   } = useEventTracking(id)
-  const [brazilianStates, setBrazilianStates] = useState<Array<{code: string, name: string, region: string}>>([])
+  const [brazilianStates, setBrazilianStates] = useState<Array<{ code: string, name: string, region: string }>>([])
   const [error, setError] = useState<string | null>(null)
-  const [images, setImages] = useState<Array<{id: string, file: File, preview: string}>>([])
+  const [images, setImages] = useState<Array<{ id: string, file: File, preview: string }>>([])
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([])
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([])
   const [selectedServices, setSelectedServices] = useState<string[]>([])
@@ -247,7 +247,7 @@ export default function EditAd() {
       } else if (currentAd.categories?.type === 'advertiser') {
         categoryType = 'equipment'
       }
-      
+
       reset({
         categoryType,
         title: currentAd.title,
@@ -299,7 +299,7 @@ export default function EditAd() {
 
   useEffect(() => {
     if (watchedCategoryType) {
-      setValue('category_id', undefined)
+      setValue('category_id', undefined as unknown as number)
     }
   }, [watchedCategoryType, setValue])
 
@@ -366,7 +366,7 @@ export default function EditAd() {
   const formatPhone = (value: string) => {
     const numbers = value.replace(/\D/g, '')
     const limitedNumbers = numbers.slice(0, 11)
-    
+
     if (limitedNumbers.length <= 10) {
       return limitedNumbers.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3')
     } else {
@@ -376,7 +376,7 @@ export default function EditAd() {
 
   const nextStep = async () => {
     let fieldsToValidate: (keyof EditAdData)[] = []
-    
+
     switch (currentStep) {
       case 1:
         fieldsToValidate = ['categoryType']
@@ -401,7 +401,7 @@ export default function EditAd() {
         fieldsToValidate = ['contactPhone']
         break
     }
-    
+
     const isStepValid = await trigger(fieldsToValidate)
     if (isStepValid && currentStep < 8) {
       setCurrentStep(currentStep + 1)
@@ -416,16 +416,19 @@ export default function EditAd() {
 
   const onSubmit = async (data: EditAdData) => {
     if (!id) return
-    
+
     setIsSubmitting(true)
     setError(null)
-    
+
+    let loadingToastId: string | number | undefined
+
     try {
       // Combinar comodidades selecionadas com customizadas
       const allAmenities = [...selectedAmenities, ...customAmenities]
       const allFeatures = [...selectedFeatures, ...customFeatures]
       const allServices = [...selectedServices, ...customServices]
-      
+
+
       const specifications = {
         ...(data.capacity && { capacity: data.capacity }),
         ...(data.area_sqm && { area_sqm: data.area_sqm }),
@@ -455,12 +458,12 @@ export default function EditAd() {
         specifications: Object.keys(specifications).length > 0 ? specifications : undefined
       }
 
-      const loadingToastId = toast.loading('Atualizando anúncio...', 'Salvando suas alterações')
-      
+      loadingToastId = toast.loading('Atualizando anúncio...', 'Salvando suas alterações')
+
       const result = await updateAd(id, updateData)
-      
+
       if (result.error) {
-        toast.removeToast(loadingToastId)
+        toast.removeToast(String(loadingToastId))
         toast.error('Erro ao atualizar anúncio', result.error)
         setError(result.error)
         return
@@ -470,28 +473,28 @@ export default function EditAd() {
       try {
         // Delete removed existing images
         if (removedExistingImageIds.length > 0) {
-          toast.updateToast(loadingToastId, { title: 'Atualizando imagens...', message: 'Processando alterações de imagens' })
+          toast.updateToast(String(loadingToastId), { title: 'Atualizando imagens...', message: 'Processando alterações de imagens' })
           await deleteSpecificAdImages(removedExistingImageIds)
         }
 
         // Upload new images if any
         if (images.length > 0) {
-          toast.updateToast(loadingToastId, { title: 'Enviando novas imagens...', message: `Carregando ${images.length} nova${images.length > 1 ? 's' : ''} imagem${images.length > 1 ? 's' : ''}` })
+          toast.updateToast(String(loadingToastId), { title: 'Enviando novas imagens...', message: `Carregando ${images.length} nova${images.length > 1 ? 's' : ''} imagem${images.length > 1 ? 's' : ''}` })
           const uploadedImages = await uploadAdImages(id, images)
           await saveImageRecords(id, uploadedImages)
         }
       } catch {
-        toast.removeToast(loadingToastId)
+        toast.removeToast(String(loadingToastId))
         toast.warning('Anúncio atualizado com limitações', 'Anúncio atualizado com sucesso, mas houve erro no processamento das imagens.')
         setError('Anúncio atualizado com sucesso, mas houve erro no processamento das imagens.')
         setTimeout(() => navigate('/dashboard/meus-anuncios'), 3000)
         return
       }
-      
+
       // Rastrear eventos de atualização
       try {
         const changedFields: string[] = []
-        
+
         // Detectar mudanças nos campos principais
         if (currentAd?.title !== data.title) changedFields.push('título')
         if (currentAd?.description !== data.description) {
@@ -502,38 +505,38 @@ export default function EditAd() {
           changedFields.push('preço')
           await trackPriceUpdated(Number(currentAd?.price || 0), Number(data.price))
         }
-        
+
         // Detectar mudanças nos contatos
         const contactChanged = (
-          currentAd?.contact_whatsapp !== data.contact_whatsapp ||
-          currentAd?.contact_phone !== data.contact_phone ||
-          currentAd?.contact_email !== data.contact_email ||
-          currentAd?.contact_instagram !== data.contact_instagram ||
-          currentAd?.contact_facebook !== data.contact_facebook
+          currentAd?.contact_whatsapp !== data.contactWhatsapp ||
+          currentAd?.contact_phone !== data.contactPhone ||
+          currentAd?.contact_email !== data.contactEmail ||
+          currentAd?.contact_instagram !== data.contactInstagram ||
+          currentAd?.contact_facebook !== data.contactFacebook
         )
-        
+
         if (contactChanged) {
           changedFields.push('contatos')
           const updatedContactFields = []
-          if (currentAd?.contact_whatsapp !== data.contact_whatsapp) updatedContactFields.push('WhatsApp')
-          if (currentAd?.contact_phone !== data.contact_phone) updatedContactFields.push('Telefone')
-          if (currentAd?.contact_email !== data.contact_email) updatedContactFields.push('E-mail')
-          if (currentAd?.contact_instagram !== data.contact_instagram) updatedContactFields.push('Instagram')
-          if (currentAd?.contact_facebook !== data.contact_facebook) updatedContactFields.push('Facebook')
+          if (currentAd?.contact_whatsapp !== data.contactWhatsapp) updatedContactFields.push('WhatsApp')
+          if (currentAd?.contact_phone !== data.contactPhone) updatedContactFields.push('Telefone')
+          if (currentAd?.contact_email !== data.contactEmail) updatedContactFields.push('E-mail')
+          if (currentAd?.contact_instagram !== data.contactInstagram) updatedContactFields.push('Instagram')
+          if (currentAd?.contact_facebook !== data.contactFacebook) updatedContactFields.push('Facebook')
           await trackContactUpdated(updatedContactFields)
         }
-        
+
         // Detectar mudanças nas imagens
-        const imagesChanged = newImages.length > 0 || removedExistingImageIds.length > 0
+        const imagesChanged = images.length > 0 || removedExistingImageIds.length > 0
         if (imagesChanged) {
           changedFields.push('fotos')
           let photoAction: 'added' | 'removed' | 'updated' = 'updated'
-          if (newImages.length > 0 && removedExistingImageIds.length === 0) photoAction = 'added'
-          else if (newImages.length === 0 && removedExistingImageIds.length > 0) photoAction = 'removed'
-          
-          await trackPhotosUpdated(photoAction, newImages.length)
+          if (images.length > 0 && removedExistingImageIds.length === 0) photoAction = 'added'
+          else if (images.length === 0 && removedExistingImageIds.length > 0) photoAction = 'removed'
+
+          await trackPhotosUpdated(photoAction, images.length)
         }
-        
+
         // Rastrear atualização geral
         if (changedFields.length > 0) {
           await trackListingUpdated(changedFields, {
@@ -545,11 +548,11 @@ export default function EditAd() {
         console.error('Erro ao rastrear eventos de atualização:', trackingError)
       }
 
-      toast.removeToast(loadingToastId)
+      toast.removeToast(String(loadingToastId))
       toast.success('Anúncio atualizado com sucesso!', 'Suas alterações foram salvas e já estão disponíveis.')
       navigate('/dashboard/meus-anuncios?updated=true')
     } catch (error) {
-      toast.removeToast(loadingToastId)
+      if (loadingToastId) toast.removeToast(String(loadingToastId))
       const errorMessage = error instanceof Error ? error.message : 'Erro inesperado ao atualizar anúncio'
       toast.error('Erro ao atualizar anúncio', errorMessage)
       setError(errorMessage)
@@ -571,13 +574,13 @@ export default function EditAd() {
                 Equipamentos ou espaços para eventos
               </p>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <label 
+              <label
                 className={`
                   cursor-pointer border-2 rounded-lg p-6 transition-all hover:shadow-md
-                  ${watchedCategoryType === 'equipment' 
-                    ? 'border-primary-500 bg-primary-50' 
+                  ${watchedCategoryType === 'equipment'
+                    ? 'border-primary-500 bg-primary-50'
                     : 'border-gray-200 hover:border-gray-300'
                   }
                 `}
@@ -598,12 +601,12 @@ export default function EditAd() {
                   </p>
                 </div>
               </label>
-              
-              <label 
+
+              <label
                 className={`
                   cursor-pointer border-2 rounded-lg p-6 transition-all hover:shadow-md
-                  ${watchedCategoryType === 'space' 
-                    ? 'border-primary-500 bg-primary-50' 
+                  ${watchedCategoryType === 'space'
+                    ? 'border-primary-500 bg-primary-50'
                     : 'border-gray-200 hover:border-gray-300'
                   }
                 `}
@@ -625,7 +628,7 @@ export default function EditAd() {
                 </div>
               </label>
             </div>
-            
+
             {errors.categoryType && (
               <p className="text-red-600 text-sm text-center">{errors.categoryType.message}</p>
             )}
@@ -654,7 +657,7 @@ export default function EditAd() {
               required
               placeholder="Selecione a categoria"
               defaultValue=""
-              {...register('category_id', { 
+              {...register('category_id', {
                 setValueAs: (value) => value ? parseInt(value) : undefined
               })}
             />
@@ -662,8 +665,8 @@ export default function EditAd() {
             <FormField
               label="Título do anúncio"
               type="text"
-              placeholder={watchedCategoryType === 'equipment' 
-                ? "Ex: Sistema de Som Profissional 2000W" 
+              placeholder={watchedCategoryType === 'equipment'
+                ? "Ex: Sistema de Som Profissional 2000W"
                 : "Ex: Salão de Festas para 200 pessoas"
               }
               error={errors.title}
@@ -811,7 +814,7 @@ export default function EditAd() {
               onAmenitiesChange={setSelectedAmenities}
               onFeaturesChange={setSelectedFeatures}
               onServicesChange={setSelectedServices}
-              categoryType={watchedCategoryType || 'space'}
+              categoryType={watchedCategoryType === 'equipment' ? 'advertiser' : (watchedCategoryType || 'space')}
               customAmenities={customAmenities}
               customFeatures={customFeatures}
               customServices={customServices}
@@ -974,7 +977,7 @@ export default function EditAd() {
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
               <h4 className="font-medium text-green-900 mb-2">🔒 Contato 100% transparente</h4>
               <p className="text-sm text-green-700">
-                No EventSpace, o contato é sempre direto entre você e o interessado. 
+                No EventSpace, o contato é sempre direto entre você e o interessado.
                 Não cobramos comissões e não intermediamos a negociação.
               </p>
             </div>
@@ -998,9 +1001,9 @@ export default function EditAd() {
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold text-gray-900">{allValues.title}</h3>
                   <p className="text-sm text-gray-600">{
-                  (watchedCategoryType === 'equipment' ? EQUIPMENT_CATEGORIES : SPACE_CATEGORIES)
-                    .find(cat => cat.id === allValues.category_id)?.name
-                }</p>
+                    (watchedCategoryType === 'equipment' ? EQUIPMENT_CATEGORIES : SPACE_CATEGORIES)
+                      .find(cat => cat.id === allValues.category_id)?.name
+                  }</p>
                 </div>
                 <div className="text-right">
                   <p className="text-lg font-bold text-green-600">
@@ -1094,7 +1097,7 @@ export default function EditAd() {
                 </div>
                 <div className="mt-3">
                   <p className="text-sm text-gray-700 mb-2">
-                    Anúncios destacados aparecem no topo das buscas e no slider da página inicial, 
+                    Anúncios destacados aparecem no topo das buscas e no slider da página inicial,
                     recebendo até 5x mais visualizações!
                   </p>
                   <div className="flex items-center gap-4 text-xs text-gray-600">
@@ -1156,12 +1159,11 @@ export default function EditAd() {
           <div className="flex items-start justify-between mb-4">
             {STEPS.map((step) => (
               <div key={step.id} className="flex flex-col items-center flex-1">
-                <div 
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                    currentStep >= step.id 
-                      ? 'bg-primary-600 text-white' 
-                      : 'bg-gray-200 text-gray-600'
-                  }`}
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${currentStep >= step.id
+                    ? 'bg-primary-600 text-white'
+                    : 'bg-gray-200 text-gray-600'
+                    }`}
                 >
                   {currentStep > step.id ? (
                     <CheckCircle className="w-4 h-4" />
@@ -1169,7 +1171,7 @@ export default function EditAd() {
                     step.id
                   )}
                 </div>
-                
+
                 <div className="text-center mt-2">
                   <p className="text-xs font-medium text-gray-900">{step.title}</p>
                   <p className="text-xs text-gray-500">{step.description}</p>
@@ -1177,10 +1179,10 @@ export default function EditAd() {
               </div>
             ))}
           </div>
-          
+
           <div className="relative -mt-20 mb-16">
             <div className="absolute top-4 left-0 right-0 h-0.5 bg-gray-200">
-              <div 
+              <div
                 className="h-full bg-primary-600 transition-all duration-300"
                 style={{ width: `${((currentStep - 1) / (STEPS.length - 1)) * 100}%` }}
               />

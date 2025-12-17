@@ -36,10 +36,10 @@ interface DashboardData {
 }
 
 export default function Dashboard() {
-  const { 
-    user, 
-    profile, 
-    signOut, 
+  const {
+    user,
+    profile,
+    signOut,
     isLoading,
     refreshProfile
   } = useAuth()
@@ -52,12 +52,12 @@ export default function Dashboard() {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
 
   // Hook para métricas em tempo real
-  const { 
-    metrics: realTimeMetrics, 
-    isLoading: metricsLoading 
-  } = useUserRealTimeMetrics({
+  const {
+    metrics: realTimeMetrics,
+    isLoading: metricsLoading
+  } = useUserRealTimeMetrics(user?.id, {
     pollingInterval: 30000, // 30 segundos
-    enableRealTime: true
+    enablePolling: true
   })
 
 
@@ -65,7 +65,7 @@ export default function Dashboard() {
   useEffect(() => {
     if (user) {
       fetchUserAds(user.id)
-      
+
       // Se vem de uma página de checkout, força refresh do perfil
       const urlParams = new URLSearchParams(window.location.search)
       const fromCheckout = urlParams.get('from_checkout') === 'true'
@@ -82,7 +82,7 @@ export default function Dashboard() {
   useEffect(() => {
     if (userAds.length > 0) {
       const activeAds = userAds.filter(ad => ad.status === 'active')
-      
+
       // Usar métricas real-time se disponíveis, senão fallback para dados existentes
       let totalViews = 0
       let totalContacts = 0
@@ -99,7 +99,7 @@ export default function Dashboard() {
         }, 0)
         totalContacts = Math.floor(totalViews * 0.08) // Simulado até termos dados reais
       }
-      
+
       const recentAds = userAds.slice(0, 3).map(ad => ({
         id: ad.id,
         title: ad.title,
@@ -113,7 +113,7 @@ export default function Dashboard() {
       // Garantir que todos os valores são números válidos
       const safeTotalViews = isNaN(totalViews) ? 0 : totalViews
       const safeTotalContacts = isNaN(totalContacts) ? 0 : totalContacts
-      
+
       setData({
         totalAds: userAds.length,
         activeAds: activeAds.length,
@@ -179,23 +179,20 @@ export default function Dashboard() {
                 {userAds.length > 0 ? 'Acompanhe o desempenho do seu anúncio no EventSpace' : 'Gerencie seu perfil e navegue pelos espaços disponíveis'}
               </p>
             </div>
-            
+
             <div className="flex items-center gap-3">
               {/* Plano Atual */}
-              <div className={`flex items-center gap-2 px-3 py-2 border rounded-lg ${
-                profile?.plan_type === 'free' 
-                  ? 'bg-gray-50 border-gray-200' 
-                  : 'bg-blue-50 border-blue-200'
-              }`}>
-                <Crown className={`w-4 h-4 ${
-                  profile?.plan_type === 'free' ? 'text-gray-600' : 'text-blue-600'
-                }`} />
-                <span className={`text-sm font-medium ${
-                  profile?.plan_type === 'free' ? 'text-gray-900' : 'text-blue-900'
+              <div className={`flex items-center gap-2 px-3 py-2 border rounded-lg ${profile?.plan_type === 'free'
+                ? 'bg-gray-50 border-gray-200'
+                : 'bg-blue-50 border-blue-200'
                 }`}>
+                <Crown className={`w-4 h-4 ${profile?.plan_type === 'free' ? 'text-gray-600' : 'text-blue-600'
+                  }`} />
+                <span className={`text-sm font-medium ${profile?.plan_type === 'free' ? 'text-gray-900' : 'text-blue-900'
+                  }`}>
                   {profile?.plan_type === 'free' ? 'Conta Gratuita' :
-                   profile?.plan_type === 'basic' ? 'Plano Básico' : 
-                   profile?.plan_type === 'premium' ? 'Plano Premium' : 'Conta Gratuita'}
+                    profile?.plan_type === 'basic' ? 'Plano Básico' :
+                      profile?.plan_type === 'premium' ? 'Plano Premium' : 'Conta Gratuita'}
                 </span>
               </div>
 
@@ -244,7 +241,7 @@ export default function Dashboard() {
                   🎉 Anúncio criado com sucesso!
                 </h3>
                 <p className="text-green-700 mb-4">
-                  Seu anúncio foi publicado e já está disponível para visualização. 
+                  Seu anúncio foi publicado e já está disponível para visualização.
                   Agora os interessados podem encontrá-lo e entrar em contato.
                 </p>
                 <div className="flex gap-3">
@@ -278,7 +275,7 @@ export default function Dashboard() {
                   Conta criada com sucesso!
                 </h3>
                 <p className="text-blue-700 mb-4">
-                  Para criar seu anúncio, escolha um de nossos planos pagos. 
+                  Para criar seu anúncio, escolha um de nossos planos pagos.
                   Navegue gratuitamente pelos espaços disponíveis!
                 </p>
                 <div className="flex gap-3">
@@ -330,7 +327,7 @@ export default function Dashboard() {
         )}
 
         {/* Stats Cards */}
-        <DashboardStats 
+        <DashboardStats
           data={data || undefined}
           loading={loadingData}
           isRealTime={!!realTimeMetrics}
@@ -341,7 +338,7 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
           {/* Recent Activity - Takes 2 columns */}
           <div className="lg:col-span-2">
-            <RecentActivity 
+            <RecentActivity
               userPlan={profile?.plan_type}
               userAds={userAds}
             />

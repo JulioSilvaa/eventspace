@@ -16,16 +16,16 @@ function validateCryptoKey(key: string): boolean {
     console.warn('⚠️  Chave de criptografia muito curta. Recomendado: mínimo 32 caracteres')
     return false
   }
-  
+
   // Chave deve conter letras, números e símbolos
   const hasLetter = /[a-zA-Z]/.test(key)
   const hasNumber = /\d/.test(key)
-  
+
   if (!hasLetter || !hasNumber) {
     console.warn('⚠️  Chave de criptografia fraca. Recomendado: letras, números e símbolos')
     return false
   }
-  
+
   return true
 }
 
@@ -41,18 +41,18 @@ export function encryptData(data: string): string {
   try {
     // Comprime o JSON primeiro removendo espaços desnecessários
     const compressedData = data.replace(/\s+/g, '')
-    
+
     // Converte a chave em array de números (usa apenas os primeiros 8 chars para eficiência)
-    const keyChars = CRYPTO_KEY.substring(0, 8).split('').map(char => char.charCodeAt(0))
-    
+    const keyChars = CRYPTO_KEY.substring(0, 8).split('').map((char: string) => char.charCodeAt(0))
+
     // Criptografa cada caractere usando XOR mais compacto
-    const encrypted = compressedData.split('').map((char, index) => {
+    const encrypted = compressedData.split('').map((char: string, index: number) => {
       const charCode = char.charCodeAt(0)
       const keyChar = keyChars[index % keyChars.length]
       const xorResult = charCode ^ keyChar
       return xorResult.toString(36) // Base36 é mais compacto que hex
     }).join('')
-    
+
     // Prefixo mais curto para economizar espaço
     return `v2_${encrypted}`
   } catch (error) {
@@ -71,31 +71,31 @@ export function decryptData(encryptedData: string): string {
     if (encryptedData.startsWith('v2_')) {
       // Nova versão otimizada (XOR + Base36)
       const encrypted = encryptedData.substring(3)
-      const keyChars = CRYPTO_KEY.substring(0, 8).split('').map(char => char.charCodeAt(0))
-      
+      const keyChars = CRYPTO_KEY.substring(0, 8).split('').map((char: string) => char.charCodeAt(0))
+
       // Descriptografa usando XOR reverso
-      const decrypted = encrypted.split('').map((char, index) => {
+      const decrypted = encrypted.split('').map((char: string, index: number) => {
         const charCode = parseInt(char, 36)
         const keyChar = keyChars[index % keyChars.length]
         return String.fromCharCode(charCode ^ keyChar)
       }).join('')
-      
+
       return decrypted
     } else if (encryptedData.startsWith('es_')) {
       // Versão anterior (compatibilidade)
       const encrypted = encryptedData.substring(3)
-      const keyChars = CRYPTO_KEY.split('').map(char => char.charCodeAt(0))
-      
+      const keyChars = CRYPTO_KEY.split('').map((char: string) => char.charCodeAt(0))
+
       // Divide a string em blocos de 4 caracteres
       const blocks = encrypted.match(/.{4}/g) || []
-      
+
       // Descriptografa cada bloco
       const decrypted = blocks.map((block, index) => {
         const charCode = parseInt(block, 16)
         const keyChar = keyChars[index % keyChars.length]
         return String.fromCharCode(charCode - keyChar)
       }).join('')
-      
+
       return decrypted
     } else if (encryptedData.startsWith('b64_')) {
       // Fallback para base64
@@ -140,7 +140,7 @@ export function encryptUserData(userData: {
   const dataString = JSON.stringify(userData)
   const encryptedData = encryptData(dataString)
   const hash = generateHash(dataString)
-  
+
   return {
     encryptedData,
     hash

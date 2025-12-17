@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
-import { supabase } from '@/lib/supabase'
+import { reviewService } from '@/services/reviewService'
 import StarRating from './StarRating'
 
 interface ReviewFormProps {
@@ -19,7 +19,7 @@ export default function ReviewForm({ listingId, onReviewSubmitted }: ReviewFormP
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (rating === 0) {
       setError('Por favor, selecione uma avaliação')
       return
@@ -44,23 +44,18 @@ export default function ReviewForm({ listingId, onReviewSubmitted }: ReviewFormP
       // Get reviewer name: from profile if logged in, or from input if anonymous
       const finalReviewerName = user ? profile?.full_name || 'Usuário' : reviewerName.trim()
 
-      const { error: insertError } = await supabase
-        .from('reviews')
-        .insert({
-          listing_id: listingId,
-          user_id: user?.id || null, // null for anonymous reviews
+      const { success, error: submitError } = await reviewService.createReview(
+        listingId,
+        {
           reviewer_name: finalReviewerName,
           rating,
-          comment: comment.trim() || null
-        })
+          comment: comment.trim() || undefined
+        },
+        user?.id
+      )
 
-      if (insertError) {
-        if (insertError.code === '23505') {
-          setError(user ? 'Você já avaliou este anúncio' : 'Já existe uma avaliação com estes dados')
-        } else {
-          setError('Erro ao salvar avaliação. Tente novamente.')
-          console.error('Insert error:', insertError)
-        }
+      if (!success) {
+        setError(submitError || 'Erro ao salvar avaliação. Tente novamente.')
         return
       }
 
@@ -68,7 +63,7 @@ export default function ReviewForm({ listingId, onReviewSubmitted }: ReviewFormP
       setRating(0)
       setComment('')
       setReviewerName('')
-      
+
       if (onReviewSubmitted) {
         onReviewSubmitted()
       }
@@ -102,13 +97,13 @@ export default function ReviewForm({ listingId, onReviewSubmitted }: ReviewFormP
       <h3 className="text-lg font-semibold text-gray-900 mb-2">
         Avaliar este anúncio
       </h3>
-      
+
       {!user && (
         <p className="text-sm text-gray-600 mb-4">
           Você pode avaliar sem criar uma conta. Sua avaliação ajuda outros usuários!
         </p>
       )}
-      
+
       <form onSubmit={handleSubmit} className="space-y-4">
         {!user && (
           <div>

@@ -9,13 +9,11 @@ if (!stripePublishableKey) {
 export const stripe = loadStripe(stripePublishableKey)
 
 export const PLAN_PRICES = {
-  basic: {
-    monthly: import.meta.env.VITE_STRIPE_PRICE_BASIC_MONTHLY || '',
-  },
-  premium: {
-    monthly: import.meta.env.VITE_STRIPE_PRICE_PREMIUM_MONTHLY || '',
+  pro: {
+    monthly: import.meta.env.VITE_STRIPE_PRICE_MONTHLY || '',
+    yearly: import.meta.env.VITE_STRIPE_PRICE_ANNUAL || '',
   }
 } as const
 
 export type PlanType = keyof typeof PLAN_PRICES
-export type BillingCycle = 'monthly'
+export type BillingCycle = 'monthly' | 'yearly'

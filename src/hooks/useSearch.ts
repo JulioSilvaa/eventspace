@@ -4,11 +4,11 @@ import { searchAdsWithCache, getCategories, type SearchFilters, type SearchRespo
 
 export function useSearch(initialFilters: SearchFilters = {}) {
   const [searchParams, setSearchParams] = useSearchParams()
-  
+
   // Inicializar filtros com parâmetros da URL apenas na primeira renderização
   const [filters, setFilters] = useState<SearchFilters>(() => {
     const urlFilters: SearchFilters = { ...initialFilters }
-    
+
     if (searchParams.get('query')) urlFilters.query = searchParams.get('query')!
     if (searchParams.get('category')) urlFilters.category = searchParams.get('category')!
     if (searchParams.get('state')) urlFilters.state = searchParams.get('state')!
@@ -18,13 +18,13 @@ export function useSearch(initialFilters: SearchFilters = {}) {
     if (searchParams.get('sortBy')) urlFilters.sortBy = searchParams.get('sortBy') as 'price' | 'rating' | 'created_at'
     if (searchParams.get('sortOrder')) urlFilters.sortOrder = searchParams.get('sortOrder') as 'asc' | 'desc'
     if (searchParams.get('page')) urlFilters.page = Number(searchParams.get('page'))
-    
+
     return urlFilters
   })
   const [results, setResults] = useState<SearchResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [categories, setCategories] = useState<Array<{id: number, name: string, type: string, slug: string}>>([])
+  const [categories, setCategories] = useState<Array<{ id: number, name: string, type: string, slug?: string }>>([])
 
   // Carregar categorias
   useEffect(() => {
@@ -43,7 +43,7 @@ export function useSearch(initialFilters: SearchFilters = {}) {
   const search = useCallback(async (newFilters?: SearchFilters) => {
     setLoading(true)
     setError(null)
-    
+
     try {
       const searchFilters = newFilters || filters
       const response = await searchAdsWithCache(searchFilters)
@@ -63,21 +63,21 @@ export function useSearch(initialFilters: SearchFilters = {}) {
 
   // Atualizar URL quando filtros mudarem (mas não na inicialização)
   const [isInitialized, setIsInitialized] = useState(false)
-  
+
   useEffect(() => {
     if (!isInitialized) {
       setIsInitialized(true)
       return
     }
-    
+
     const newSearchParams = new URLSearchParams()
-    
+
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== '' && value !== 'all' && key !== 'type' && key !== 'limit') {
         newSearchParams.set(key, String(value))
       }
     })
-    
+
     setSearchParams(newSearchParams, { replace: true })
   }, [filters, setSearchParams, isInitialized])
 
@@ -119,18 +119,18 @@ export function useSearch(initialFilters: SearchFilters = {}) {
     loading,
     error,
     categories,
-    
+
     // Ações
     search,
     updateFilter,
     updateFilters,
     clearFilters,
-    
+
     // Paginação
     nextPage,
     prevPage,
     goToPage,
-    
+
     // Computed
     hasResults: results && results.results.length > 0,
     totalResults: results?.total || 0,

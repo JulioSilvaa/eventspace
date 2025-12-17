@@ -4,7 +4,6 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Link } from 'react-router-dom'
 import { FormField, FormButton, FormSelect } from '@/components/forms'
-import { getBrazilianStates, getRegionFromState } from '@/lib/brazilian-regions'
 import { paymentService, type CreateCheckoutSessionParams } from '@/services/paymentService'
 import { Crown, Check, ArrowLeft, ArrowRight } from 'lucide-react'
 import { useToast } from '@/contexts/ToastContext'
@@ -31,12 +30,7 @@ const personalDataSchema = z.object({
     .string()
     .min(1, 'Telefone é obrigatório')
     .regex(/^\(\d{2}\)\s\d{4,5}-\d{4}$/, 'Formato: (11) 99999-9999'),
-  state: z
-    .string()
-    .min(1, 'Estado é obrigatório'),
-  city: z
-    .string()
-    .min(1, 'Cidade é obrigatória'),
+
   acceptTerms: z
     .boolean()
     .refine(val => val === true, 'Você deve aceitar os termos de uso')
@@ -47,9 +41,10 @@ const personalDataSchema = z.object({
 
 // Schema para Step 2 - Seleção de Plano
 const planSelectionSchema = z.object({
-  planType: z.enum(['basic', 'premium'], {
+  planType: z.enum(['pro'], {
     required_error: 'Selecione um plano'
-  })
+  }),
+  billingCycle: z.enum(['monthly', 'yearly'])
 })
 
 type PersonalDataForm = z.infer<typeof personalDataSchema>
@@ -61,7 +56,6 @@ export default function RegisterForm() {
   const [currentStep, setCurrentStep] = useState<RegisterStep>(1)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [brazilianStates, setBrazilianStates] = useState<Array<{code: string, name: string, region: string}>>([])
 
   // Dados salvos entre steps
   const [personalData, setPersonalData] = useState<PersonalDataForm | null>(null)
@@ -78,15 +72,12 @@ export default function RegisterForm() {
     resolver: zodResolver(planSelectionSchema),
     mode: 'onChange',
     defaultValues: {
-      planType: 'basic'
+      planType: 'pro',
+      billingCycle: 'monthly'
     }
   })
 
   const toast = useToast()
-
-  useEffect(() => {
-    getBrazilianStates().then(setBrazilianStates)
-  }, [])
 
   const formatPhone = (value: string) => {
     const numbers = value.replace(/\D/g, '')
@@ -108,7 +99,7 @@ export default function RegisterForm() {
   }
 
   const handleFinalSubmit = async () => {
-    
+
     if (!personalData || !planData) {
       setError('Dados incompletos. Tente novamente.')
       return
@@ -121,35 +112,44 @@ export default function RegisterForm() {
 
     setIsLoading(true)
     setError(null)
-    
+
     const loadingToast = toast.loading('Processando cadastro...', 'Preparando seu plano')
 
     try {
-      
+
       // Capturar informações para consentimento LGPD
       const userAgent = navigator.userAgent
       const timestamp = new Date().toISOString()
-      
+
       // Preparar dados para o checkout com metadata completa
-      const checkoutParams: CreateCheckoutSessionParams & { 
+      const checkoutParams: CreateCheckoutSessionParams & {
         userData: PersonalDataForm & PlanSelectionForm & {
           // Informações de consentimento LGPD
           consentTimestamp: string
           consentUserAgent: string
           termsVersion: string
           privacyVersion: string
+          full_name: string
+          billingCycle: string
+          region: string
+          state: string
+          city: string
         }
       } = {
         planType: planData.planType,
-        billingCycle: 'monthly', // Sempre mensal
+        billingCycle: planData.billingCycle,
         userId: 'temp-' + Date.now(), // ID temporário
         userEmail: personalData.email,
-        userData: { 
-          ...personalData, 
-          ...planData, 
-          billingCycle: 'monthly',
-          // Adicionar região baseada no estado
-          region: getRegionFromState(personalData.state),
+        userData: {
+          ...personalData,
+          ...planData,
+          full_name: personalData.fullName,
+          billingCycle: planData.billingCycle,
+          // Campos de localização não são mais coletados
+          state: '',
+          city: '',
+          // Adicionar região padrão vazia
+          region: '',
           // Adicionar dados de consentimento
           consentTimestamp: timestamp,
           consentUserAgent: userAgent,
@@ -163,22 +163,22 @@ export default function RegisterForm() {
 
       // Redirecionar para Stripe Checkout
       await paymentService.createCheckoutSessionWithSignup(checkoutParams)
-      
-      toast.updateToast(loadingToast, { 
-        type: 'success', 
-        title: 'Redirecionando...', 
-        message: 'Você será redirecionado para o pagamento' 
+
+      toast.updateToast(loadingToast, {
+        type: 'success',
+        title: 'Redirecionando...',
+        message: 'Você será redirecionado para o pagamento'
       })
-      
+
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido'
-      
-      toast.updateToast(loadingToast, { 
-        type: 'error', 
-        title: 'Erro no cadastro', 
-        message: errorMessage || 'Erro ao processar. Tente novamente.' 
+
+      toast.updateToast(loadingToast, {
+        type: 'error',
+        title: 'Erro no cadastro',
+        message: errorMessage || 'Erro ao processar. Tente novamente.'
       })
-      
+
       setError(errorMessage || 'Erro ao processar. Tente novamente.')
     } finally {
       setIsLoading(false)
@@ -186,30 +186,29 @@ export default function RegisterForm() {
   }
 
   const planDetails = {
-    basic: {
-      name: 'Básico',
-      price: 49.90,
-      originalPrice: 59.90,
+    pro: {
+      name: 'Plano Profissional',
+      prices: {
+        monthly: {
+          price: 49.90,
+          originalPrice: 59.90,
+          label: '/mês'
+        },
+        yearly: {
+          price: 499.90,
+          originalPrice: 599.90,
+          label: '/ano',
+          discount: '2 meses grátis'
+        }
+      },
       features: [
-        'Até 3 anúncios ativos',
-        'Relatórios básicos',
-        'Suporte por email',
-        'Remove marca d\'água'
-      ],
-      badge: 'Mais Popular'
-    },
-    premium: {
-      name: 'Premium',
-      price: 79.90,
-      originalPrice: 99.90,
-      features: [
-        'Até 5 anúncios ativos',
-        'Anúncios destacados ilimitados',
-        'Até 10 fotos por anúncio',
+        'Até 20 fotos por anúncio',
         'Relatórios avançados',
-        'Dashboard personalizado'
+        'Suporte prioritário',
+        'Sem fidelidade',
+        'Pagamento seguro'
       ],
-      badge: 'Profissional'
+      badge: 'Melhor Valor'
     }
   }
 
@@ -231,26 +230,26 @@ export default function RegisterForm() {
               <div className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">1</div>
               <div className="ml-2 text-sm font-medium text-blue-600 hidden sm:block">Dados Pessoais</div>
             </div>
-            
+
             {/* Connector */}
             <div className="w-8 sm:w-12 h-1 bg-gray-200 rounded mx-2 sm:mx-4"></div>
-            
+
             {/* Step 2 */}
             <div className="flex items-center">
               <div className="w-10 h-10 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-sm flex-shrink-0">2</div>
               <div className="ml-2 text-sm text-gray-500 hidden sm:block">Plano</div>
             </div>
-            
+
             {/* Connector */}
             <div className="w-8 sm:w-12 h-1 bg-gray-200 rounded mx-2 sm:mx-4"></div>
-            
+
             {/* Step 3 */}
             <div className="flex items-center">
               <div className="w-10 h-10 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-sm flex-shrink-0">3</div>
               <div className="ml-2 text-sm text-gray-500 hidden sm:block">Confirmação</div>
             </div>
           </div>
-          
+
           {/* Mobile labels */}
           <div className="flex justify-center mt-3 sm:hidden">
             <div className="text-xs text-blue-600 font-medium">Etapa 1 de 3: Dados Pessoais</div>
@@ -312,39 +311,18 @@ export default function RegisterForm() {
             />
           </div>
 
-          <FormField
-            label="Telefone/WhatsApp"
-            type="tel"
-            placeholder="(11) 99999-9999"
-            error={personalForm.formState.errors.phone}
-            required
-            {...personalForm.register('phone', {
-              onChange: (e) => {
-                e.target.value = formatPhone(e.target.value)
-              }
-            })}
-          />
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormSelect
-              label="Estado"
-              options={brazilianStates.map(state => ({
-                value: state.code,
-                label: state.name
-              }))}
-              error={personalForm.formState.errors.state}
-              required
-              placeholder="Selecione o estado"
-              {...personalForm.register('state')}
-            />
-
             <FormField
-              label="Cidade"
-              type="text"
-              placeholder="Nome da cidade"
-              error={personalForm.formState.errors.city}
+              label="Telefone/WhatsApp"
+              type="tel"
+              placeholder="(11) 99999-9999"
+              error={personalForm.formState.errors.phone}
               required
-              {...personalForm.register('city')}
+              {...personalForm.register('phone', {
+                onChange: (e) => {
+                  e.target.value = formatPhone(e.target.value)
+                }
+              })}
             />
           </div>
 
@@ -406,7 +384,7 @@ export default function RegisterForm() {
             Fazer login
           </Link>
         </div>
-        
+
         {/* Trust indicators */}
         <div className="bg-gray-50 rounded-xl p-6 mt-6">
           <div className="text-center mb-4">
@@ -434,9 +412,11 @@ export default function RegisterForm() {
     )
   }
 
-  // Step 2 - Seleção de Plano
+  // Step 2 - Seu Plano
   if (currentStep === 2) {
-    const selectedPlan = planForm.watch('planType')
+    const plan = planDetails.pro
+    const currentBillingCycle = planForm.watch('billingCycle')
+    const currentPriceInfo = plan.prices[currentBillingCycle]
 
     return (
       <div className="space-y-8">
@@ -448,131 +428,120 @@ export default function RegisterForm() {
               <div className="w-10 h-10 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">✓</div>
               <div className="ml-2 text-sm font-medium text-green-600 hidden sm:block">Dados Pessoais</div>
             </div>
-            
+
             {/* Connector */}
             <div className="w-8 sm:w-12 h-1 bg-green-600 rounded mx-2 sm:mx-4"></div>
-            
+
             {/* Step 2 */}
             <div className="flex items-center">
               <div className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">2</div>
-              <div className="ml-2 text-sm font-medium text-blue-600 hidden sm:block">Plano</div>
+              <div className="ml-2 text-sm font-medium text-blue-600 hidden sm:block">Seu Plano</div>
             </div>
-            
+
             {/* Connector */}
             <div className="w-8 sm:w-12 h-1 bg-gray-200 rounded mx-2 sm:mx-4"></div>
-            
+
             {/* Step 3 */}
             <div className="flex items-center">
               <div className="w-10 h-10 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-sm flex-shrink-0">3</div>
               <div className="ml-2 text-sm text-gray-500 hidden sm:block">Confirmação</div>
             </div>
           </div>
-          
+
           {/* Mobile labels */}
           <div className="flex justify-center mt-3 sm:hidden">
-            <div className="text-xs text-blue-600 font-medium">Etapa 2 de 3: Escolha seu Plano</div>
+            <div className="text-xs text-blue-600 font-medium">Etapa 2 de 3: Seu Plano</div>
           </div>
         </div>
 
         <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Escolha seu Plano</h2>
-          <p className="text-lg text-gray-600">Selecione o plano que melhor atende suas necessidades</p>
-          <p className="text-sm text-gray-500 mt-2">Cobrança mensal • Cancele quando quiser</p>
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">Seu Plano</h2>
+          <p className="text-lg text-gray-600">Simples e transparente. Tudo o que você precisa.</p>
+          <p className="text-sm text-gray-500 mt-2">
+            {currentBillingCycle === 'monthly' ? 'Cobrança mensal • Cancele quando quiser' : 'Cobrança anual • Economize 20%'}
+          </p>
         </div>
 
         <form onSubmit={planForm.handleSubmit(handleStep2Submit)} className="space-y-8">
-          {/* Seleção de Planos */}
-          <div className="space-y-6">
-            {Object.entries(planDetails).map(([key, plan]) => (
-              <label key={key} className="cursor-pointer block">
-                <input
-                  type="radio"
-                  value={key}
-                  className="sr-only"
-                  {...planForm.register('planType')}
-                />
-                <div className={`relative border-2 rounded-xl p-6 transition-all duration-200 ${
-                  selectedPlan === key 
-                    ? 'border-blue-500 bg-blue-50 shadow-lg' 
-                    : 'border-gray-200 hover:border-blue-300 hover:shadow-md'
-                }`}>
-                  {/* Badge */}
-                  {plan.badge && (
-                    <div className="absolute -top-3 left-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                        key === 'basic' 
-                          ? 'bg-green-500 text-white' 
-                          : 'bg-purple-500 text-white'
-                      }`}>
-                        {plan.badge}
-                      </span>
-                    </div>
-                  )}
-                  
-                  <div className="flex items-center gap-4">
-                    {/* Ícone */}
-                    <div className={`w-14 h-14 flex-shrink-0 rounded-full flex items-center justify-center ${
-                      selectedPlan === key ? 'bg-blue-100' : 'bg-gray-100'
-                    }`}>
-                      <Crown className={`w-7 h-7 ${
-                        selectedPlan === key ? 'text-blue-600' : 'text-gray-400'
-                      }`} />
-                    </div>
-                    
-                    {/* Conteúdo principal */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between mb-3">
-                        <div>
-                          <h3 className="text-xl font-bold text-gray-900">{plan.name}</h3>
-                          <div className="flex items-baseline gap-2 mt-1">
-                            <span className="text-2xl font-bold text-gray-900">
-                              R$ {plan.price.toFixed(2).replace('.', ',')}
-                            </span>
-                            <span className="text-gray-600 text-sm">/mês</span>
-                          </div>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="text-xs line-through text-gray-400">
-                              R$ {plan.originalPrice.toFixed(2).replace('.', ',')}
-                            </span>
-                            <span className="text-green-600 text-xs font-medium">
-                              -R$ {(plan.originalPrice - plan.price).toFixed(2).replace('.', ',')}
-                            </span>
-                          </div>
-                        </div>
-                        
-                        {/* Indicador de seleção */}
-                        <div className="flex-shrink-0">
-                          {selectedPlan === key ? (
-                            <div className="inline-flex items-center gap-1 bg-blue-600 text-white px-2 py-1 rounded-full text-xs font-medium">
-                              <Check className="w-3 h-3" />
-                              Selecionado
-                            </div>
-                          ) : (
-                            <div className="inline-flex items-center justify-center w-6 h-6 border-2 border-gray-300 rounded-full">
-                              <div className="w-2 h-2 border border-gray-400 rounded-full"></div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      
-                      {/* Features em grid compacto */}
-                      <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-                        {plan.features.map((feature, index) => (
-                          <div key={index} className="flex items-start gap-1">
-                            <Check className="w-3 h-3 text-green-500 mt-0.5 flex-shrink-0" />
-                            <span className="text-gray-700 text-xs leading-tight">{feature}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
+          {/* Billing Cycle Toggle */}
+          <div className="flex justify-center mb-6">
+            <div className="bg-gray-100 p-1 rounded-full flex relative">
+              <button
+                type="button"
+                onClick={() => planForm.setValue('billingCycle', 'monthly')}
+                className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${currentBillingCycle === 'monthly'
+                    ? 'bg-white text-blue-600 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700'
+                  }`}
+              >
+                Mensal
+              </button>
+              <button
+                type="button"
+                onClick={() => planForm.setValue('billingCycle', 'yearly')}
+                className={`px-6 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 ${currentBillingCycle === 'yearly'
+                    ? 'bg-white text-blue-600 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700'
+                  }`}
+              >
+                Anual
+                <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full font-bold">
+                  -20%
+                </span>
+              </button>
+            </div>
+          </div>
+          {/* Card do Plano */}
+          <div className="max-w-md mx-auto">
+            <div className="relative border-2 border-blue-500 bg-blue-50 rounded-xl p-6 shadow-lg">
+              {/* Badge */}
+              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                <span className="bg-blue-600 text-white px-4 py-1 rounded-full text-sm font-bold shadow-sm">
+                  {plan.badge}
+                </span>
+              </div>
+
+              <div className="flex flex-col items-center text-center mt-4">
+                {/* Ícone */}
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                  <Crown className="w-8 h-8 text-blue-600" />
                 </div>
-              </label>
-            ))}
+
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">{plan.name}</h3>
+
+                <div className="flex items-baseline gap-2 mb-4">
+                  <span className="text-4xl font-bold text-gray-900">
+                    R$ {currentPriceInfo.price.toFixed(2).replace('.', ',')}
+                  </span>
+                  <span className="text-gray-600">{currentPriceInfo.label}</span>
+                </div>
+
+                <div className="flex items-center gap-2 mb-6 bg-green-100 px-3 py-1 rounded-full">
+                  <span className="text-xs line-through text-gray-500">
+                    R$ {currentPriceInfo.originalPrice.toFixed(2).replace('.', ',')}
+                  </span>
+                  <span className="text-green-700 text-xs font-bold">
+                    Economize R$ {(currentPriceInfo.originalPrice - currentPriceInfo.price).toFixed(2).replace('.', ',')}
+                  </span>
+                </div>
+
+                {/* Features */}
+                <div className="w-full space-y-3 mb-6 bg-white/60 p-4 rounded-lg text-left">
+                  {plan.features.map((feature, index) => (
+                    <div key={index} className="flex items-center gap-3">
+                      <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                        <Check className="w-3 h-3 text-green-600" />
+                      </div>
+                      <span className="text-gray-700 font-medium">{feature}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-4 pt-4">
+          <div className="flex gap-4 pt-4 max-w-md mx-auto">
             <FormButton
               type="button"
               onClick={goBackStep}
@@ -587,8 +556,7 @@ export default function RegisterForm() {
             </FormButton>
             <FormButton
               type="submit"
-              disabled={!planForm.formState.isValid}
-              className="flex-1 py-4"
+              className="flex-1 py-4 bg-blue-600 hover:bg-blue-700"
               size="lg"
             >
               <div className="flex items-center justify-center gap-2">
@@ -598,24 +566,20 @@ export default function RegisterForm() {
             </FormButton>
           </div>
         </form>
-        
+
         {/* Trust indicators */}
-        <div className="bg-gray-50 rounded-xl p-6 mt-8">
+        <div className="bg-gray-50 rounded-xl p-6 mt-8 max-w-md mx-auto">
           <div className="text-center mb-4">
             <h3 className="font-semibold text-gray-900 mb-2">🔒 Seus dados estão seguros</h3>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+          <div className="flex flex-wrap justify-center gap-4 text-center">
             <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span>Pagamento seguro via Stripe</span>
+              <span>Pagamento seguro</span>
             </div>
             <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span>Cancele quando quiser</span>
-            </div>
-            <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span>Suporte 24/7</span>
+              <span>Sem fidelidade</span>
             </div>
           </div>
         </div>
@@ -626,7 +590,8 @@ export default function RegisterForm() {
   // Step 3 - Resumo e Confirmação
   if (currentStep === 3 && personalData && planData) {
     const selectedPlanDetails = planDetails[planData.planType]
-    const price = selectedPlanDetails.price
+    const priceInfo = selectedPlanDetails.prices[planData.billingCycle]
+    const price = priceInfo.price
 
     return (
       <div className="space-y-8">
@@ -638,26 +603,26 @@ export default function RegisterForm() {
               <div className="w-10 h-10 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">✓</div>
               <div className="ml-2 text-sm font-medium text-green-600 hidden sm:block">Dados Pessoais</div>
             </div>
-            
+
             {/* Connector */}
             <div className="w-8 sm:w-12 h-1 bg-green-600 rounded mx-2 sm:mx-4"></div>
-            
+
             {/* Step 2 */}
             <div className="flex items-center">
               <div className="w-10 h-10 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">✓</div>
               <div className="ml-2 text-sm font-medium text-green-600 hidden sm:block">Plano</div>
             </div>
-            
+
             {/* Connector */}
             <div className="w-8 sm:w-12 h-1 bg-blue-600 rounded mx-2 sm:mx-4"></div>
-            
+
             {/* Step 3 */}
             <div className="flex items-center">
               <div className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">3</div>
               <div className="ml-2 text-sm font-medium text-blue-600 hidden sm:block">Confirmação</div>
             </div>
           </div>
-          
+
           {/* Mobile labels */}
           <div className="flex justify-center mt-3 sm:hidden">
             <div className="text-xs text-blue-600 font-medium">Etapa 3 de 3: Confirmação</div>
@@ -692,10 +657,6 @@ export default function RegisterForm() {
                 <div className="text-sm text-gray-600 mb-1">Telefone</div>
                 <div className="font-medium text-gray-900">{personalData.phone}</div>
               </div>
-              <div>
-                <div className="text-sm text-gray-600 mb-1">Localização</div>
-                <div className="font-medium text-gray-900">{personalData.city}, {personalData.state}</div>
-              </div>
             </div>
           </div>
 
@@ -715,23 +676,23 @@ export default function RegisterForm() {
                 </div>
               </div>
             </div>
-            
+
             {/* Preço */}
             <div className="bg-white/60 rounded-lg p-4 mb-4">
               <div className="flex items-baseline gap-2 mb-2">
                 <span className="text-3xl font-bold text-blue-600">
                   R$ {price.toFixed(2).replace('.', ',')}
                 </span>
-                <span className="text-gray-600">/mês</span>
+                <span className="text-gray-600">{priceInfo.label}</span>
                 <span className="text-sm line-through text-gray-400 ml-2">
-                  R$ {selectedPlanDetails.originalPrice.toFixed(2).replace('.', ',')}
+                  R$ {priceInfo.originalPrice.toFixed(2).replace('.', ',')}
                 </span>
               </div>
               <div className="text-green-600 text-sm font-medium">
-                💰 Economize R$ {(selectedPlanDetails.originalPrice - price).toFixed(2).replace('.', ',')} por mês
+                💰 Economize R$ {(priceInfo.originalPrice - price).toFixed(2).replace('.', ',')} {planData.billingCycle === 'monthly' ? 'por mês' : 'por ano'}
               </div>
             </div>
-            
+
             {/* Features resumidas */}
             <div className="bg-white/60 rounded-lg p-4">
               <div className="text-sm text-gray-700 font-medium mb-3">✨ Principais recursos inclusos:</div>

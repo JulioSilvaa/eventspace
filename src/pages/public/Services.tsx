@@ -23,12 +23,12 @@ export default function Services() {
     totalPages,
     hasNextPage,
     hasPrevPage
-  } = useSearch({ type: 'service' })
+  } = useSearch({ type: 'advertiser' })
 
   return (
     <div className="min-h-screen bg-gray-50 pt-16">
       <Header />
-      
+
       <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         {/* Header da Página */}
         <div className="mb-8">
@@ -43,7 +43,7 @@ export default function Services() {
               </p>
             </div>
           </div>
-          
+
           {/* Breadcrumb */}
           <nav className="text-sm text-gray-500">
             <a href="/" className="hover:text-gray-700">Início</a>
@@ -64,7 +64,7 @@ export default function Services() {
 
         {/* Resultados */}
         <SearchResults
-          results={results}
+          results={results?.results || []}
           loading={loading}
           error={error}
           totalResults={totalResults}

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { supabase } from '@/lib/supabase'
+import { reviewService } from '@/services/reviewService'
 import StarRating from './StarRating'
 import ReviewReply from './ReviewReply'
 import { reviewReplyService, type ReviewReply as ReviewReplyType } from '@/services/reviewReplyService'
@@ -29,18 +29,7 @@ export default function ReviewsList({ listingId, refreshTrigger }: ReviewsListPr
 
   const fetchReviews = useCallback(async () => {
     try {
-      const { data, error } = await supabase
-        .from('reviews')
-        .select(`
-          id,
-          user_id,
-          reviewer_name,
-          rating,
-          comment,
-          created_at
-        `)
-        .eq('listing_id', listingId)
-        .order('created_at', { ascending: false })
+      const { data, error } = await reviewService.getListingReviews(listingId, 50) // Fetch up to 50 reviews
 
       if (error) {
         toast.error('Erro ao carregar avaliações', 'Não foi possível carregar as avaliações. Tente recarregar a página.')
@@ -86,7 +75,7 @@ export default function ReviewsList({ listingId, refreshTrigger }: ReviewsListPr
   }
 
   const handleReplyUpdated = (updatedReply: ReviewReplyType) => {
-    setReplies(prev => prev.map(reply => 
+    setReplies(prev => prev.map(reply =>
       reply.id === updatedReply.id ? updatedReply : reply
     ))
   }
@@ -153,7 +142,7 @@ export default function ReviewsList({ listingId, refreshTrigger }: ReviewsListPr
                       {new Date(review.created_at).toLocaleDateString('pt-BR')}
                     </span>
                   </div>
-                  
+
                   {review.comment && (
                     <p className="text-gray-700 text-sm leading-relaxed">
                       {review.comment}

@@ -309,7 +309,7 @@ export default function Home() {
                                 </div>
                               </div>
 
-                              {ad.specifications?.capacity && typeof ad.specifications.capacity === 'number' && (
+                              {typeof ad.specifications?.capacity === 'number' && (
                                 <p className="text-gray-600 mb-4">Até {String(ad.specifications.capacity)} pessoas</p>
                               )}
 

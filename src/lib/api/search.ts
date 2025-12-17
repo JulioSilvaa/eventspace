@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase'
+import { apiClient } from '@/lib/api-client'
 
 export interface SearchFilters {
   query?: string
@@ -44,6 +44,43 @@ export interface SearchResponse {
   totalPages: number
 }
 
+interface SpaceImage {
+  thumbnail: string
+  medium: string
+  large: string
+}
+
+interface SpaceResponse {
+  id: string
+  title: string
+  description: string
+  price: number
+  price_type?: string
+  state: string
+  city: string
+  neighborhood?: string
+  contact_whatsapp?: string
+  contact_phone?: string
+  status: string
+  featured: boolean
+  views_count?: number
+  created_at: string
+  images?: SpaceImage[]
+  category_id?: number
+  category_name?: string
+  category_type?: string
+}
+
+interface SpacesListResponse {
+  spaces: SpaceResponse[]
+  pagination: {
+    page: number
+    limit: number
+    total: number
+    totalPages: number
+  }
+}
+
 export async function searchAds(filters: SearchFilters): Promise<SearchResponse> {
   try {
     const {
@@ -60,164 +97,59 @@ export async function searchAds(filters: SearchFilters): Promise<SearchResponse>
       limit = 12
     } = filters
 
-    let supabaseQuery = supabase
-      .from('listings')
-      .select(`
-        id,
-        title,
-        description,
-        price,
-        price_type,
-        state,
-        city,
-        neighborhood,
-        contact_whatsapp,
-        contact_phone,
-        featured,
-        created_at,
-        categories:category_id (
-          name,
-          type
-        ),
-        listing_images (
-          image_url,
-          display_order
-        )
-      `, { count: 'exact' })
-      .eq('status', 'active')
-
-    // Filtro por tipo (equipment ou space) - usar inner join para funcionar corretamente
-    if (type) {
-      // Refazer a query com inner join quando há filtro por tipo
-      supabaseQuery = supabase
-        .from('listings')
-        .select(`
-          id,
-          title,
-          description,
-          price,
-          price_type,
-          state,
-          city,
-          neighborhood,
-          contact_whatsapp,
-          contact_phone,
-          featured,
-          created_at,
-          categories:category_id!inner (
-            name,
-            type
-          ),
-          listing_images (
-            image_url,
-            display_order
-          )
-        `, { count: 'exact' })
-        .eq('status', 'active')
-        .eq('categories.type', type)
+    const params: Record<string, string | number | boolean | undefined> = {
+      page,
+      limit,
+      status: 'active',
     }
 
-    // Filtro por categoria específica  
-    if (category && category !== 'all') {
-      // Se é um número, buscar por ID, senão por nome
-      if (!isNaN(Number(category))) {
-        supabaseQuery = supabaseQuery.eq('category_id', Number(category))
-      } else {
-        supabaseQuery = supabaseQuery.eq('categories.name', category)
-      }
-    }
+    // Apply filters
+    if (query) params.search = query
+    if (category && category !== 'all') params.category = category
+    if (state) params.state = state
+    if (city) params.city = city
+    if (minPrice !== undefined) params.price_min = minPrice
+    if (maxPrice !== undefined) params.price_max = maxPrice
+    if (type) params.type = type
+    if (sortBy) params.sort = sortBy
+    if (sortOrder) params.order = sortOrder
 
-    // Filtro por localização
-    if (state) {
-      supabaseQuery = supabaseQuery.eq('state', state)
-    }
-    if (city) {
-      supabaseQuery = supabaseQuery.eq('city', city)
-    }
-
-    // Filtro por preço
-    if (minPrice !== undefined) {
-      supabaseQuery = supabaseQuery.gte('price', minPrice)
-    }
-    if (maxPrice !== undefined) {
-      supabaseQuery = supabaseQuery.lte('price', maxPrice)
-    }
-
-    // Busca por texto no título e descrição
-    if (query) {
-      supabaseQuery = supabaseQuery.or(`title.ilike.%${query}%,description.ilike.%${query}%`)
-    }
-
-    // Ordenação
-    if (sortBy === 'price') {
-      supabaseQuery = supabaseQuery.order('price', { ascending: sortOrder === 'asc' })
-    } else if (sortBy === 'rating') {
-      // Por enquanto ordenar por views_count como proxy para popularidade
-      supabaseQuery = supabaseQuery.order('views_count', { ascending: sortOrder === 'asc' })
-    } else {
-      supabaseQuery = supabaseQuery.order('created_at', { ascending: sortOrder === 'asc' })
-    }
-
-    // Destacar anúncios featured primeiro
-    supabaseQuery = supabaseQuery.order('featured', { ascending: false })
-
-    // Paginação
-    const offset = (page - 1) * limit
-    supabaseQuery = supabaseQuery.range(offset, offset + limit - 1)
-
-    const { data, error, count } = await supabaseQuery
+    const { data, error } = await apiClient.get<SpacesListResponse>('/api/spaces', params)
 
     if (error) {
       console.error('Erro na busca:', error)
-      throw error
+      throw new Error(error.message)
     }
 
-    // Buscar views_count de cada listing a partir da activity_events
-    const listingIds = (data || []).map(ad => ad.id)
-    let viewsData: Record<string, number> = {}
-    
-    if (listingIds.length > 0) {
-      const { data: viewsCountData } = await supabase
-        .from('activity_events')
-        .select('listing_id')
-        .in('listing_id', listingIds)
-        .eq('event_type', 'view')
-
-      // Contar views por listing_id
-      if (viewsCountData) {
-        viewsData = viewsCountData.reduce((acc, event) => {
-          acc[event.listing_id] = (acc[event.listing_id] || 0) + 1
-          return acc
-        }, {} as Record<string, number>)
-      }
-    }
-
-    // Transformar os dados para o formato esperado
-    const results: SearchResult[] = (data || []).map(ad => ({
-      id: ad.id,
-      title: ad.title,
-      description: ad.description,
-      price: ad.price,
-      price_type: ad.price_type,
-      state: ad.state,
-      city: ad.city,
-      neighborhood: ad.neighborhood,
-      contact_whatsapp: ad.contact_whatsapp,
-      contact_phone: ad.contact_phone,
-      category_name: (ad.categories as { name?: string })?.name || '',
-      category_type: ((ad.categories as { type?: string })?.type || 'space') as 'space' | 'advertiser',
-      featured: ad.featured,
-      views_count: viewsData[ad.id] || 0,
-      created_at: ad.created_at,
+    // Transform API response to SearchResult format
+    const results: SearchResult[] = (data?.spaces || []).map(space => ({
+      id: space.id,
+      title: space.title,
+      description: space.description,
+      price: space.price,
+      price_type: space.price_type || 'daily',
+      state: space.state,
+      city: space.city,
+      neighborhood: space.neighborhood,
+      contact_whatsapp: space.contact_whatsapp,
+      contact_phone: space.contact_phone,
+      category_name: space.category_name || '',
+      category_type: (space.category_type as 'space' | 'advertiser') || 'space',
+      featured: space.featured,
+      views_count: space.views_count || 0,
+      created_at: space.created_at,
       user_plan_type: undefined,
-      listing_images: ad.listing_images || []
+      listing_images: space.images?.map((img, index) => ({
+        image_url: img.medium || img.large || img.thumbnail,
+        display_order: index
+      })) || []
     }))
 
-    const totalPages = Math.ceil((count || 0) / limit)
+    const totalPages = data?.pagination?.totalPages || Math.ceil((data?.pagination?.total || 0) / limit)
 
     return {
       results,
-      total: count || 0,
+      total: data?.pagination?.total || 0,
       page,
       totalPages
     }
@@ -228,28 +160,32 @@ export async function searchAds(filters: SearchFilters): Promise<SearchResponse>
   }
 }
 
+interface CategoryResponse {
+  id: number
+  name: string
+  type: string
+  slug?: string
+}
+
 export async function getCategories(type?: 'space' | 'advertiser') {
   try {
-    let query = supabase
-      .from('categories')
-      .select('id, name, type, slug')
-      .order('name')
+    const params: Record<string, string | undefined> = {}
+    if (type) params.type = type
 
-    if (type) {
-      query = query.eq('type', type)
-    }
-
-    const { data, error } = await query
+    // Note: The marketplace API may not have a dedicated categories endpoint
+    // This is a placeholder - adjust based on actual API
+    const { data, error } = await apiClient.get<CategoryResponse[]>('/api/categories', params)
 
     if (error) {
       console.error('Erro ao buscar categorias:', error)
-      throw error
+      // Return empty array instead of throwing
+      return []
     }
 
     return data || []
   } catch (error) {
     console.error('Erro na API de categorias:', error)
-    throw error
+    return []
   }
 }
 
@@ -263,13 +199,13 @@ const CACHE_DURATION = 5 * 60 * 1000 // 5 minutos
 export async function searchAdsWithCache(filters: SearchFilters): Promise<SearchResponse> {
   const cacheKey = JSON.stringify(filters)
   const cached = cache.get(cacheKey)
-  
+
   if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
     return cached.data
   }
-  
+
   const result = await searchAds(filters)
   cache.set(cacheKey, { data: result, timestamp: Date.now() })
-  
+
   return result
 }

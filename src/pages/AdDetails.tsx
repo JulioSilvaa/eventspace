@@ -14,10 +14,10 @@ interface ImageData {
   url?: string
   image_url?: string
 }
-import { 
-  ArrowLeft, 
-  MapPin, 
-  Phone, 
+import {
+  ArrowLeft,
+  MapPin,
+  Phone,
   MessageCircle,
   Calendar,
   Users,
@@ -211,7 +211,7 @@ export default function AdDetails() {
           setIsGeocodingLoading(false)
         }
       }
-      
+
       geocodeLocation()
     }
   }, [ad, coordinates])
@@ -219,7 +219,7 @@ export default function AdDetails() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!isModalOpen) return
-      
+
       if (e.key === 'Escape') {
         closeModal()
       } else if (e.key === 'ArrowLeft') {
@@ -297,11 +297,11 @@ export default function AdDetails() {
       toast.warning('WhatsApp não disponível', 'Este anúncio não possui um número de WhatsApp cadastrado.')
       return
     }
-    
+
     // Track the contact before opening WhatsApp
     trackWhatsAppContact()
     toast.success('Redirecionando para WhatsApp...', 'Você será redirecionado para conversar com o anunciante.')
-    
+
     const cleanPhone = phone.replace(/\D/g, '')
     const message = encodeURIComponent(`Olá! Tenho interesse no seu anúncio: ${ad.title}`)
     window.open(`https://wa.me/55${cleanPhone}?text=${message}`, '_blank')
@@ -361,7 +361,7 @@ export default function AdDetails() {
             <ArrowLeft className="w-5 h-5" />
             Voltar
           </button>
-          
+
           <div className="flex items-center gap-2">
             <button
               onClick={shareAd}
@@ -370,9 +370,9 @@ export default function AdDetails() {
             >
               <Share2 className="w-5 h-5" />
             </button>
-            <FavoriteButton 
-              adId={ad.id} 
-              size="md" 
+            <FavoriteButton
+              adId={ad.id}
+              size="md"
               variant="button"
               className="hover:bg-gray-100"
             />
@@ -467,7 +467,7 @@ export default function AdDetails() {
                           <ZoomIn className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
                         </div>
                       </div>
-                      
+
                       {/* Grid 2x2 para as outras imagens */}
                       <div className="grid grid-cols-2 grid-rows-2 gap-2">
                         {images.slice(1, 5).map((image, index) => (
@@ -496,7 +496,7 @@ export default function AdDetails() {
                     </div>
                   )}
                 </div>
-                
+
                 {/* Contador total de imagens */}
                 {images.length > 1 && (
                   <div className="text-center">
@@ -548,7 +548,8 @@ export default function AdDetails() {
               </div>
 
               {/* Informações específicas para espaços */}
-              {specifications.capacity && (
+              {/* Informações específicas para espaços */}
+              {typeof specifications.capacity === 'number' && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                   <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg">
                     <Users className="w-6 h-6 text-blue-600" />
@@ -557,7 +558,7 @@ export default function AdDetails() {
                       <p className="text-sm text-gray-600">{String(specifications.capacity)} pessoas</p>
                     </div>
                   </div>
-                  {specifications.area_sqm && (
+                  {typeof specifications.area_sqm === 'number' && (
                     <div className="flex items-center gap-3 p-4 bg-green-50 rounded-lg">
                       <Ruler className="w-6 h-6 text-green-600" />
                       <div>
@@ -579,7 +580,7 @@ export default function AdDetails() {
             {(amenities.length > 0 || features.length > 0 || services.length > 0) && (
               <div className="bg-white rounded-lg shadow p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-6">Comodidades e Recursos</h3>
-                
+
                 {amenities.length > 0 && (
                   <div className="mb-6">
                     <h4 className="font-medium text-gray-900 mb-3">Comodidades Básicas</h4>
@@ -639,7 +640,7 @@ export default function AdDetails() {
             {/* Localização */}
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Localização</h3>
-              
+
               {/* Informações de endereço */}
               <div className="space-y-3 mb-6">
                 {/* Cidade e Estado - Principal */}
@@ -667,14 +668,14 @@ export default function AdDetails() {
                     </div>
                   )}
 
-                  {ad.specifications?.address && (
+                  {typeof ad.specifications?.address === 'string' && (
                     <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors">
                       <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
                         <MapPin className="w-3 h-3 text-purple-600" />
                       </div>
                       <div>
                         <span className="font-medium text-gray-700">Endereço:</span>
-                        <span className="ml-2 text-gray-600">{ad.specifications.address}</span>
+                        <span className="ml-2 text-gray-600">{String(ad.specifications.address)}</span>
                       </div>
                     </div>
                   )}
@@ -691,14 +692,14 @@ export default function AdDetails() {
                     </div>
                   )}
 
-                  {ad.specifications?.reference_point && (
+                  {typeof ad.specifications?.reference_point === 'string' && (
                     <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors">
                       <div className="w-6 h-6 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
                         <Navigation className="w-3 h-3 text-orange-600" />
                       </div>
                       <div>
                         <span className="font-medium text-gray-700">Referência:</span>
-                        <span className="ml-2 text-gray-600">{ad.specifications.reference_point}</span>
+                        <span className="ml-2 text-gray-600">{String(ad.specifications.reference_point)}</span>
                       </div>
                     </div>
                   )}
@@ -737,7 +738,7 @@ export default function AdDetails() {
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow p-6 sticky top-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Entre em Contato</h3>
-              
+
               <div className="space-y-3 mb-6">
                 <button
                   onClick={openWhatsApp}
@@ -746,7 +747,7 @@ export default function AdDetails() {
                   <MessageCircle className="w-5 h-5" />
                   WhatsApp
                 </button>
-                
+
                 <button
                   onClick={callPhone}
                   className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
@@ -763,16 +764,16 @@ export default function AdDetails() {
                   <div className="grid grid-cols-1 gap-2">
                     {ad.contact_instagram && (
                       <a
-                        href={ad.contact_instagram.startsWith('@') 
+                        href={ad.contact_instagram.startsWith('@')
                           ? `https://instagram.com/${ad.contact_instagram.substring(1)}`
-                          : ad.contact_instagram.startsWith('http') 
-                          ? ad.contact_instagram
-                          : `https://instagram.com/${ad.contact_instagram}`
+                          : ad.contact_instagram.startsWith('http')
+                            ? ad.contact_instagram
+                            : `https://instagram.com/${ad.contact_instagram}`
                         }
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-3 py-3 px-4 bg-gradient-to-r from-pink-50 to-purple-50 border border-pink-200 text-pink-700 rounded-lg hover:from-pink-100 hover:to-purple-100 hover:border-pink-300 transition-all duration-200 group"
-                        onClick={() => {}}
+                        onClick={() => { }}
                       >
                         <div className="w-8 h-8 bg-pink-100 rounded-full flex items-center justify-center group-hover:bg-pink-200 transition-colors">
                           <Instagram className="w-4 h-4 text-pink-600" />
@@ -783,17 +784,17 @@ export default function AdDetails() {
                         </div>
                       </a>
                     )}
-                    
+
                     {ad.contact_facebook && (
                       <a
-                        href={ad.contact_facebook.startsWith('http') 
+                        href={ad.contact_facebook.startsWith('http')
                           ? ad.contact_facebook
                           : `https://facebook.com/${ad.contact_facebook}`
                         }
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-3 py-3 px-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 text-blue-700 rounded-lg hover:from-blue-100 hover:to-indigo-100 hover:border-blue-300 transition-all duration-200 group"
-                        onClick={() => {}}
+                        onClick={() => { }}
                       >
                         <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center group-hover:bg-blue-200 transition-colors">
                           <Facebook className="w-4 h-4 text-blue-600" />
@@ -834,13 +835,13 @@ export default function AdDetails() {
         <div className="mt-12">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div>
-              <ReviewForm 
-                listingId={ad.id} 
+              <ReviewForm
+                listingId={ad.id}
                 onReviewSubmitted={() => setReviewsRefreshTrigger(prev => prev + 1)}
               />
             </div>
             <div>
-              <ReviewsList 
+              <ReviewsList
                 listingId={ad.id}
                 refreshTrigger={reviewsRefreshTrigger}
               />
@@ -859,17 +860,17 @@ export default function AdDetails() {
               >
                 <X className="w-6 h-6" />
               </button>
-              
+
               {/* Imagem */}
               <div className="relative max-w-full max-h-full">
                 <img
-                  src={typeof images[modalImageIndex] === 'string' 
-                    ? images[modalImageIndex] 
+                  src={typeof images[modalImageIndex] === 'string'
+                    ? images[modalImageIndex]
                     : (images[modalImageIndex] as ImageData)?.url || (images[modalImageIndex] as ImageData)?.image_url || '/placeholder-image.jpg'}
                   alt={`${ad.title} - Imagem ${modalImageIndex + 1}`}
                   className="max-w-full max-h-full object-contain rounded-lg"
                 />
-                
+
                 {/* Navegação do modal */}
                 {images.length > 1 && (
                   <>
@@ -887,13 +888,13 @@ export default function AdDetails() {
                     </button>
                   </>
                 )}
-                
+
                 {/* Contador no modal */}
                 <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-4 py-2 rounded-full text-sm">
                   {modalImageIndex + 1} / {images.length}
                 </div>
               </div>
-              
+
               {/* Miniaturas no modal */}
               {images.length > 1 && (
                 <div className="absolute bottom-4 left-4 right-4">
@@ -901,11 +902,10 @@ export default function AdDetails() {
                     {images.map((image, index) => (
                       <div
                         key={index}
-                        className={`flex-shrink-0 w-16 h-16 bg-gray-200 rounded-md overflow-hidden cursor-pointer border-2 transition-all ${
-                          index === modalImageIndex 
-                            ? 'border-white ring-2 ring-primary-400' 
-                            : 'border-transparent hover:border-gray-300'
-                        }`}
+                        className={`flex-shrink-0 w-16 h-16 bg-gray-200 rounded-md overflow-hidden cursor-pointer border-2 transition-all ${index === modalImageIndex
+                          ? 'border-white ring-2 ring-primary-400'
+                          : 'border-transparent hover:border-gray-300'
+                          }`}
                         onClick={() => setModalImageIndex(index)}
                       >
                         <img

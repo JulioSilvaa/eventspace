@@ -1,16 +1,15 @@
-import { supabase } from '@/lib/supabase'
+import { apiClient } from '@/lib/api-client'
 import { geolocationService, type GeographicInsight } from './geolocationService'
 import { competitorAnalysisService, type CompetitiveInsight } from './competitorAnalysisService'
 
 // Tipos para eventos de atividade
-export type ActivityEventType = 
-  | 'view' 
-  | 'contact_whatsapp' 
-  | 'contact_phone' 
-  | 'contact_email'
+export type ActivityEventType =
+  | 'view'
+  | 'contact_whatsapp'
+  | 'contact_phone'
   | 'favorite_add'
   | 'favorite_remove'
-  | 'review_add'
+  | 'review'
   | 'share'
   | 'listing_created'
   | 'listing_updated'
@@ -25,17 +24,7 @@ export interface ActivityEvent {
   user_id?: string
   event_type: ActivityEventType
   created_at?: string
-  metadata?: {
-    ip?: string
-    user_agent?: string
-    referrer?: string
-    location?: {
-      city?: string
-      state?: string
-      country?: string
-    }
-    [key: string]: unknown
-  }
+  metadata?: Record<string, unknown>
 }
 
 export interface MetricsSummary {
@@ -57,147 +46,100 @@ export interface RealTimeMetrics {
   totalReviews: number
   recentEvents: ActivityEvent[]
   dailyMetrics: MetricsSummary[]
-  geographicInsights?: GeographicInsight // Premium feature
-  competitiveInsights?: CompetitiveInsight // Premium feature
+  geographicInsights?: GeographicInsight
+  competitiveInsights?: CompetitiveInsight[]
+}
+
+interface MetricsResponse {
+  totalViews: number
+  totalContacts: number
+  totalFavorites: number
+  totalReviews: number
+  recentEvents?: ActivityEvent[]
+  dailyMetrics?: MetricsSummary[]
 }
 
 class RealTimeService {
   private eventQueue: ActivityEvent[] = []
   private isProcessingQueue = false
   private readonly BATCH_SIZE = 10
-  private readonly QUEUE_FLUSH_INTERVAL = 5000 // 5 segundos
+  private readonly QUEUE_FLUSH_INTERVAL = 5000
 
   constructor() {
-    // Processar queue a cada 5 segundos
+    // Process queue periodically
     setInterval(() => {
       this.flushEventQueue()
     }, this.QUEUE_FLUSH_INTERVAL)
   }
 
   /**
-   * Registra um evento de atividade
+   * Track an activity event
    */
   async trackEvent(event: Omit<ActivityEvent, 'id' | 'created_at'>): Promise<void> {
-    try {
-      // Capturar IP para geolocalização (apenas para premium)
-      let ipAddress = null
-      try {
-        const ipResponse = await fetch('https://api.ipify.org?format=json')
-        const ipData = await ipResponse.json()
-        ipAddress = ipData.ip
-      } catch (ipError) {
-        console.warn('Não foi possível capturar IP:', ipError)
-      }
+    // Add to queue for batch processing
+    this.eventQueue.push({
+      ...event,
+      created_at: new Date().toISOString()
+    })
 
-      // Adicionar metadata automaticamente
-      const enhancedEvent: ActivityEvent = {
-        ...event,
-        created_at: new Date().toISOString(),
-        metadata: {
-          ...event.metadata,
-          user_agent: navigator.userAgent,
-          referrer: document.referrer,
-          timestamp: Date.now(),
-          ip: ipAddress
-        }
-      }
-
-      // Adicionar à queue para processamento em lote
-      this.eventQueue.push(enhancedEvent)
-
-      // Se a queue estiver muito cheia, processar imediatamente
-      if (this.eventQueue.length >= this.BATCH_SIZE) {
-        await this.flushEventQueue()
-      }
-
-    } catch (error) {
-      console.error('Erro ao registrar evento:', error)
+    // Flush immediately if queue is full
+    if (this.eventQueue.length >= this.BATCH_SIZE) {
+      await this.flushEventQueue()
     }
   }
 
   /**
-   * Processa a queue de eventos em lote
+   * Process event queue in batch
    */
   private async flushEventQueue(): Promise<void> {
-    if (this.isProcessingQueue || this.eventQueue.length === 0) {
-      return
-    }
+    if (this.isProcessingQueue || this.eventQueue.length === 0) return
 
     this.isProcessingQueue = true
+    const eventsToProcess = [...this.eventQueue]
+    this.eventQueue = []
 
     try {
-      const eventsToProcess = this.eventQueue.splice(0, this.BATCH_SIZE)
-      
-      const { error } = await supabase
-        .from('activity_events')
-        .insert(eventsToProcess)
-
-      if (error) {
-        console.error('Erro ao salvar eventos:', error)
-        // Re-adicionar eventos à queue se houver erro
-        this.eventQueue.unshift(...eventsToProcess)
-      }
-
+      // Send events to API
+      await apiClient.post('/api/events/batch', { events: eventsToProcess })
     } catch (error) {
-      console.error('Erro ao processar queue de eventos:', error)
+      // Events tracking may not be implemented, just log and continue
+      console.log('Event tracking not available:', error)
     } finally {
       this.isProcessingQueue = false
     }
   }
 
   /**
-   * Busca métricas em tempo real para um anúncio
+   * Get metrics for a listing
    */
   async getListingMetrics(listingId: string): Promise<RealTimeMetrics> {
     try {
-      // Buscar eventos recentes (últimas 24h)
-      const { data: recentEvents, error: eventsError } = await supabase
-        .from('activity_events')
-        .select('*')
-        .eq('listing_id', listingId)
-        .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-        .order('created_at', { ascending: false })
-        .limit(50)
+      const { data, error } = await apiClient.get<MetricsResponse>(
+        `/api/spaces/${listingId}/metrics`
+      )
 
-      if (eventsError) {
-        throw eventsError
+      if (error) {
+        // Return default metrics if endpoint not available
+        return {
+          totalViews: 0,
+          totalContacts: 0,
+          totalFavorites: 0,
+          totalReviews: 0,
+          recentEvents: [],
+          dailyMetrics: []
+        }
       }
-
-      // Calcular métricas diretamente dos activity_events (últimos 30 dias)
-      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
-      
-      const { data: allEvents, error: allEventsError } = await supabase
-        .from('activity_events')
-        .select('event_type')
-        .eq('listing_id', listingId)
-        .gte('created_at', thirtyDaysAgo)
-
-      if (allEventsError) {
-        throw allEventsError
-      }
-
-      // Calcular totais por tipo de evento
-      const totalViews = (allEvents || []).filter(e => e.event_type === 'view').length
-      const totalContacts = (allEvents || []).filter(e => 
-        e.event_type === 'contact_whatsapp' || e.event_type === 'contact_phone' || e.event_type === 'contact_email'
-      ).length
-      const totalFavorites = (allEvents || []).filter(e => e.event_type === 'favorite_add').length
-      const totalReviews = (allEvents || []).filter(e => e.event_type === 'review_add').length
-
-      // Para compatibilidade, criar métricas diárias vazias
-      const dailyMetrics: MetricsSummary[] = []
 
       return {
-        totalViews,
-        totalContacts,
-        totalFavorites,
-        totalReviews,
-        recentEvents: recentEvents || [],
-        dailyMetrics: dailyMetrics || []
+        totalViews: data?.totalViews || 0,
+        totalContacts: data?.totalContacts || 0,
+        totalFavorites: data?.totalFavorites || 0,
+        totalReviews: data?.totalReviews || 0,
+        recentEvents: data?.recentEvents || [],
+        dailyMetrics: data?.dailyMetrics || []
       }
-
     } catch (error) {
-      console.error('Erro ao buscar métricas:', error)
+      console.error('Error fetching listing metrics:', error)
       return {
         totalViews: 0,
         totalContacts: 0,
@@ -210,7 +152,7 @@ class RealTimeService {
   }
 
   /**
-   * Busca métricas consolidadas para todos os anúncios do usuário
+   * Get consolidated metrics for all user listings
    */
   async getUserMetrics(userId: string): Promise<{
     totalViews: number
@@ -220,19 +162,11 @@ class RealTimeService {
     recentEvents: ActivityEvent[]
   }> {
     try {
-      // Buscar IDs dos anúncios do usuário
-      const { data: userListings, error: listingsError } = await supabase
-        .from('listings')
-        .select('id')
-        .eq('user_id', userId)
+      const { data, error } = await apiClient.get<MetricsResponse>(
+        `/api/user/${userId}/metrics`
+      )
 
-      if (listingsError) {
-        throw listingsError
-      }
-
-      const listingIds = userListings?.map(listing => listing.id) || []
-
-      if (listingIds.length === 0) {
+      if (error) {
         return {
           totalViews: 0,
           totalContacts: 0,
@@ -242,50 +176,15 @@ class RealTimeService {
         }
       }
 
-      // Buscar eventos recentes para todos os anúncios
-      const { data: recentEvents, error: eventsError } = await supabase
-        .from('activity_events')
-        .select('*')
-        .in('listing_id', listingIds)
-        .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-        .order('created_at', { ascending: false })
-        .limit(100)
-
-      if (eventsError) {
-        throw eventsError
-      }
-
-      // Buscar todos os eventos dos últimos 30 dias para os anúncios do usuário
-      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
-      
-      const { data: userEvents, error: userEventsError } = await supabase
-        .from('activity_events')
-        .select('event_type')
-        .in('listing_id', listingIds)
-        .gte('created_at', thirtyDaysAgo)
-
-      if (userEventsError) {
-        throw userEventsError
-      }
-
-      // Calcular totais por tipo de evento
-      const totalViews = (userEvents || []).filter(e => e.event_type === 'view').length
-      const totalContacts = (userEvents || []).filter(e => 
-        e.event_type === 'contact_whatsapp' || e.event_type === 'contact_phone' || e.event_type === 'contact_email'
-      ).length
-      const totalFavorites = (userEvents || []).filter(e => e.event_type === 'favorite_add').length
-      const totalReviews = (userEvents || []).filter(e => e.event_type === 'review_add').length
-
       return {
-        totalViews,
-        totalContacts,
-        totalFavorites,
-        totalReviews,
-        recentEvents: recentEvents || []
+        totalViews: data?.totalViews || 0,
+        totalContacts: data?.totalContacts || 0,
+        totalFavorites: data?.totalFavorites || 0,
+        totalReviews: data?.totalReviews || 0,
+        recentEvents: data?.recentEvents || []
       }
-
     } catch (error) {
-      console.error('Erro ao buscar métricas do usuário:', error)
+      console.error('Error fetching user metrics:', error)
       return {
         totalViews: 0,
         totalContacts: 0,
@@ -296,356 +195,121 @@ class RealTimeService {
     }
   }
 
-  /**
-   * Incrementa contador de views (compatibilidade com sistema atual)
-   */
+  // Convenience methods for tracking specific events
   async incrementViews(listingId: string): Promise<void> {
-    await this.trackEvent({
-      listing_id: listingId,
-      event_type: 'view'
-    })
+    await this.trackEvent({ listing_id: listingId, event_type: 'view' })
   }
 
-  /**
-   * Registra contato via WhatsApp
-   */
   async trackWhatsAppContact(listingId: string, userId?: string): Promise<void> {
-    await this.trackEvent({
-      listing_id: listingId,
-      user_id: userId,
-      event_type: 'contact_whatsapp'
-    })
+    await this.trackEvent({ listing_id: listingId, user_id: userId, event_type: 'contact_whatsapp' })
   }
 
-  /**
-   * Registra contato via telefone
-   */
   async trackPhoneContact(listingId: string, userId?: string): Promise<void> {
-    await this.trackEvent({
-      listing_id: listingId,
-      user_id: userId,
-      event_type: 'contact_phone'
-    })
+    await this.trackEvent({ listing_id: listingId, user_id: userId, event_type: 'contact_phone' })
   }
 
-  /**
-   * Registra adição aos favoritos
-   */
   async trackFavoriteAdd(listingId: string, userId: string): Promise<void> {
-    await this.trackEvent({
-      listing_id: listingId,
-      user_id: userId,
-      event_type: 'favorite_add'
-    })
+    await this.trackEvent({ listing_id: listingId, user_id: userId, event_type: 'favorite_add' })
   }
 
-  /**
-   * Registra remoção dos favoritos
-   */
   async trackFavoriteRemove(listingId: string, userId: string): Promise<void> {
-    await this.trackEvent({
-      listing_id: listingId,
-      user_id: userId,
-      event_type: 'favorite_remove'
-    })
+    await this.trackEvent({ listing_id: listingId, user_id: userId, event_type: 'favorite_remove' })
   }
 
-  /**
-   * Registra nova avaliação
-   */
   async trackReview(listingId: string, userId: string): Promise<void> {
-    await this.trackEvent({
-      listing_id: listingId,
-      user_id: userId,
-      event_type: 'review_add'
-    })
+    await this.trackEvent({ listing_id: listingId, user_id: userId, event_type: 'review' })
   }
 
-  /**
-   * Registra compartilhamento
-   */
   async trackShare(listingId: string, platform: string): Promise<void> {
     await this.trackEvent({
       listing_id: listingId,
       event_type: 'share',
-      metadata: {
-        platform
-      }
+      metadata: { platform }
     })
   }
 
-  /**
-   * Registra criação de anúncio
-   */
   async trackListingCreated(listingId: string, userId: string, metadata?: Record<string, unknown>): Promise<void> {
     await this.trackEvent({
       listing_id: listingId,
       user_id: userId,
       event_type: 'listing_created',
-      metadata: {
-        ...metadata,
-        action: 'created'
-      }
+      metadata
     })
   }
 
-  /**
-   * Registra atualização geral do anúncio
-   */
   async trackListingUpdated(listingId: string, userId: string, changedFields: string[], metadata?: Record<string, unknown>): Promise<void> {
     await this.trackEvent({
       listing_id: listingId,
       user_id: userId,
       event_type: 'listing_updated',
-      metadata: {
-        ...metadata,
-        changedFields,
-        action: 'updated'
-      }
+      metadata: { changedFields, ...metadata }
     })
   }
 
-  /**
-   * Registra atualização de preço
-   */
   async trackPriceUpdated(listingId: string, userId: string, oldPrice: number, newPrice: number): Promise<void> {
     await this.trackEvent({
       listing_id: listingId,
       user_id: userId,
       event_type: 'price_updated',
-      metadata: {
-        oldPrice,
-        newPrice,
-        priceChange: newPrice - oldPrice,
-        priceChangePercent: oldPrice > 0 ? Math.round(((newPrice - oldPrice) / oldPrice) * 100) : 0,
-        action: 'price_updated'
-      }
+      metadata: { oldPrice, newPrice }
     })
   }
 
-  /**
-   * Registra atualização de fotos
-   */
   async trackPhotosUpdated(listingId: string, userId: string, action: 'added' | 'removed' | 'updated', photoCount?: number): Promise<void> {
     await this.trackEvent({
       listing_id: listingId,
       user_id: userId,
       event_type: 'photos_updated',
-      metadata: {
-        photoAction: action,
-        photoCount,
-        action: 'photos_updated'
-      }
+      metadata: { action, photoCount }
     })
   }
 
-  /**
-   * Registra atualização de descrição
-   */
   async trackDescriptionUpdated(listingId: string, userId: string): Promise<void> {
     await this.trackEvent({
       listing_id: listingId,
       user_id: userId,
-      event_type: 'description_updated',
-      metadata: {
-        action: 'description_updated'
-      }
+      event_type: 'description_updated'
     })
   }
 
-  /**
-   * Registra atualização de informações de contato
-   */
   async trackContactUpdated(listingId: string, userId: string, updatedFields: string[]): Promise<void> {
     await this.trackEvent({
       listing_id: listingId,
       user_id: userId,
       event_type: 'contact_updated',
-      metadata: {
-        updatedContactFields: updatedFields,
-        action: 'contact_updated'
-      }
+      metadata: { updatedFields }
     })
   }
 
   /**
-   * Força o processamento da queue (para testes)
+   * Get user metrics with premium insights
    */
-  async forceFlushQueue(): Promise<void> {
-    await this.flushEventQueue()
-  }
-
-  /**
-   * Obter insights geográficos para um anúncio (Premium)
-   */
-  async getListingGeographicInsights(listingId: string): Promise<GeographicInsight | null> {
-    try {
-      // Buscar eventos com dados de IP dos últimos 30 dias
-      const { data: events, error } = await supabase
-        .from('activity_events')
-        .select('*')
-        .eq('listing_id', listingId)
-        .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
-        .not('metadata->>ip', 'is', null)
-
-      if (error) {
-        throw error
-      }
-
-      if (!events || events.length === 0) {
-        return null
-      }
-
-      return await geolocationService.getListingGeographicInsights(listingId, events)
-
-    } catch (error) {
-      console.error('Erro ao obter insights geográficos:', error)
-      return null
-    }
-  }
-
-  /**
-   * Obter insights geográficos consolidados do usuário (Premium)
-   */
-  async getUserGeographicInsights(userId: string): Promise<GeographicInsight | null> {
-    try {
-      // Buscar IDs dos anúncios do usuário
-      const { data: userListings, error: listingsError } = await supabase
-        .from('listings')
-        .select('id')
-        .eq('user_id', userId)
-
-      if (listingsError) {
-        throw listingsError
-      }
-
-      const listingIds = userListings?.map(listing => listing.id) || []
-
-      if (listingIds.length === 0) {
-        return null
-      }
-
-      // Buscar eventos com dados de IP dos últimos 30 dias
-      const { data: events, error: eventsError } = await supabase
-        .from('activity_events')
-        .select('*')
-        .in('listing_id', listingIds)
-        .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
-        .not('metadata->>ip', 'is', null)
-
-      if (eventsError) {
-        throw eventsError
-      }
-
-      if (!events || events.length === 0) {
-        return null
-      }
-
-      return await geolocationService.getUserGeographicInsights(listingIds, events)
-
-    } catch (error) {
-      console.error('Erro ao obter insights geográficos do usuário:', error)
-      return null
-    }
-  }
-
-  /**
-   * Buscar métricas com insights geográficos (Premium)
-   */
-  async getListingMetricsWithGeographicInsights(listingId: string, includePremiumFeatures = false): Promise<RealTimeMetrics> {
-    const baseMetrics = await this.getListingMetrics(listingId)
-
-    if (includePremiumFeatures) {
-      const geographicInsights = await this.getListingGeographicInsights(listingId)
-      return {
-        ...baseMetrics,
-        geographicInsights
-      }
-    }
-
-    return baseMetrics
-  }
-
-  /**
-   * Buscar métricas do usuário com insights geográficos (Premium)
-   */
-  async getUserMetricsWithGeographicInsights(userId: string, includePremiumFeatures = false): Promise<RealTimeMetrics & { geographicInsights?: GeographicInsight }> {
-    const baseMetrics = await this.getUserMetrics(userId)
-
-    if (includePremiumFeatures) {
-      const geographicInsights = await this.getUserGeographicInsights(userId)
-      return {
-        ...baseMetrics,
-        dailyMetrics: [], // Not available in user metrics
-        geographicInsights
-      }
-    }
-
-    return {
-      ...baseMetrics,
-      dailyMetrics: []
-    }
-  }
-
-  /**
-   * Obter insights competitivos para um anúncio (Premium)
-   */
-  async getListingCompetitiveInsights(listingId: string): Promise<CompetitiveInsight | null> {
-    try {
-      return await competitorAnalysisService.analyzeListingCompetitivePerformance(listingId)
-    } catch (error) {
-      console.error('Erro ao obter insights competitivos:', error)
-      return null
-    }
-  }
-
-  /**
-   * Obter insights competitivos consolidados do usuário (Premium)
-   */
-  async getUserCompetitiveInsights(userId: string): Promise<CompetitiveInsight[]> {
-    try {
-      return await competitorAnalysisService.getUserCompetitiveInsights(userId)
-    } catch (error) {
-      console.error('Erro ao obter insights competitivos do usuário:', error)
-      return []
-    }
-  }
-
-  /**
-   * Buscar métricas completas com todos os insights premium
-   */
-  async getListingMetricsWithPremiumInsights(listingId: string): Promise<RealTimeMetrics> {
-    const baseMetrics = await this.getListingMetrics(listingId)
-    const geographicInsights = await this.getListingGeographicInsights(listingId)
-    const competitiveInsights = await this.getListingCompetitiveInsights(listingId)
-
-    return {
-      ...baseMetrics,
-      geographicInsights,
-      competitiveInsights
-    }
-  }
-
-  /**
-   * Buscar métricas do usuário com todos os insights premium
-   */
-  async getUserMetricsWithPremiumInsights(userId: string): Promise<RealTimeMetrics & { 
+  async getUserMetricsWithPremiumInsights(userId: string): Promise<RealTimeMetrics & {
     geographicInsights?: GeographicInsight
     competitiveInsights?: CompetitiveInsight[]
   }> {
-    const baseMetrics = await this.getUserMetrics(userId)
-    const geographicInsights = await this.getUserGeographicInsights(userId)
-    const competitiveInsights = await this.getUserCompetitiveInsights(userId)
+    const [metrics, compInsights] = await Promise.all([
+      this.getUserMetrics(userId),
+      competitorAnalysisService.getUserCompetitiveInsights(userId).catch(() => [] as CompetitiveInsight[])
+    ])
+
+    let geoInsights: GeographicInsight | undefined
+
+    if (metrics.recentEvents && metrics.recentEvents.length > 0) {
+      const listingIds = Array.from(new Set(metrics.recentEvents.map(e => e.listing_id)))
+      geoInsights = await geolocationService.getUserGeographicInsights(
+        listingIds,
+        metrics.recentEvents as Record<string, any>[]
+      ).catch(() => undefined)
+    }
 
     return {
-      ...baseMetrics,
+      ...metrics,
       dailyMetrics: [],
-      geographicInsights,
-      competitiveInsights
+      geographicInsights: geoInsights,
+      competitiveInsights: compInsights
     }
   }
 }
 
-// Instância singleton
 export const realTimeService = new RealTimeService()
-export default realTimeService

@@ -2,24 +2,24 @@ import { formatDistanceToNow } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { 
-  Eye, MessageCircle, Star, Package, TrendingUp, MapPin, 
+import {
+  Eye, MessageCircle, Star, Package, TrendingUp, MapPin,
   Clock, Users, Crown, Lock, BarChart3, Zap, Target
 } from 'lucide-react'
-// import { useAuth } from '@/hooks/useAuth' // Not used currently
+import { useAuth } from '@/hooks/useAuth'
 import { useUserRealTimeMetrics } from '@/hooks/useRealTimeMetrics'
 import { ActivityEvent } from '@/services/realTimeService'
 import { Ad } from '@/types'
 
 interface ActivityDisplayProps {
   id: string
-  type: 'view' | 'contact' | 'rating' | 'ad_created' | 'ad_featured' | 
-        'milestone' | 'update' | 'status_change' | 'peak_time' | 
-        'geographic_insight' | 'demographic_insight' | 'competitor_analysis' | 
-        'priority_lead' | 'auto_boost' | 'market_alert' | 'listing_created' |
-        'review_received' | 'listing_milestone' | 'performance_insight' |
-        'listing_updated' | 'price_updated' | 'photos_updated' | 
-        'description_updated' | 'contact_updated'
+  type: 'view' | 'contact' | 'rating' | 'ad_created' | 'ad_featured' |
+  'milestone' | 'update' | 'status_change' | 'peak_time' |
+  'geographic_insight' | 'demographic_insight' | 'competitor_analysis' |
+  'priority_lead' | 'auto_boost' | 'market_alert' | 'listing_created' |
+  'review_received' | 'listing_milestone' | 'performance_insight' |
+  'listing_updated' | 'price_updated' | 'photos_updated' |
+  'description_updated' | 'contact_updated'
   title: string
   description: string
   timestamp: Date
@@ -56,22 +56,21 @@ interface RecentActivityProps {
   userAds?: Ad[]
 }
 
-export default function RecentActivity({ 
+export default function RecentActivity({
   userPlan = 'basic',
   userAds = []
 }: RecentActivityProps) {
-  // const { } = useAuth() // Not used currently
+  const { user } = useAuth()
   const [activities, setActivities] = useState<ActivityDisplayProps[]>([])
-  
+
   // Hook para métricas em tempo real
-  const { 
-    metrics, 
-    isLoading: metricsLoading, 
+  const {
+    metrics,
+    isLoading: metricsLoading,
     error: metricsError
-  } = useUserRealTimeMetrics({
+  } = useUserRealTimeMetrics(user?.id, {
     pollingInterval: 30000, // 30 segundos
-    enableRealTime: true,
-    includePremiumFeatures: userPlan === 'premium'
+    enablePolling: true
   })
 
   // Converter eventos reais em atividades para display
@@ -92,31 +91,31 @@ export default function RecentActivity({
           title = '👀 Nova visualização'
           description = `Seu anúncio "${adTitle}" foi visualizado`
           break
-          
+
         case 'contact_whatsapp':
           activityType = 'contact'
           title = '📱 Contato WhatsApp'
           description = `Alguém entrou em contato via WhatsApp sobre "${adTitle}"`
           break
-          
+
         case 'contact_phone':
           activityType = 'contact'
           title = '📞 Ligação recebida'
           description = `Alguém ligou sobre "${adTitle}"`
           break
-          
+
         case 'favorite_add':
           activityType = 'rating'
           title = '⭐ Novo favorito'
           description = `"${adTitle}" foi adicionado aos favoritos`
           break
-          
-        case 'review_add':
+
+        case 'review':
           activityType = 'rating'
           title = '💬 Nova avaliação'
           description = `Você recebeu uma nova avaliação em "${adTitle}"`
           break
-          
+
         case 'share':
           activityType = 'update'
           title = '🔗 Compartilhamento'
@@ -132,7 +131,7 @@ export default function RecentActivity({
         case 'listing_updated': {
           activityType = 'listing_updated'
           title = '✏️ Anúncio Atualizado'
-          const fields = event.metadata?.changedFields || []
+          const fields = (event.metadata?.changedFields as string[]) || []
           description = `"${adTitle}" foi atualizado${fields.length > 0 ? ` (${fields.join(', ')})` : ''}`
           break
         }
@@ -142,7 +141,7 @@ export default function RecentActivity({
           title = '💰 Preço Atualizado'
           const oldPrice = event.metadata?.oldPrice
           const newPrice = event.metadata?.newPrice
-          const priceChange = event.metadata?.priceChangePercent
+          const priceChange = event.metadata?.priceChangePercent as number | undefined
           description = `Preço de "${adTitle}" alterado${oldPrice && newPrice ? ` de R$ ${oldPrice} para R$ ${newPrice}` : ''}${priceChange ? ` (${priceChange > 0 ? '+' : ''}${priceChange}%)` : ''}`
           break
         }
@@ -152,11 +151,10 @@ export default function RecentActivity({
           title = '📸 Fotos Atualizadas'
           const photoAction = event.metadata?.photoAction
           const photoCount = event.metadata?.photoCount
-          description = `Fotos de "${adTitle}" foram ${
-            photoAction === 'added' ? 'adicionadas' : 
-            photoAction === 'removed' ? 'removidas' : 
-            'atualizadas'
-          }${photoCount ? ` (${photoCount} fotos)` : ''}`
+          description = `Fotos de "${adTitle}" foram ${photoAction === 'added' ? 'adicionadas' :
+            photoAction === 'removed' ? 'removidas' :
+              'atualizadas'
+            }${photoCount ? ` (${photoCount} fotos)` : ''}`
           break
         }
 
@@ -169,11 +167,11 @@ export default function RecentActivity({
         case 'contact_updated': {
           activityType = 'contact_updated'
           title = '📞 Contato Atualizado'
-          const contactFields = event.metadata?.updatedContactFields || []
+          const contactFields = (event.metadata?.updatedContactFields as string[]) || []
           description = `Informações de contato de "${adTitle}" foram atualizadas${contactFields.length > 0 ? ` (${contactFields.join(', ')})` : ''}`
           break
         }
-          
+
         default:
           activityType = 'update'
           title = '📊 Atividade'
@@ -190,8 +188,8 @@ export default function RecentActivity({
         metadata: {
           adTitle,
           listingId: event.listing_id,
-          contactType: event.event_type === 'contact_whatsapp' ? 'whatsapp' : 
-                      event.event_type === 'contact_phone' ? 'phone' : undefined
+          contactType: event.event_type === 'contact_whatsapp' ? 'whatsapp' :
+            event.event_type === 'contact_phone' ? 'phone' : undefined
         }
       })
     })
@@ -289,7 +287,7 @@ export default function RecentActivity({
     // Insights competitivos reais
     if (metrics.competitiveInsights && Array.isArray(metrics.competitiveInsights) && metrics.competitiveInsights.length > 0) {
       const competitiveData = metrics.competitiveInsights[0] // Usar o primeiro insight como exemplo
-      
+
       if (competitiveData.performance.overallRanking.percentile >= 75) {
         activities.push({
           id: 'premium-competitor-top',
@@ -394,7 +392,7 @@ export default function RecentActivity({
     // 2. Adicionar apenas atividades de publicação e marcos (não eventos individuais)
     const staticActivities = generateMetricsBasedActivities(userAds)
     // Filtrar apenas atividades que não sejam baseadas em eventos reais
-    const filteredStaticActivities = staticActivities.filter(activity => 
+    const filteredStaticActivities = staticActivities.filter(activity =>
       activity.type === 'listing_created' || activity.type === 'milestone'
     )
     allActivities.push(...filteredStaticActivities)
@@ -409,7 +407,7 @@ export default function RecentActivity({
     }
 
     // 4. Remover duplicatas e ordenar por timestamp
-    const uniqueActivities = allActivities.filter((activity, index, arr) => 
+    const uniqueActivities = allActivities.filter((activity, index, arr) =>
       arr.findIndex(a => a.id === activity.id) === index
     )
 
@@ -448,10 +446,10 @@ export default function RecentActivity({
 
   const loading = metricsLoading
   const error = metricsError
-  
+
   const getActivityIcon = (type: ActivityDisplayProps['type'], isPremium: boolean) => {
     const iconClass = isPremium ? "h-4 w-4 text-amber-600" : "h-4 w-4"
-    
+
     switch (type) {
       case 'view':
         return <Eye className={`${iconClass} ${!isPremium && 'text-blue-500'}`} />
@@ -499,16 +497,16 @@ export default function RecentActivity({
         return <Eye className={`${iconClass} ${!isPremium && 'text-gray-500'}`} />
     }
   }
-  
+
   const getActivityColor = (type: ActivityDisplayProps['type'], isPremium: boolean, locked?: boolean) => {
     if (locked) {
       return 'bg-gradient-to-r from-gray-50 to-gray-100 border-gray-200 opacity-75'
     }
-    
+
     if (isPremium) {
       return 'bg-gradient-to-r from-amber-50 to-yellow-50 border-amber-200'
     }
-    
+
     switch (type) {
       case 'view':
         return 'bg-blue-50 border-blue-100'
@@ -550,7 +548,7 @@ export default function RecentActivity({
           <div className="h-5 bg-gray-200 rounded w-32 mb-2"></div>
           <div className="h-4 bg-gray-200 rounded w-48"></div>
         </div>
-        
+
         <div className="space-y-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="flex items-start gap-3 animate-pulse">
@@ -577,15 +575,15 @@ export default function RecentActivity({
           Acompanhe as últimas interações com seus anúncios
         </p>
       </div>
-      
+
       {error ? (
         <div className="text-center py-8">
           <Package className="h-12 w-12 text-red-300 mx-auto mb-4" />
           <p className="text-red-500 text-sm mb-2">
             {error}
           </p>
-          <button 
-            onClick={() => window.location.reload()} 
+          <button
+            onClick={() => window.location.reload()}
             className="text-xs text-primary-600 hover:text-primary-700 font-medium"
           >
             Tentar novamente
@@ -607,14 +605,14 @@ export default function RecentActivity({
           scrollbarColor: '#d1d5db #f3f4f6'
         }}>
           {activities.map((activity) => (
-            <div 
+            <div
               key={activity.id}
               className={`flex items-start gap-3 p-3 rounded-lg border ${getActivityColor(activity.type, activity.isPremium, activity.locked)}`}
             >
               <div className="flex-shrink-0 p-1">
                 {getActivityIcon(activity.type, activity.isPremium)}
               </div>
-              
+
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                   <p className={`text-sm font-medium ${activity.locked ? 'text-gray-500' : 'text-gray-900'}`}>
@@ -627,11 +625,11 @@ export default function RecentActivity({
                     <Lock className="h-3 w-3 text-gray-400" />
                   )}
                 </div>
-                
+
                 <p className={`text-xs mt-1 ${activity.locked ? 'text-gray-500' : 'text-gray-600'}`}>
                   {activity.description}
                 </p>
-                
+
                 {activity.metadata?.adTitle && !activity.locked && (
                   <div className="flex items-center justify-between mt-1">
                     <p className="text-xs text-gray-500">
@@ -647,7 +645,7 @@ export default function RecentActivity({
                     )}
                   </div>
                 )}
-                
+
                 {activity.metadata?.growth && (
                   <div className="flex items-center mt-1">
                     <TrendingUp className="h-3 w-3 text-green-500 mr-1" />
@@ -656,7 +654,7 @@ export default function RecentActivity({
                     </span>
                   </div>
                 )}
-                
+
                 {activity.metadata?.competitorData && (
                   <div className="flex items-center mt-1">
                     <BarChart3 className="h-3 w-3 text-blue-500 mr-1" />
@@ -665,7 +663,7 @@ export default function RecentActivity({
                     </span>
                   </div>
                 )}
-                
+
                 {activity.metadata?.rating && (
                   <div className="flex items-center mt-1">
                     {Array.from({ length: activity.metadata.rating }).map((_, i) => (
@@ -673,8 +671,8 @@ export default function RecentActivity({
                     ))}
                   </div>
                 )}
-                
-                
+
+
                 {activity.locked && (
                   <div className="mt-2">
                     <button className="text-xs text-amber-600 hover:text-amber-700 font-medium">
@@ -683,19 +681,19 @@ export default function RecentActivity({
                   </div>
                 )}
               </div>
-              
+
               <div className="flex-shrink-0">
                 <p className={`text-xs ${activity.locked ? 'text-gray-400' : 'text-gray-500'}`}>
-                  {formatDistanceToNow(activity.timestamp, { 
+                  {formatDistanceToNow(activity.timestamp, {
                     addSuffix: true,
-                    locale: ptBR 
+                    locale: ptBR
                   })}
                 </p>
               </div>
             </div>
           ))}
-          
-          
+
+
           {activities.length > 0 && userPlan !== 'premium' && (
             <div className="pt-4 border-t border-gray-100">
               <div className="text-right">

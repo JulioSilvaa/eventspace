@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Crown, CreditCard, AlertTriangle, CheckCircle, XCircle } from 'lucide-react'
 import { subscriptionService, type Subscription } from '@/services/subscriptionService'
 import { useAuth } from '@/hooks/useAuth'
-import { supabase } from '@/lib/supabase'
+import { apiClient } from '@/lib/api-client'
 
 interface Payment {
   id: string
@@ -28,21 +28,18 @@ export default function SubscriptionCard() {
       setLoading(false)
       return
     }
-    
+
     try {
       setLoading(true)
-      
+
       // Try to load subscription data
       const activeSubscription = await subscriptionService.getUserActiveSubscription(profile.id)
       setSubscription(activeSubscription)
 
       // Also load payment history
-      const { data: paymentData, error: paymentError } = await supabase
-        .from('payments')
-        .select('*')
-        .eq('user_id', profile.id)
-        .order('created_at', { ascending: false })
-        .limit(5)
+      const { data: paymentData, error: paymentError } = await apiClient.get<Payment[]>(
+        `/api/payments/history?userId=${profile.id}&limit=5`
+      )
 
       if (paymentError) {
         console.warn('Error loading payment history:', paymentError)
@@ -66,14 +63,14 @@ export default function SubscriptionCard() {
 
   const handleCancelSubscription = () => {
     if (!subscription) return
-    
+
     // Redirecionar para a página de cancelamento
     navigate(`/checkout/cancel?subscription_id=${subscription.id}`)
   }
 
   const handleReactivateSubscription = async () => {
     if (!subscription) return
-    
+
     setActionLoading(true)
     try {
       const success = await subscriptionService.reactivateSubscription(subscription.id)
@@ -114,7 +111,7 @@ export default function SubscriptionCard() {
             <Crown className="w-6 h-6 text-primary-600" />
             <h3 className="text-lg font-semibold text-gray-900">Plano Atual</h3>
           </div>
-          
+
           <div className="space-y-4">
             <div className="flex items-center justify-between p-4 bg-primary-50 rounded-lg">
               <div>
@@ -153,28 +150,11 @@ export default function SubscriptionCard() {
             {/* Plan Actions */}
             <div className="space-y-4">
               <div className="flex flex-col sm:flex-row gap-3">
-                {profile.plan_type === 'basic' ? (
-                  <button
-                    onClick={() => navigate('/checkout/upgrade')}
-                    className="flex-1 bg-primary-600 text-white py-2 px-4 rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium flex items-center justify-center gap-2"
-                  >
-                    <Crown className="w-4 h-4" />
-                    Fazer Upgrade para Premium
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => navigate('/checkout/downgrade')}
-                    className="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
-                  >
-                    Downgrade para Básico
-                  </button>
-                )}
-                
                 <button
                   onClick={() => navigate('/planos')}
                   className="flex-1 border border-primary-600 text-primary-600 py-2 px-4 rounded-lg hover:bg-primary-50 transition-colors text-sm font-medium"
                 >
-                  Comparar Planos
+                  Detalhes do Plano
                 </button>
               </div>
 
@@ -223,9 +203,8 @@ export default function SubscriptionCard() {
                         <p className="text-sm font-medium text-gray-900">
                           {payment.currency === 'BRL' ? 'R$' : payment.currency} {payment.amount.toFixed(2)}
                         </p>
-                        <p className={`text-xs ${
-                          payment.payment_status === 'completed' ? 'text-green-600' : 'text-yellow-600'
-                        }`}>
+                        <p className={`text-xs ${payment.payment_status === 'completed' ? 'text-green-600' : 'text-yellow-600'
+                          }`}>
                           {payment.payment_status === 'completed' ? 'Pago' : payment.payment_status}
                         </p>
                       </div>
@@ -252,11 +231,11 @@ export default function SubscriptionCard() {
           </div>
           <h4 className="text-lg font-medium text-gray-900 mb-2">Nenhuma Assinatura Ativa</h4>
           <p className="text-gray-600 mb-4">
-            {profile?.plan_type === 'free' || !profile?.plan_type 
+            {profile?.plan_type === 'free' || !profile?.plan_type
               ? 'Assine um plano para desbloquear todos os recursos.'
               : 'Não foi possível carregar os dados da sua assinatura.'}
           </p>
-          
+
           {payments.length > 0 && (
             <div className="mb-4">
               <p className="text-sm text-gray-600 mb-2">Últimos pagamentos:</p>
@@ -270,7 +249,7 @@ export default function SubscriptionCard() {
               </div>
             </div>
           )}
-          
+
           <div className="flex gap-2">
             <a
               href="/planos"
@@ -313,11 +292,10 @@ export default function SubscriptionCard() {
           <Crown className="w-6 h-6 text-blue-600" />
           <h3 className="text-lg font-semibold text-gray-900">Plano Atual</h3>
         </div>
-        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-          statusBadge.color === 'green' ? 'bg-green-100 text-green-800' :
+        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${statusBadge.color === 'green' ? 'bg-green-100 text-green-800' :
           statusBadge.color === 'yellow' ? 'bg-yellow-100 text-yellow-800' :
-          'bg-red-100 text-red-800'
-        }`}>
+            'bg-red-100 text-red-800'
+          }`}>
           {statusBadge.icon}
           {statusBadge.text}
         </span>
@@ -394,28 +372,11 @@ export default function SubscriptionCard() {
         <div className="space-y-4 pt-4 border-t">
           {/* Plan Change Options */}
           <div className="flex flex-col sm:flex-row gap-3">
-            {subscription.plan_type === 'basic' ? (
-              <button
-                onClick={() => navigate('/checkout/upgrade')}
-                className="flex-1 bg-primary-600 text-white py-2 px-4 rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium flex items-center justify-center gap-2"
-              >
-                <Crown className="w-4 h-4" />
-                Fazer Upgrade para Premium
-              </button>
-            ) : (
-              <button
-                onClick={() => navigate('/checkout/downgrade')}
-                className="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
-              >
-                Downgrade para Básico
-              </button>
-            )}
-            
             <button
               onClick={() => navigate('/planos')}
               className="flex-1 border border-primary-600 text-primary-600 py-2 px-4 rounded-lg hover:bg-primary-50 transition-colors text-sm font-medium"
             >
-              Comparar Planos
+              Detalhes do Plano
             </button>
           </div>
 

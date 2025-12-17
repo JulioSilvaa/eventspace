@@ -5,7 +5,7 @@ import type { SearchFilters } from '@/lib/api/search'
 
 interface SearchFiltersProps {
   filters: SearchFilters
-  categories: Array<{id: number, name: string, type: string, slug: string}>
+  categories: Array<{ id: number, name: string, type: string, slug?: string }>
   onUpdateFilter: (key: keyof SearchFilters, value: string | number | undefined) => void
   onUpdateFilters: (filters: Partial<SearchFilters>) => void
   onClearFilters: () => void
@@ -22,8 +22,8 @@ export default function SearchFiltersComponent({
 }: SearchFiltersProps) {
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [searchTerm, setSearchTerm] = useState(filters.query || '')
-  const [brazilianStates, setBrazilianStates] = useState<Array<{code: string, name: string, region: string}>>([])
-  
+  const [brazilianStates, setBrazilianStates] = useState<Array<{ code: string, name: string, region: string }>>([])
+
   useEffect(() => {
     getBrazilianStates().then(setBrazilianStates)
   }, [])
@@ -43,7 +43,7 @@ export default function SearchFiltersComponent({
     return value !== undefined && value !== '' && value !== 'all' && key !== 'type' && key !== 'page' && key !== 'limit'
   }).length
 
-  const suggestions = filters.type === 'advertiser' 
+  const suggestions = filters.type === 'advertiser'
     ? ['Som', 'Iluminação', 'Decoração', 'Buffet', 'DJ', 'Fotógrafo']
     : filters.type === 'space'
       ? ['Área de Lazer', 'Chácara', 'Salão']
@@ -60,10 +60,9 @@ export default function SearchFiltersComponent({
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder={`Buscar ${
-                filters.type === 'advertiser' ? 'anunciantes' : 
-                filters.type === 'space' ? 'espaços' : 'anúncios'
-              }...`}
+              placeholder={`Buscar ${filters.type === 'advertiser' ? 'anunciantes' :
+                  filters.type === 'space' ? 'espaços' : 'anúncios'
+                }...`}
               className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
           </div>
@@ -107,7 +106,7 @@ export default function SearchFiltersComponent({
             </span>
           )}
         </button>
-        
+
         {activeFiltersCount > 0 && (
           <button
             onClick={onClearFilters}

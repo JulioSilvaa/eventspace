@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase'
+import { apiClient } from '@/lib/api-client'
 import { Review, ReviewFormData } from '@/types/reviews'
 
 class ReviewService {
@@ -11,24 +11,19 @@ class ReviewService {
     offset: number = 0
   ): Promise<{ data: Review[]; error?: string; total?: number }> {
     try {
-      const { data, error, count } = await supabase
-        .from('reviews')
-        .select(`
-          *,
-          user:users(full_name)
-        `, { count: 'exact' })
-        .eq('listing_id', listingId)
-        .order('created_at', { ascending: false })
-        .range(offset, offset + limit - 1)
+      const { data, error } = await apiClient.get<{ reviews: Review[]; total: number }>(
+        `/api/reviews/listing/${listingId}`,
+        { limit, offset }
+      )
 
       if (error) {
         console.error('Error fetching listing reviews:', error)
         return { data: [], error: error.message }
       }
 
-      return { 
-        data: data || [], 
-        total: count || 0 
+      return {
+        data: data?.reviews || [],
+        total: data?.total || 0
       }
     } catch (error) {
       console.error('Error in getListingReviews:', error)
@@ -45,34 +40,18 @@ class ReviewService {
     userId?: string
   ): Promise<{ success: boolean; data?: Review; error?: string }> {
     try {
-      const insertData = {
+      const payload = {
         listing_id: listingId,
-        user_id: userId || null,
+        user_id: userId,
         reviewer_name: reviewData.reviewer_name || 'Usuário Anônimo',
         rating: reviewData.rating,
-        comment: reviewData.comment || null
+        comment: reviewData.comment
       }
 
-      const { data, error } = await supabase
-        .from('reviews')
-        .insert([insertData])
-        .select(`
-          *,
-          user:users(full_name)
-        `)
-        .single()
+      const { data, error } = await apiClient.post<Review>('/api/reviews', payload)
 
       if (error) {
         console.error('Error creating review:', error)
-        
-        // Handle duplicate review error
-        if (error.code === '23505') {
-          return { 
-            success: false, 
-            error: userId ? 'Você já avaliou este anúncio' : 'Já existe uma avaliação com estes dados' 
-          }
-        }
-        
         return { success: false, error: error.message }
       }
 
@@ -92,21 +71,10 @@ class ReviewService {
     userId: string
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      const updateData: Record<string, number | string | null> = {}
-      
-      if (reviewData.rating !== undefined) {
-        updateData.rating = reviewData.rating
-      }
-      
-      if (reviewData.comment !== undefined) {
-        updateData.comment = reviewData.comment || null
-      }
-
-      const { error } = await supabase
-        .from('reviews')
-        .update(updateData)
-        .eq('id', reviewId)
-        .eq('user_id', userId) // Ensure user can only update their own reviews
+      const { error } = await apiClient.patch(`/api/reviews/${reviewId}`, {
+        ...reviewData,
+        user_id: userId // Backend should verify ownership
+      })
 
       if (error) {
         console.error('Error updating review:', error)
@@ -125,11 +93,9 @@ class ReviewService {
    */
   async deleteReview(reviewId: string, userId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const { error } = await supabase
-        .from('reviews')
-        .delete()
-        .eq('id', reviewId)
-        .eq('user_id', userId)
+      // Backend should verify ownership, but we pass userId for safety if needed by API
+      // Usually DELETE methods don't take body, but validation relies on auth token
+      const { error } = await apiClient.delete(`/api/reviews/${reviewId}`)
 
       if (error) {
         console.error('Error deleting review:', error)
@@ -148,51 +114,27 @@ class ReviewService {
    */
   async getListingRatingSummary(
     listingId: string
-  ): Promise<{ 
-    data?: { 
-      average_rating: number; 
-      total_reviews: number; 
-      rating_distribution: { [key: number]: number } 
-    }; 
-    error?: string 
+  ): Promise<{
+    data?: {
+      average_rating: number;
+      total_reviews: number;
+      rating_distribution: { [key: number]: number }
+    };
+    error?: string
   }> {
     try {
-      const { data, error } = await supabase
-        .from('reviews')
-        .select('rating')
-        .eq('listing_id', listingId)
+      const { data, error } = await apiClient.get<{
+        average_rating: number;
+        total_reviews: number;
+        rating_distribution: { [key: number]: number }
+      }>(`/api/reviews/listing/${listingId}/summary`)
 
       if (error) {
         console.error('Error fetching rating summary:', error)
         return { error: error.message }
       }
 
-      if (!data || data.length === 0) {
-        return { 
-          data: { 
-            average_rating: 0, 
-            total_reviews: 0, 
-            rating_distribution: {} 
-          } 
-        }
-      }
-
-      const total_reviews = data.length
-      const average_rating = data.reduce((sum, review) => sum + review.rating, 0) / total_reviews
-
-      // Calculate rating distribution
-      const rating_distribution: { [key: number]: number } = {}
-      for (let i = 1; i <= 5; i++) {
-        rating_distribution[i] = data.filter(review => review.rating === i).length
-      }
-
-      return {
-        data: {
-          average_rating: Math.round(average_rating * 100) / 100, // Round to 2 decimal places
-          total_reviews,
-          rating_distribution
-        }
-      }
+      return { data }
     } catch (error) {
       console.error('Error in getListingRatingSummary:', error)
       return { error: 'Failed to fetch rating summary' }
@@ -204,19 +146,17 @@ class ReviewService {
    */
   async hasUserReviewed(listingId: string, userId: string): Promise<{ hasReviewed: boolean; error?: string }> {
     try {
-      const { data, error } = await supabase
-        .from('reviews')
-        .select('id')
-        .eq('listing_id', listingId)
-        .eq('user_id', userId)
-        .single()
+      const { data, error } = await apiClient.get<{ hasReviewed: boolean }>(
+        `/api/reviews/listing/${listingId}/user-status`,
+        { userId } // Pass userId as query param or rely on token
+      )
 
-      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+      if (error) {
         console.error('Error checking user review:', error)
         return { hasReviewed: false, error: error.message }
       }
 
-      return { hasReviewed: !!data }
+      return { hasReviewed: !!data?.hasReviewed }
     } catch (error) {
       console.error('Error in hasUserReviewed:', error)
       return { hasReviewed: false, error: 'Failed to check review status' }
@@ -232,31 +172,19 @@ class ReviewService {
     offset: number = 0
   ): Promise<{ data: (Review & { listing_title: string })[]; error?: string; total?: number }> {
     try {
-      const { data, error, count } = await supabase
-        .from('reviews')
-        .select(`
-          *,
-          listing:listings!inner(title, user_id),
-          user:users(full_name)
-        `, { count: 'exact' })
-        .eq('listing.user_id', userId)
-        .order('created_at', { ascending: false })
-        .range(offset, offset + limit - 1)
+      const { data, error } = await apiClient.get<{ reviews: (Review & { listing_title: string })[]; total: number }>(
+        `/api/reviews/user/${userId}/received`,
+        { limit, offset }
+      )
 
       if (error) {
         console.error('Error fetching user received reviews:', error)
         return { data: [], error: error.message }
       }
 
-      // Transform data to include listing title
-      const transformedData = (data || []).map(review => ({
-        ...review,
-        listing_title: review.listing?.title || 'Anúncio'
-      }))
-
-      return { 
-        data: transformedData, 
-        total: count || 0 
+      return {
+        data: data?.reviews || [],
+        total: data?.total || 0
       }
     } catch (error) {
       console.error('Error in getUserReceivedReviews:', error)
@@ -273,31 +201,19 @@ class ReviewService {
     offset: number = 0
   ): Promise<{ data: (Review & { listing_title: string })[]; error?: string; total?: number }> {
     try {
-      const { data, error, count } = await supabase
-        .from('reviews')
-        .select(`
-          *,
-          listing:listings(title),
-          user:users(full_name)
-        `, { count: 'exact' })
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .range(offset, offset + limit - 1)
+      const { data, error } = await apiClient.get<{ reviews: (Review & { listing_title: string })[]; total: number }>(
+        `/api/reviews/user/${userId}/written`,
+        { limit, offset }
+      )
 
       if (error) {
         console.error('Error fetching user written reviews:', error)
         return { data: [], error: error.message }
       }
 
-      // Transform data to include listing title
-      const transformedData = (data || []).map(review => ({
-        ...review,
-        listing_title: review.listing?.title || 'Anúncio'
-      }))
-
-      return { 
-        data: transformedData, 
-        total: count || 0 
+      return {
+        data: data?.reviews || [],
+        total: data?.total || 0
       }
     } catch (error) {
       console.error('Error in getUserWrittenReviews:', error)

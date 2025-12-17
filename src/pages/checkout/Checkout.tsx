@@ -9,45 +9,32 @@ export default function Checkout() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const { profile, user, isLoading: authLoading, isAuthenticated } = useAuth()
-  
+
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  
+
   // Get params from URL
-  const plan = (searchParams.get('plan') || 'basic') as PlanType
+  const plan = (searchParams.get('plan') || 'pro') as PlanType
   const billingCycle = (searchParams.get('billing') || 'monthly') as BillingCycle
   const isFromSignup = searchParams.get('signup') === 'true'
   const isRequired = searchParams.get('required') === 'true'
 
   const planDetails = {
-    basic: {
-      name: 'Básico',
-      description: 'Ideal para proprietários que querem testar a plataforma',
+    pro: {
+      name: 'Profissional',
+      description: 'O plano completo para seu negócio de eventos',
       monthlyPrice: 49.90,
       yearlyPrice: 499.00,
       features: [
-        '10 fotos profissionais por anúncio',
-        'Relatórios de visualizações e contatos', 
-        'Suporte por email (48h)',
-        '✅ 0% de comissão sobre vendas'
-      ]
-    },
-    premium: {
-      name: 'Premium',
-      description: 'Para negócios sérios que querem maximizar resultados',
-      monthlyPrice: 79.90,
-      yearlyPrice: 799.00,
-      features: [
-        'Destaque ilimitado (4x mais visitas)',
-        '20 fotos profissionais por anúncio',
-        'Relatórios detalhados e analytics',
-        'Dashboard personalizado + insights',
-        '✅ 0% de comissão sobre vendas'
+        'Até 20 fotos profissionais',
+        'Relatórios detalhados',
+        'Suporte prioritário',
+        '0% de comissão sobre vendas'
       ]
     }
   }
 
-  const selectedPlan = planDetails[plan as keyof typeof planDetails] || planDetails.basic
+  const selectedPlan = planDetails[plan as keyof typeof planDetails] || planDetails.pro
   const price = billingCycle === 'yearly' ? selectedPlan.yearlyPrice : selectedPlan.monthlyPrice
   const originalYearlyPrice = selectedPlan.monthlyPrice * 12
   const yearlyDiscount = originalYearlyPrice - selectedPlan.yearlyPrice
@@ -56,13 +43,13 @@ export default function Checkout() {
   useEffect(() => {
     // Wait for auth to initialize
     if (authLoading) return
-    
+
     // If not authenticated, redirect to login
     if (!isAuthenticated) {
       navigate('/login?redirect=/checkout')
       return
     }
-    
+
     // If authenticated but no profile, this might be a newly registered user
     // Try to use user data from auth as fallback
     if (!profile && user) {
@@ -83,7 +70,7 @@ export default function Checkout() {
       profileId: profile?.id,
       profileEmail: profile?.email
     })
-    
+
     // We need both user (for email) and profile (for id) data
     if (!user?.id || !user?.email || !profile?.id) {
       console.error('No user data available:', { user, profile })
@@ -93,7 +80,7 @@ export default function Checkout() {
 
     setIsLoading(true)
     setError(null)
-    
+
     try {
       const params: CreateCheckoutSessionParams = {
         planType: plan,
@@ -107,10 +94,10 @@ export default function Checkout() {
     } catch (error) {
       console.error('Payment error:', error)
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido'
-      
+
       // Provide more user-friendly error messages
       let userMessage = 'Erro ao processar pagamento. Tente novamente.'
-      
+
       if (errorMessage.includes('fetch')) {
         userMessage = 'Erro de conexão. Verifique sua internet e tente novamente.'
       } else if (errorMessage.includes('session') || errorMessage.includes('Stripe')) {
@@ -119,9 +106,9 @@ export default function Checkout() {
         userMessage = 'Sessão expirada. Faça login novamente.'
         setTimeout(() => navigate('/login?redirect=/checkout'), 2000)
       }
-      
+
       setError(userMessage)
-      
+
       // Navigate to error page for critical errors after a delay
       setTimeout(() => {
         if (errorMessage.includes('Stripe') || errorMessage.includes('session')) {
@@ -143,7 +130,7 @@ export default function Checkout() {
       </div>
     )
   }
-  
+
   // Show a warning if user exists but profile is missing
   if (isAuthenticated && user && !profile) {
     console.warn('User authenticated but profile not loaded. Proceeding with user data.')
@@ -206,7 +193,7 @@ export default function Checkout() {
             {/* Plan Summary */}
             <div className="bg-white rounded-lg shadow p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Resumo do Pedido</h2>
-              
+
               <div className="flex items-start gap-4 p-4 bg-blue-50 rounded-lg mb-4">
                 <Crown className="w-6 h-6 text-blue-600 mt-1" />
                 <div className="flex-1">
@@ -243,7 +230,7 @@ export default function Checkout() {
             {/* Payment Info */}
             <div className="bg-white rounded-lg shadow p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Finalizar Pagamento</h2>
-              
+
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
                 <div className="flex items-center gap-3 mb-2">
                   <CreditCard className="w-5 h-5 text-blue-600" />
@@ -265,7 +252,7 @@ export default function Checkout() {
                   <div>
                     <p className="text-sm font-medium text-red-800 mb-1">Ops! Algo deu errado</p>
                     <p className="text-sm text-red-700">{error}</p>
-                    <button 
+                    <button
                       onClick={() => setError(null)}
                       className="text-xs text-red-600 hover:text-red-800 mt-2 underline"
                     >
@@ -300,7 +287,7 @@ export default function Checkout() {
           <div className="lg:sticky lg:top-8">
             <div className="bg-white rounded-lg shadow p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Por que EventSpace?</h2>
-              
+
               <div className="space-y-4 mb-6">
                 <div className="flex items-start gap-3">
                   <Check className="w-5 h-5 text-green-500 mt-0.5" />
@@ -309,7 +296,7 @@ export default function Checkout() {
                     <p className="text-sm text-gray-600">Você fica com 100% do valor dos aluguéis</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start gap-3">
                   <Check className="w-5 h-5 text-green-500 mt-0.5" />
                   <div>
@@ -317,7 +304,7 @@ export default function Checkout() {
                     <p className="text-sm text-gray-600">Clientes entram em contato diretamente com você</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start gap-3">
                   <Check className="w-5 h-5 text-green-500 mt-0.5" />
                   <div>
@@ -325,7 +312,7 @@ export default function Checkout() {
                     <p className="text-sm text-gray-600">Cancele quando quiser, sem multa</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start gap-3">
                   <Check className="w-5 h-5 text-green-500 mt-0.5" />
                   <div>

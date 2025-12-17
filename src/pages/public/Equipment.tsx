@@ -24,12 +24,12 @@ export default function Equipment() {
     totalPages,
     hasNextPage,
     hasPrevPage
-  } = useSearch({ type: 'equipment' })
+  } = useSearch({ type: 'advertiser' })
 
   return (
     <div className="min-h-screen bg-gray-50 pt-16">
       <Header />
-      
+
       <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         {/* Header da Página */}
         <div className="mb-8">
@@ -44,7 +44,7 @@ export default function Equipment() {
               </p>
             </div>
           </div>
-          
+
           {/* Breadcrumb */}
           <nav className="text-sm text-gray-500">
             <a href="/" className="hover:text-gray-700">Início</a>
@@ -77,7 +77,7 @@ export default function Equipment() {
                 </button>
               </div>
             </div>
-            
+
             {hasResults && (
               <div className="text-sm text-gray-600">
                 {totalResults} {totalResults === 1 ? 'equipamento encontrado' : 'equipamentos encontrados'}
@@ -121,7 +121,7 @@ export default function Equipment() {
           </div>
         )}
       </div>
-      
+
       <Footer />
     </div>
   )

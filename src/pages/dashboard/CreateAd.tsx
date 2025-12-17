@@ -9,11 +9,11 @@ import UpgradeModal from '@/components/modals/UpgradeModal'
 import { useAdsStore } from '@/stores/adsStore'
 import { uploadAdImages, saveImageRecords } from '@/services/imageService'
 import { useToast } from '@/contexts/ToastContext'
-import { 
-  ArrowLeft, 
-  ArrowRight, 
-  CheckCircle, 
-  Building2, 
+import {
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle,
+  Building2,
   Users,
   DollarSign,
   Star,
@@ -26,8 +26,8 @@ import { getBrazilianStates } from '@/lib/api/search'
 import { getMaxImagesForPlan } from '@/lib/planLimits'
 import Tooltip from '@/components/ui/Tooltip'
 
-// Import supabase for fetching categories
-import { supabase } from '@/lib/supabase'
+// Import apiClient for fetching categories
+import { apiClient } from '@/lib/api-client'
 
 // Mapas de tradução das comodidades
 const AMENITIES_LABELS = {
@@ -76,10 +76,10 @@ const SERVICES_LABELS = {
 
 // Função para traduzir comodidades/recursos/serviços
 const translateItem = (item: string) => {
-  return AMENITIES_LABELS[item as keyof typeof AMENITIES_LABELS] || 
-         FEATURES_LABELS[item as keyof typeof FEATURES_LABELS] || 
-         SERVICES_LABELS[item as keyof typeof SERVICES_LABELS] || 
-         item // fallback para o ID original se não encontrar tradução
+  return AMENITIES_LABELS[item as keyof typeof AMENITIES_LABELS] ||
+    FEATURES_LABELS[item as keyof typeof FEATURES_LABELS] ||
+    SERVICES_LABELS[item as keyof typeof SERVICES_LABELS] ||
+    item // fallback para o ID original se não encontrar tradução
 }
 
 // Schema de validação
@@ -88,7 +88,7 @@ const createListingSchema = z.object({
   categoryType: z.enum(['space', 'advertiser'], {
     required_error: 'Selecione o tipo de anúncio'
   }),
-  
+
   // Step 2: Informações básicas
   title: z.string()
     .min(1, 'Título é obrigatório')
@@ -99,7 +99,7 @@ const createListingSchema = z.object({
     .min(50, 'Descrição deve ter pelo menos 50 caracteres')
     .max(1000, 'Descrição deve ter no máximo 1000 caracteres'),
   category_id: z.number().min(1, 'Categoria é obrigatória'),
-  
+
   // Campos específicos para espaços
   capacity: z.number()
     .min(1, 'Capacidade deve ser maior que zero')
@@ -109,7 +109,7 @@ const createListingSchema = z.object({
     .min(1, 'Área deve ser maior que zero')
     .max(100000, 'Área muito grande')
     .optional(),
-  
+
   // Step 3: Localização
   state: z.string().min(1, 'Estado é obrigatório'),
   city: z.string().min(1, 'Cidade é obrigatória'),
@@ -119,12 +119,12 @@ const createListingSchema = z.object({
     .regex(/^\d{5}-?\d{3}$/, 'CEP inválido (formato: 12345-678)')
     .optional(),
   reference_point: z.string().optional(),
-  
+
   // Step 4: Comodidades e Recursos
   amenities: z.array(z.string()).optional(),
   features: z.array(z.string()).optional(),
   services: z.array(z.string()).optional(),
-  
+
   // Step 5: Preço
   price: z.number()
     .min(1, 'Preço deve ser maior que zero')
@@ -132,7 +132,7 @@ const createListingSchema = z.object({
   priceType: z.enum(['daily', 'hourly', 'event'], {
     required_error: 'Selecione o tipo de preço'
   }),
-  
+
   // Step 6: Contato
   contactPhone: z.string()
     .min(1, 'Telefone é obrigatório')
@@ -148,10 +148,10 @@ const createListingSchema = z.object({
   contactFacebook: z.string()
     .max(100, 'Facebook muito longo')
     .optional(),
-  
+
   // Featured (apenas para planos premium/pro)
   featured: z.boolean().optional(),
-  
+
   // Images (será tratado separadamente no estado)
   images: z.array(z.any()).optional()
 })
@@ -179,10 +179,10 @@ export default function CreateListing() {
   const { isOpen, context, openModal, closeModal } = useUpgradeModal()
   const { createAd } = useAdsStore()
   const toast = useToast()
-  const [brazilianStates, setBrazilianStates] = useState<Array<{code: string, name: string, region: string}>>([])
-  const [categories, setCategories] = useState<Array<{id: number, name: string, type: 'space' | 'advertiser', parent_id?: number}>>([])
+  const [brazilianStates, setBrazilianStates] = useState<Array<{ code: string, name: string, region: string }>>([])
+  const [categories, setCategories] = useState<Array<{ id: number, name: string, type: 'space' | 'advertiser', parent_id?: number }>>([])
   const [error, setError] = useState<string | null>(null)
-  const [images, setImages] = useState<Array<{id: string, file: File, preview: string}>>([])
+  const [images, setImages] = useState<Array<{ id: string, file: File, preview: string }>>([])
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([])
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([])
   const [selectedServices, setSelectedServices] = useState<string[]>([])
@@ -191,27 +191,22 @@ export default function CreateListing() {
   const [customServices, setCustomServices] = useState<string[]>([])
   const maxImages = getMaxImagesForPlan(profile?.plan_type || 'free')
   const modalShownRef = useRef(false)
-  
+
   useEffect(() => {
     getBrazilianStates().then(setBrazilianStates)
-    
-    // Fetch categories from database
+
+    // Fetch categories from API
     const fetchCategories = async () => {
-      const { data, error } = await supabase
-        .from('categories')
-        .select('id, name, type, parent_id')
-        .eq('is_active', true)
-        .order('name')
-      
+      const { data, error } = await apiClient.get<Array<{ id: number, name: string, type: 'space' | 'advertiser', parent_id?: number }>>('/api/categories')
+
       if (error) {
         toast.error('Erro ao carregar categorias', 'Não foi possível carregar as categorias. Tente recarregar a página.')
       } else {
         const allCategories = data || []
         setCategories(allCategories)
-        // Categories are already set above
       }
     }
-    
+
     fetchCategories()
   }, [])
 
@@ -221,10 +216,10 @@ export default function CreateListing() {
       modalShownRef.current = true // Mark that we've shown the modal
       // If user has free plan, show no_plan modal
       if (profile.plan_type === 'free') {
-        openModal('no_plan')
+        openModal('generic') // Changed from no_plan to generic as per type definition
       } else {
         // If user has paid plan but reached limit, show create_listing modal
-        openModal('create_listing')
+        openModal('create_ad') // Changed from create_listing to create_ad
       }
     }
   }, [profile?.plan_type, canCreateAd, openModal, profile]) // Include all dependencies
@@ -246,14 +241,14 @@ export default function CreateListing() {
 
   const watchedCategoryType = watch('categoryType')
   const allValues = watch()
-  
+
   // Reset category when changing type
   useEffect(() => {
     if (watchedCategoryType) {
-      setValue('category_id', undefined)
+      setValue('category_id', undefined as unknown as number)
     }
   }, [watchedCategoryType, setValue])
-  
+
   // Definir featured como true automaticamente para usuários premium
   useEffect(() => {
     if (profile?.plan_type === 'premium') {
@@ -274,7 +269,7 @@ export default function CreateListing() {
     const numbers = value.replace(/\D/g, '')
     // Limitar a 11 dígitos (2 DDD + 9 número)
     const limitedNumbers = numbers.slice(0, 11)
-    
+
     if (limitedNumbers.length <= 10) {
       return limitedNumbers.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3')
     } else {
@@ -284,7 +279,7 @@ export default function CreateListing() {
 
   const nextStep = async () => {
     let fieldsToValidate: (keyof CreateListingData)[] = []
-    
+
     switch (currentStep) {
       case 1:
         fieldsToValidate = ['categoryType']
@@ -312,7 +307,7 @@ export default function CreateListing() {
         fieldsToValidate = ['contactPhone']
         break
     }
-    
+
     const isStepValid = await trigger(fieldsToValidate)
     if (isStepValid && currentStep < 8) {
       setCurrentStep(currentStep + 1)
@@ -328,17 +323,21 @@ export default function CreateListing() {
   const onSubmit = async (data: CreateListingData) => {
     setIsSubmitting(true)
     setError(null)
-    
+
+    let loadingToastId: string | number | undefined
+
     try {
       if (!user) {
         throw new Error('Usuário não encontrado')
       }
 
+      loadingToastId = toast.loading('Criando anúncio...', 'Aguarde enquanto processamos seus dados')
+
       // Mapear dados do formulário para o formato do banco
       const allAmenities = [...selectedAmenities, ...customAmenities]
       const allFeatures = [...selectedFeatures, ...customFeatures]
       const allServices = [...selectedServices, ...customServices]
-      
+
       const specifications = {
         ...(data.capacity && { capacity: data.capacity }),
         ...(data.area_sqm && { area_sqm: data.area_sqm }),
@@ -371,12 +370,10 @@ export default function CreateListing() {
         specifications: Object.keys(specifications).length > 0 ? specifications : undefined
       }
 
-      const loadingToastId = toast.loading('Criando anúncio...', 'Aguarde enquanto processamos seus dados')
-      
       const result = await createAd(listingData)
-      
+
       if (result.error) {
-        toast.removeToast(loadingToastId)
+        if (loadingToastId) toast.removeToast(loadingToastId)
         toast.error('Erro ao criar anúncio', result.error)
         setError(result.error)
         return
@@ -385,24 +382,24 @@ export default function CreateListing() {
       // Upload de imagens se houver
       if (images.length > 0 && result.data?.id) {
         try {
-          toast.updateToast(loadingToastId, { title: 'Enviando imagens...', message: `Carregando ${images.length} imagem${images.length > 1 ? 's' : ''}` })
+          if (loadingToastId) toast.updateToast(loadingToastId, { title: 'Enviando imagens...', message: `Carregando ${images.length} imagem${images.length > 1 ? 's' : ''}` })
           const uploadedImages = await uploadAdImages(result.data.id, images)
           await saveImageRecords(result.data.id, uploadedImages)
         } catch {
-          toast.removeToast(loadingToastId)
+          if (loadingToastId) toast.removeToast(loadingToastId)
           toast.warning('Anúncio criado com limitações', 'Anúncio criado com sucesso, mas houve erro no upload das imagens. Você pode editá-las depois.')
           setError('Anúncio criado com sucesso, mas houve erro no upload das imagens. Você pode editá-las depois.')
           setTimeout(() => navigate('/dashboard?newListing=true'), 3000)
           return
         }
       }
-      
+
       // Redirecionar para dashboard com mensagem de sucesso
-      toast.removeToast(loadingToastId)
+      if (loadingToastId) toast.removeToast(String(loadingToastId))
       toast.success('Anúncio criado com sucesso!', 'Seu anúncio foi publicado e já está disponível para visualização.')
       navigate('/dashboard?newListing=true')
     } catch (error) {
-      toast.removeToast(loadingToastId)
+      if (loadingToastId) toast.removeToast(String(loadingToastId))
       const errorMessage = error instanceof Error ? error.message : 'Erro inesperado ao criar anúncio'
       toast.error('Erro ao criar anúncio', errorMessage)
       setError(errorMessage)
@@ -424,13 +421,13 @@ export default function CreateListing() {
                 Escolha entre espaços para eventos ou anunciar como prestador de serviços
               </p>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-              <label 
+              <label
                 className={`
                   cursor-pointer border-2 rounded-lg p-6 transition-all hover:shadow-md
-                  ${watchedCategoryType === 'space' 
-                    ? 'border-primary-500 bg-primary-50' 
+                  ${watchedCategoryType === 'space'
+                    ? 'border-primary-500 bg-primary-50'
                     : 'border-gray-200 hover:border-gray-300'
                   }
                 `}
@@ -451,12 +448,12 @@ export default function CreateListing() {
                   </p>
                 </div>
               </label>
-              
-              <label 
+
+              <label
                 className={`
                   cursor-pointer border-2 rounded-lg p-6 transition-all hover:shadow-md
-                  ${watchedCategoryType === 'advertiser' 
-                    ? 'border-primary-500 bg-primary-50' 
+                  ${watchedCategoryType === 'advertiser'
+                    ? 'border-primary-500 bg-primary-50'
                     : 'border-gray-200 hover:border-gray-300'
                   }
                 `}
@@ -478,7 +475,7 @@ export default function CreateListing() {
                 </div>
               </label>
             </div>
-            
+
             {errors.categoryType && (
               <p className="text-red-600 text-sm text-center">{errors.categoryType.message}</p>
             )}
@@ -515,7 +512,7 @@ export default function CreateListing() {
                 required
                 placeholder="Selecione o tipo de serviço"
                 defaultValue=""
-                {...register('category_id', { 
+                {...register('category_id', {
                   setValueAs: (value) => value ? parseInt(value) : undefined
                 })}
               />
@@ -533,7 +530,7 @@ export default function CreateListing() {
                 required
                 placeholder="Selecione a categoria"
                 defaultValue=""
-                {...register('category_id', { 
+                {...register('category_id', {
                   setValueAs: (value) => value ? parseInt(value) : undefined
                 })}
               />
@@ -543,8 +540,8 @@ export default function CreateListing() {
               label="Título do anúncio"
               type="text"
               placeholder={
-                watchedCategoryType === 'advertiser' 
-                  ? "Ex: Buffet Completo para Festas" 
+                watchedCategoryType === 'advertiser'
+                  ? "Ex: Buffet Completo para Festas"
                   : watchedCategoryType === 'space'
                     ? "Ex: Salão de Festas para 200 pessoas"
                     : "Ex: Área de Lazer com Piscina"
@@ -865,7 +862,7 @@ export default function CreateListing() {
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
               <h4 className="font-medium text-green-900 mb-2">🔒 Contato 100% transparente</h4>
               <p className="text-sm text-green-700">
-                No EventSpace, o contato é sempre direto entre você e o interessado. 
+                No EventSpace, o contato é sempre direto entre você e o interessado.
                 Não cobramos comissões e não intermediamos a negociação.
               </p>
             </div>
@@ -948,7 +945,7 @@ export default function CreateListing() {
                   </p>
                 )}
               </div>
-              
+
               {/* Image Preview */}
               {images.length > 0 && (
                 <div className="border-t pt-4">
@@ -994,7 +991,7 @@ export default function CreateListing() {
                 </div>
                 <div className="mt-3">
                   <p className="text-sm text-gray-700 mb-2">
-                    Anúncios destacados aparecem no topo das buscas e no slider da página inicial, 
+                    Anúncios destacados aparecem no topo das buscas e no slider da página inicial,
                     recebendo até 5x mais visualizações!
                   </p>
                   <div className="flex items-center gap-4 text-xs text-gray-600">
@@ -1025,7 +1022,7 @@ export default function CreateListing() {
                       Quer destacar seus anúncios?
                     </h4>
                     <p className="text-sm text-blue-700 mb-4">
-                      Anúncios destacados recebem até 5x mais visualizações e aparecem 
+                      Anúncios destacados recebem até 5x mais visualizações e aparecem
                       no topo das buscas e na página inicial.
                     </p>
                     <button
@@ -1084,12 +1081,11 @@ export default function CreateListing() {
             {STEPS.map((step) => (
               <div key={step.id} className="flex flex-col items-center flex-1">
                 {/* Circle */}
-                <div 
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                    currentStep >= step.id 
-                      ? 'bg-primary-600 text-white' 
-                      : 'bg-gray-200 text-gray-600'
-                  }`}
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${currentStep >= step.id
+                    ? 'bg-primary-600 text-white'
+                    : 'bg-gray-200 text-gray-600'
+                    }`}
                 >
                   {currentStep > step.id ? (
                     <CheckCircle className="w-4 h-4" />
@@ -1097,7 +1093,7 @@ export default function CreateListing() {
                     step.id
                   )}
                 </div>
-                
+
                 {/* Step Info */}
                 <div className="text-center mt-2">
                   <p className="text-xs font-medium text-gray-900">{step.title}</p>
@@ -1106,11 +1102,11 @@ export default function CreateListing() {
               </div>
             ))}
           </div>
-          
+
           {/* Progress Line */}
           <div className="relative -mt-20 mb-16">
             <div className="absolute top-4 left-0 right-0 h-0.5 bg-gray-200">
-              <div 
+              <div
                 className="h-full bg-primary-600 transition-all duration-300"
                 style={{ width: `${((currentStep - 1) / (STEPS.length - 1)) * 100}%` }}
               />

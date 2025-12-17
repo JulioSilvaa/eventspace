@@ -1,6 +1,6 @@
-import { supabase } from '@/lib/supabase'
 import { stripe, PLAN_PRICES, type PlanType, type BillingCycle } from '@/lib/stripe'
 import { encryptUserData } from '@/lib/crypto'
+import { apiClient } from '@/lib/api-client'
 
 export interface CreateCheckoutSessionParams {
   planType: PlanType
@@ -24,76 +24,54 @@ export interface PaymentRecord {
   updated_at: string
 }
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
+
 class PaymentService {
   async createCheckoutSession(params: CreateCheckoutSessionParams): Promise<string> {
     const { planType, billingCycle, userId, userEmail } = params
-    
+
     try {
       // Get the price ID from our configuration
       const priceId = PLAN_PRICES[planType][billingCycle]
-      
-      // Create payment record in database
-      const amount = this.getPlanAmount(planType, billingCycle)
-      const expiresAt = this.calculateExpirationDate(billingCycle)
-      
-      const { data: payment, error: paymentError } = await supabase
-        .from('payments')
-        .insert({
-          user_id: userId,
-          plan_type: planType,
-          amount,
-          currency: 'BRL',
-          payment_status: 'pending',
-          payment_method: 'credit_card',
-          starts_at: new Date().toISOString(),
-          expires_at: expiresAt
-        })
-        .select('id')
-        .single()
 
-      if (paymentError) {
-        throw new Error(`Failed to create payment record: ${paymentError.message}`)
-      }
-
-      // Call Supabase Edge Function to create Stripe session
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://zdvsafxltfdzjspmsdla.supabase.co'
-      const response = await fetch(`${supabaseUrl}/functions/v1/stripe-checkout`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-        },
-        body: JSON.stringify({
-          priceId,
-          userId,
-          userEmail,
-          paymentId: payment.id,
-          planType,
-          billingCycle
-        }),
+      // Create payment through API
+      const { data, error } = await apiClient.post<{ sessionId: string; url?: string }>('/api/subscription/checkout', {
+        priceId,
+        planType,
+        billingCycle,
+        userId,
+        userEmail,
       })
 
-      if (!response.ok) {
-        throw new Error('Failed to create checkout session')
+      if (error) {
+        throw new Error(error.message || 'Failed to create checkout session')
       }
 
-      const { sessionId } = await response.json()
-      
+      if (data?.url) {
+        // If API returns a URL directly, redirect
+        window.location.href = data.url
+        return data.sessionId || ''
+      }
+
+      if (!data?.sessionId) {
+        throw new Error('No session ID returned')
+      }
+
       // Redirect to Stripe Checkout
       const stripeInstance = await stripe
       if (!stripeInstance) {
         throw new Error('Stripe not loaded')
       }
 
-      const { error } = await stripeInstance.redirectToCheckout({
-        sessionId,
+      const { error: stripeError } = await stripeInstance.redirectToCheckout({
+        sessionId: data.sessionId,
       })
 
-      if (error) {
-        throw new Error(error.message)
+      if (stripeError) {
+        throw new Error(stripeError.message)
       }
 
-      return sessionId
+      return data.sessionId
     } catch (error) {
       console.error('Error creating checkout session:', error)
       throw error
@@ -102,137 +80,60 @@ class PaymentService {
 
 
   async getPaymentStatus(paymentId: string): Promise<PaymentRecord | null> {
-    const { data, error } = await supabase
-      .from('payments')
-      .select('*')
-      .eq('id', paymentId)
-      .single()
+    const { data, error } = await apiClient.get<PaymentRecord>(`/api/payments/${paymentId}`)
 
     if (error) {
       console.error('Error fetching payment:', error)
       return null
     }
 
-    return data
+    return data || null
   }
 
   async updatePaymentStatus(paymentId: string, payment_status: PaymentRecord['payment_status'], stripePaymentIntentId?: string) {
-    const updateData: { 
+    const updateData: {
       payment_status: PaymentRecord['payment_status'],
-      updated_at: string,
       stripe_payment_id?: string
-    } = { 
-      payment_status,
-      updated_at: new Date().toISOString()
+    } = {
+      payment_status
     }
-    
+
     if (stripePaymentIntentId) {
       updateData.stripe_payment_id = stripePaymentIntentId
     }
 
-    const { error } = await supabase
-      .from('payments')
-      .update(updateData)
-      .eq('id', paymentId)
+    const { error } = await apiClient.patch(`/api/payments/${paymentId}`, updateData)
 
     if (error) {
       console.error('Error updating payment status:', error)
-      throw error
-    }
-
-    // If payment completed successfully, update user's plan_type
-    if (payment_status === 'completed') {
-      await this.updateUserPlanTypeFromPayment(paymentId)
+      throw new Error(error.message)
     }
   }
 
-  private async updateUserPlanTypeFromPayment(paymentId: string) {
-    try {
-      // Get payment details
-      const { data: payment, error: paymentError } = await supabase
-        .from('payments')
-        .select('user_id, plan_type, expires_at')
-        .eq('id', paymentId)
-        .single()
-
-      if (paymentError || !payment) {
-        console.error('Error fetching payment for plan update:', paymentError)
-        return
-      }
-
-      // Activate account and update plan_type only after confirmed payment
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ 
-          plan_type: payment.plan_type,
-          account_status: 'active', // Activate the account
-          plan_expires_at: payment.expires_at, // Use the expiration from payment
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', payment.user_id)
-
-      if (profileError) {
-        console.error('Error updating user plan type:', profileError)
-      }
-    } catch (error) {
-      console.error('Error in updateUserPlanTypeFromPayment:', error)
-    }
-  }
-
-  // Método para processar pagamentos pendentes que podem ter sido completados
-  async processPendingPayments(userId: string): Promise<void> {
-    try {
-      const { data: pendingPayments, error } = await supabase
-        .from('payments')
-        .select('id, plan_type, expires_at')
-        .eq('user_id', userId)
-        .eq('payment_status', 'pending')
-        .order('created_at', { ascending: false })
-
-      if (error) {
-        console.error('Error fetching pending payments:', error)
-        return
-      }
-
-      // Se há pagamentos pendentes, marca o mais recente como completado
-      // Isso simula o que um webhook faria
-      if (pendingPayments && pendingPayments.length > 0) {
-        const latestPayment = pendingPayments[0]
-        await this.updatePaymentStatus(latestPayment.id, 'completed')
-      }
-    } catch (error) {
-      console.error('Error processing pending payments:', error)
-    }
+  async processPendingPayments(_userId: string): Promise<void> {
+    // This is typically handled by webhooks on the backend
+    console.log('Pending payments are processed by backend webhooks')
   }
 
   async getUserActivePayment(userId: string): Promise<PaymentRecord | null> {
-    const { data, error } = await supabase
-      .from('payments')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('status', 'completed')
-      .gt('expires_at', new Date().toISOString())
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single()
+    const { data, error } = await apiClient.get<{ payment: PaymentRecord }>(
+      `/api/payments/user/${userId}/active`
+    )
 
-    if (error && error.code !== 'PGRST116') {
+    if (error) {
+      if (error.status === 404) return null
       console.error('Error fetching active payment:', error)
       return null
     }
 
-    return data
+    return data?.payment || null
   }
 
   private getPlanAmount(planType: PlanType, billingCycle: BillingCycle): number {
     const prices = {
-      basic: {
+      pro: {
         monthly: 49.90,
         yearly: 499.00
-      },
-      premium: {
-        monthly: 79.90,
-        yearly: 799.00
       }
     }
 
@@ -242,17 +143,16 @@ class PaymentService {
   private calculateExpirationDate(billingCycle: BillingCycle): string {
     const now = new Date()
     const expirationDate = new Date(now)
-    
+
     if (billingCycle === 'monthly') {
       expirationDate.setMonth(now.getMonth() + 1)
     } else {
       expirationDate.setFullYear(now.getFullYear() + 1)
     }
-    
+
     return expirationDate.toISOString()
   }
 
-  // Create checkout session for upgrading existing subscription
   async createUpgradeCheckoutSession(params: {
     currentSubscriptionId: string
     newPlanType: PlanType
@@ -261,125 +161,57 @@ class PaymentService {
     userEmail: string
     proRatedAmount: number
   }): Promise<string> {
-    const { currentSubscriptionId, newPlanType, billingCycle, userId, userEmail, proRatedAmount } = params
-    
+    const { newPlanType, billingCycle, userId, userEmail, proRatedAmount, currentSubscriptionId } = params
+
     try {
-      // Get the price ID for the new plan
       const priceId = PLAN_PRICES[newPlanType][billingCycle]
-      
+
       if (!priceId) {
         throw new Error(`Price ID not configured for ${newPlanType}/${billingCycle}`)
       }
 
-      // Create payment record for the upgrade
-      const { data: payment, error: paymentError } = await supabase
-        .from('payments')
-        .insert({
-          user_id: userId,
-          plan_type: newPlanType,
-          amount: proRatedAmount,
-          currency: 'BRL',
-          payment_status: 'pending',
-          payment_method: 'credit_card',
-          starts_at: new Date().toISOString(),
-          expires_at: this.calculateExpirationDate(billingCycle)
-        })
-        .select()
-        .single()
-
-      if (paymentError) {
-        throw new Error(`Failed to create payment record: ${paymentError.message}`)
-      }
-
-      // Prepare metadata for Stripe
-      const metadata = {
+      const { data, error } = await apiClient.post<{ url: string }>('/api/subscription/upgrade-checkout', {
+        priceId,
         planType: newPlanType,
         billingCycle,
         userId,
         userEmail,
-        paymentId: payment.id,
-        isUpgrade: 'true',
+        proRatedAmount,
         currentSubscriptionId,
-        proRatedAmount: proRatedAmount.toString()
-      }
-
-      // Call Edge Function to create Stripe checkout session
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://zdvsafxltfdzjspmsdla.supabase.co'
-      
-      const response = await fetch(`${supabaseUrl}/functions/v1/create-checkout-session`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-        },
-        body: JSON.stringify({
-          priceId,
-          customerEmail: userEmail,
-          metadata,
-          mode: 'payment', // One-time payment for pro-rated amount
-          successUrl: `${window.location.origin}/checkout/upgrade-success?plan=${newPlanType}`,
-          cancelUrl: `${window.location.origin}/checkout/upgrade?cancelled=true`
-        }),
       })
 
-      if (!response.ok) {
-        const errorData = await response.text()
-        throw new Error(`Stripe checkout session creation failed: ${errorData}`)
+      if (error) {
+        throw new Error(error.message || 'Failed to create upgrade checkout')
       }
 
-      const { url } = await response.json()
-      
-      if (!url) {
-        throw new Error('No checkout URL returned from Stripe')
+      if (!data?.url) {
+        throw new Error('No checkout URL returned')
       }
 
-      return url
+      return data.url
     } catch (error) {
       console.error('Error creating upgrade checkout session:', error)
       throw error
     }
   }
 
-  // Schedule subscription downgrade (no payment required)
   async scheduleDowngrade(params: {
     subscriptionId: string
     newPlanType: PlanType
     userId: string
     effectiveDate: string
   }): Promise<boolean> {
-    const { subscriptionId, newPlanType, userId, effectiveDate } = params
-    
+    const { subscriptionId, newPlanType, effectiveDate } = params
+
     try {
-      // Record the scheduled downgrade
-      const { error: changeError } = await supabase
-        .from('subscription_changes')
-        .insert({
-          subscription_id: subscriptionId,
-          user_id: userId,
-          change_type: 'downgrade',
-          from_plan: 'premium', // Assuming downgrade is always from premium
-          to_plan: newPlanType,
-          effective_date: effectiveDate,
-          status: 'scheduled',
-          created_at: new Date().toISOString()
-        })
+      const { error } = await apiClient.patch(`/api/subscription/${subscriptionId}/schedule-downgrade`, {
+        new_plan_type: newPlanType,
+        effective_date: effectiveDate,
+      })
 
-      if (changeError) {
-        throw new Error(`Failed to schedule downgrade: ${changeError.message}`)
-      }
-
-      // Update subscription to mark for downgrade at period end
-      const { error: subscriptionError } = await supabase
-        .from('subscriptions')
-        .update({
-          cancel_at_period_end: true,
-          downgrade_to_plan: newPlanType,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', subscriptionId)
-
-      if (subscriptionError) {
-        throw new Error(`Failed to update subscription: ${subscriptionError.message}`)
+      if (error) {
+        console.error('Failed to schedule downgrade:', error)
+        return false
       }
 
       return true
@@ -389,7 +221,6 @@ class PaymentService {
     }
   }
 
-  // Get plan pricing information
   getPlanPricing(planType: PlanType, billingCycle: BillingCycle): {
     amount: number
     currency: string
@@ -402,8 +233,7 @@ class PaymentService {
     }
   }
 
-  // Novo método para checkout com dados de signup
-  async createCheckoutSessionWithSignup(params: CreateCheckoutSessionParams & { 
+  async createCheckoutSessionWithSignup(params: CreateCheckoutSessionParams & {
     userData: {
       full_name: string
       phone?: string
@@ -413,112 +243,71 @@ class PaymentService {
     }
   }): Promise<string> {
     const { planType, billingCycle, userEmail, userData } = params
-    
+
     try {
-      // Get the price ID from our configuration
       const priceId = PLAN_PRICES[planType][billingCycle]
-      
-      // Verificar se o Price ID está configurado
+
       if (!priceId) {
         const error = `Price ID not configured for ${planType}/${billingCycle}. Check your .env file.`
         console.error('❌ Price ID não configurado:', error)
         throw new Error(error)
       }
-      
-      // Criptografar todos os dados sensíveis do usuário
+
+      // Encrypt user data
       const { encryptedData, hash } = encryptUserData({
         fullName: userData.full_name,
         email: userEmail,
         phone: userData.phone || '',
         state: userData.state,
         city: userData.city,
-        password: '' // Não há password neste contexto
+        password: ''
       })
-      
-      // Preparar metadata com dados criptografados
-      const metadata = {
+
+      // Create checkout session through API
+      const { data, error } = await apiClient.post<{ sessionId: string; url?: string }>('/api/subscription/signup-checkout', {
+        priceId,
         planType,
         billingCycle,
-        userEmail, // Email fica não criptografado para identificação
-        encryptedUserData: encryptedData,
-        dataHash: hash, // Hash para verificação de integridade
-        signupFlow: 'true', // Flag para identificar como signup
-        encryptionVersion: import.meta.env.VITE_ENCRYPTION_VERSION || '2.0' // Versão da criptografia
-      }
-
-      // Validar tamanho da metadata para Stripe (limite 500 chars por campo)
-      const validateMetadataSize = (obj: Record<string, string>) => {
-        for (const [key, value] of Object.entries(obj)) {
-          if (value && value.length > 500) {
-            throw new Error(`Metadata field '${key}' exceeds Stripe limit: ${value.length} chars (max 500)`)
-          }
-        }
-      }
-
-      validateMetadataSize(metadata)
-
-      // Call Supabase Edge Function to create Stripe session with signup data
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://zdvsafxltfdzjspmsdla.supabase.co'
-      const edgeFunctionUrl = `${supabaseUrl}/functions/v1/stripe-checkout`
-      
-      const requestBody = {
-        priceId,
         userEmail,
-        metadata,
+        encryptedUserData: encryptedData,
+        dataHash: hash,
         successUrl: `${window.location.origin}/signup-success?session_id={CHECKOUT_SESSION_ID}&plan=${planType}`,
         cancelUrl: `${window.location.origin}/cadastro?error=cancelled`
-      }
-      
-      const response = await fetch(edgeFunctionUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-        },
-        body: JSON.stringify(requestBody),
       })
 
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.error('Edge function error:', {
-          status: response.status,
-          statusText: response.statusText,
-          error: errorText
-        })
-        
-        // Melhor tratamento de erros específicos
-        if (response.status === 400) {
-          if (errorText.includes('Metadata values can have up to 500 characters')) {
-            throw new Error('Dados muito longos para processar. Tente com informações mais concisas.')
-          }
-          throw new Error(`Erro de validação: ${errorText}`)
-        } else if (response.status === 401) {
-          throw new Error('Erro de autenticação. Tente novamente.')
-        } else if (response.status >= 500) {
-          throw new Error('Erro temporário do servidor. Tente novamente em alguns segundos.')
+      if (error) {
+        if (error.message.includes('Metadata values can have up to 500 characters')) {
+          throw new Error('Dados muito longos para processar. Tente com informações mais concisas.')
         }
-        
-        throw new Error(`Erro ao criar sessão de pagamento: ${errorText}`)
+        throw new Error(error.message || 'Erro ao criar sessão de pagamento')
       }
 
-      const responseData = await response.json()
-      const { sessionId } = responseData
-      
+      // If API returns a URL directly, use it
+      if (data?.url) {
+        // Fallback: Try to use Edge Function if API doesn't support this
+        window.location.href = data.url
+        return data.sessionId || ''
+      }
+
+      if (!data?.sessionId) {
+        throw new Error('No session ID returned')
+      }
+
       // Redirect to Stripe Checkout
       const stripeInstance = await stripe
       if (!stripeInstance) {
         throw new Error('Stripe not loaded')
       }
 
-      const { error } = await stripeInstance.redirectToCheckout({
-        sessionId,
+      const { error: stripeError } = await stripeInstance.redirectToCheckout({
+        sessionId: data.sessionId,
       })
 
-      if (error) {
-        throw new Error(error.message)
+      if (stripeError) {
+        throw new Error(stripeError.message)
       }
 
-      return sessionId
+      return data.sessionId
     } catch (error) {
       console.error('💥 Error creating signup checkout session:', error)
       throw error

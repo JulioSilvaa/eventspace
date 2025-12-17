@@ -35,7 +35,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     setToasts(prev => [...prev, newToast])
 
     // Auto remove toast after duration (unless it's loading or duration is 0)
-    if (newToast.duration > 0) {
+    if (newToast.duration && newToast.duration > 0) {
       setTimeout(() => {
         setToasts(prev => prev.filter(toast => toast.id !== id))
       }, newToast.duration)
@@ -49,7 +49,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const updateToast = useCallback((id: string, updates: Partial<Toast>) => {
-    setToasts(prev => prev.map(toast => 
+    setToasts(prev => prev.map(toast =>
       toast.id === id ? { ...toast, ...updates } : toast
     ))
   }, [])

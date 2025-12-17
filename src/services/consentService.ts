@@ -8,13 +8,13 @@
  * - Providing consent status checks
  */
 
-import { supabase } from '@/lib/supabase'
-import type { 
-  ConsentRecord, 
-  ConsentStatus, 
-  ConsentType, 
-  DOCUMENT_VERSIONS 
+import { apiClient } from '@/lib/api-client'
+import type {
+  ConsentRecord,
+  ConsentStatus,
+  ConsentType
 } from '@/types'
+import { DOCUMENT_VERSIONS } from '@/types'
 
 /**
  * Gets the user's IP address for consent records
@@ -50,10 +50,10 @@ export async function recordConsent(
   try {
     const ip_address = await getUserIP()
     const user_agent = getUserAgent()
-    
+
     // Use provided version or current version
     const version = documentVersion || DOCUMENT_VERSIONS[consentType as keyof typeof DOCUMENT_VERSIONS] || '1.0'
-    
+
     const consentData: Omit<ConsentRecord, 'id' | 'created_at' | 'updated_at' | 'withdrawal_timestamp' | 'withdrawal_reason'> = {
       user_id: userId,
       consent_type: consentType,
@@ -64,11 +64,7 @@ export async function recordConsent(
       user_agent
     }
 
-    const { error } = await supabase
-      .from('consent_records')
-      .insert([consentData])
-      .select()
-      .single()
+    const { error } = await apiClient.post('/api/consent', consentData)
 
     if (error) {
       console.error('Error recording consent:', error)
@@ -78,9 +74,9 @@ export async function recordConsent(
     return { success: true }
   } catch (error) {
     console.error('Exception recording consent:', error)
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
     }
   }
 }
@@ -97,9 +93,9 @@ export async function recordRegistrationConsent(
   try {
     const detectedIP = ip_address || await getUserIP()
     const detectedUA = user_agent || getUserAgent()
-    
+
     const timestamp = new Date().toISOString()
-    
+
     const consentRecords = [
       {
         user_id: userId,
@@ -121,10 +117,7 @@ export async function recordRegistrationConsent(
       }
     ]
 
-    const { error } = await supabase
-      .from('consent_records')
-      .insert(consentRecords)
-      .select()
+    const { error } = await apiClient.post('/api/consent/registration', { consents: consentRecords })
 
     if (error) {
       console.error('Error recording registration consent:', error)
@@ -134,9 +127,9 @@ export async function recordRegistrationConsent(
     return { success: true }
   } catch (error) {
     console.error('Exception recording registration consent:', error)
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
     }
   }
 }
@@ -150,45 +143,24 @@ export async function withdrawConsent(
   reason?: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    // Find the most recent consent record for this user/type
-    const { data: existingConsent, error: findError } = await supabase
-      .from('consent_records')
-      .select('id')
-      .eq('user_id', userId)
-      .eq('consent_type', consentType)
-      .eq('consent_given', true)
-      .is('withdrawal_timestamp', null)
-      .order('consent_timestamp', { ascending: false })
-      .limit(1)
-      .single()
+    const { error } = await apiClient.post('/api/consent/withdraw', {
+      userId,
+      consentType,
+      reason
+    })
 
-    if (findError || !existingConsent) {
-      return { 
-        success: false, 
-        error: 'No active consent found to withdraw' 
-      }
-    }
-
-    // Update the record to mark withdrawal
-    const { error: updateError } = await supabase
-      .from('consent_records')
-      .update({
-        withdrawal_timestamp: new Date().toISOString(),
-        withdrawal_reason: reason
-      })
-      .eq('id', existingConsent.id)
-
-    if (updateError) {
-      console.error('Error withdrawing consent:', updateError)
-      return { success: false, error: updateError.message }
+    if (error) {
+      console.error('Error withdrawing consent:', error)
+      // Return success false but handle simpler error from backend
+      return { success: false, error: error.message }
     }
 
     return { success: true }
   } catch (error) {
     console.error('Exception withdrawing consent:', error)
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
     }
   }
 }
@@ -198,18 +170,14 @@ export async function withdrawConsent(
  */
 export async function getConsentStatus(userId: string): Promise<ConsentStatus | null> {
   try {
-    const { data, error } = await supabase
-      .from('user_consent_status')
-      .select('*')
-      .eq('user_id', userId)
-      .single()
+    const { data, error } = await apiClient.get<ConsentStatus>(`/api/consent/status/${userId}`)
 
     if (error) {
       console.error('Error fetching consent status:', error)
       return null
     }
 
-    return data
+    return data || null
   } catch (error) {
     console.error('Exception fetching consent status:', error)
     return null
@@ -237,11 +205,7 @@ export async function hasCurrentConsentVersions(userId: string): Promise<boolean
  */
 export async function getConsentHistory(userId: string): Promise<ConsentRecord[]> {
   try {
-    const { data, error } = await supabase
-      .from('consent_records')
-      .select('*')
-      .eq('user_id', userId)
-      .order('consent_timestamp', { ascending: false })
+    const { data, error } = await apiClient.get<ConsentRecord[]>(`/api/consent/history/${userId}`)
 
     if (error) {
       console.error('Error fetching consent history:', error)
@@ -275,11 +239,11 @@ export function formatConsentSummary(status: ConsentStatus): string {
   if (!status.has_required_consents) {
     return 'Consentimentos pendentes'
   }
-  
+
   if (!status.has_current_consent_versions) {
     return 'Atualization de consentimentos necessária'
   }
-  
+
   return `Termos aceitos em ${new Date(status.terms_accepted_at!).toLocaleDateString('pt-BR')}`
 }
 
@@ -294,7 +258,7 @@ export async function exportUserConsentData(userId: string): Promise<{
 }> {
   const consents = await getConsentHistory(userId)
   const summary = await getConsentStatus(userId)
-  
+
   return {
     consents,
     summary,
