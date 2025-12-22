@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { 
-  ArrowLeft, 
-  User, 
-  Shield, 
-  CreditCard, 
-  Bell, 
+import {
+  ArrowLeft,
+  User,
+  Shield,
+  CreditCard,
+  Bell,
   Trash2,
   Settings as SettingsIcon
 } from 'lucide-react'
@@ -65,7 +65,7 @@ export default function Settings() {
               Voltar ao Dashboard
             </Link>
           </div>
-          
+
           <div className="flex items-center gap-3 mb-4">
             <div className="bg-primary-100 p-3 rounded-lg">
               <SettingsIcon className="w-8 h-8 text-primary-600" />
@@ -79,7 +79,7 @@ export default function Settings() {
           </div>
 
           {/* Profile Info Header */}
-          {profile && (
+          {profile && profile.full_name && (
             <div className="bg-white rounded-lg p-4 border border-gray-200">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
@@ -91,7 +91,7 @@ export default function Settings() {
                   <h3 className="text-lg font-semibold text-gray-900">{profile.full_name}</h3>
                   <p className="text-sm text-gray-600">{profile.email}</p>
                   <p className="text-xs text-gray-500">
-                    Plano {profile.plan_type} • {profile.city}, {profile.state}
+                    Plano {profile.plan_type || 'free'} • {profile.city || 'N/A'}, {profile.state || 'N/A'}
                   </p>
                 </div>
               </div>
@@ -110,11 +110,10 @@ export default function Settings() {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`w-full flex items-center gap-3 p-3 rounded-lg text-left transition-colors ${
-                      activeTab === tab.id
+                    className={`w-full flex items-center gap-3 p-3 rounded-lg text-left transition-colors ${activeTab === tab.id
                         ? 'bg-primary-50 text-primary-700 border border-primary-200'
                         : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
-                    }`}
+                      }`}
                   >
                     <Icon className="w-5 h-5" />
                     <div>
@@ -184,7 +183,7 @@ function PersonalInformationSection() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
-    
+
     try {
       const result = await updateProfile(formData)
       if (result.error) {
@@ -299,7 +298,7 @@ function SecuritySection() {
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       alert('As senhas não coincidem')
       return
@@ -410,7 +409,7 @@ function SubscriptionSection() {
           Visualize e gerencie sua assinatura atual, métodos de pagamento e histórico de cobrança.
         </p>
       </div>
-      
+
       <SubscriptionCard />
     </div>
   )
@@ -433,7 +432,7 @@ function PrivacySection() {
         marketing_consent: preferences.marketing_consent,
         marketing_consent_at: preferences.marketing_consent ? new Date().toISOString() : undefined
       })
-      
+
       if (result.error) {
         alert('Erro ao atualizar preferências: ' + result.error)
       } else {
@@ -451,7 +450,7 @@ function PrivacySection() {
     <div className="space-y-6">
       <div>
         <h3 className="text-lg font-medium text-gray-900 mb-4">Preferências de Comunicação</h3>
-        
+
         <div className="space-y-4">
           <div className="flex items-start">
             <div className="flex items-center h-5">
@@ -560,8 +559,8 @@ function AccountManagementSection() {
       return
     }
 
-    if (!confirm('Digite "EXCLUIR" para confirmar a exclusão da conta:') || 
-        prompt('Digite "EXCLUIR" para confirmar:') !== 'EXCLUIR') {
+    if (!confirm('Digite "EXCLUIR" para confirmar a exclusão da conta:') ||
+      prompt('Digite "EXCLUIR" para confirmar:') !== 'EXCLUIR') {
       return
     }
 
@@ -610,7 +609,7 @@ function AccountManagementSection() {
       {/* Danger Zone */}
       <div className="border-t pt-8">
         <h3 className="text-lg font-medium text-red-900 mb-4">Zona de Perigo</h3>
-        
+
         <div className="space-y-4">
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
             <h4 className="font-medium text-red-900 mb-2">Desativar Conta</h4>
