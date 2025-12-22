@@ -57,7 +57,7 @@ export default function Dashboard() {
     isLoading: metricsLoading
   } = useUserRealTimeMetrics(user?.id, {
     pollingInterval: 30000, // 30 segundos
-    enablePolling: true
+    enablePolling: true // Endpoint implementado!
   })
 
 
@@ -154,7 +154,7 @@ export default function Dashboard() {
     setLoadingData(false)
   }, [userAds, realTimeMetrics])
 
-  if (isLoading || metricsLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">

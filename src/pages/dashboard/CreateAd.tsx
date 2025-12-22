@@ -1179,8 +1179,9 @@ export default function CreateListing() {
       <UpgradeModal
         isOpen={isOpen}
         onClose={() => {
-          modalShownRef.current = false // Reset the flag when modal is closed
           closeModal()
+          // Se o usuário fechar o modal sem fazer upgrade, redirecionar para dashboard
+          navigate('/dashboard')
         }}
         context={context}
       />

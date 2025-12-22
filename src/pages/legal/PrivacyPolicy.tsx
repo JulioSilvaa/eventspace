@@ -41,7 +41,7 @@ export default function PrivacyPolicy() {
           <p><strong>Encarregado de Dados (DPO):</strong> A ser definido</p>
         </div>
         <p>
-          O EventSpace atua como controlador dos dados pessoais coletados através da plataforma 
+          O EventSpace atua como controlador dos dados pessoais coletados através da plataforma
           e é responsável por assegurar o cumprimento da legislação de proteção de dados.
         </p>
       </section>
@@ -59,7 +59,7 @@ export default function PrivacyPolicy() {
           <li>Localização (cidade e estado)</li>
           <li>Senha (armazenada de forma criptografada)</li>
         </ul>
-        
+
         <p>
           <strong>Durante o uso da plataforma:</strong>
         </p>
@@ -82,7 +82,7 @@ export default function PrivacyPolicy() {
 
         <h3>3.3 Dados de Pagamento</h3>
         <p>
-          Dados de pagamento são processados exclusivamente pela Stripe (processador PCI-DSS compliant). 
+          Dados de pagamento são processados exclusivamente pela Stripe (processador PCI-DSS compliant).
           O EventSpace não armazena informações completas de cartão de crédito.
         </p>
       </section>
@@ -130,17 +130,16 @@ export default function PrivacyPolicy() {
         <h2>6. Compartilhamento de Dados</h2>
         <h3>6.1 Compartilhamento Necessário</h3>
         <p>
-          <strong>Com outros usuários:</strong> Informações de contato são compartilhadas para 
+          <strong>Com outros usuários:</strong> Informações de contato são compartilhadas para
           facilitar a comunicação (conforme funcionalidade da plataforma).
         </p>
-        
+
         <p>
           <strong>Com prestadores de serviços:</strong>
         </p>
         <ul>
           <li>Stripe (processamento de pagamentos)</li>
-          <li>Supabase (hospedagem de dados)</li>
-          <li>Provedores de infraestrutura</li>
+          <li>Provedores de infraestrutura e hospedagem</li>
           <li>Serviços de análise e monitoramento</li>
         </ul>
 
@@ -157,7 +156,7 @@ export default function PrivacyPolicy() {
 
         <h3>6.3 Não Vendemos Dados</h3>
         <p>
-          O EventSpace não vende, aluga ou comercializa dados pessoais de usuários 
+          O EventSpace não vende, aluga ou comercializa dados pessoais de usuários
           para terceiros para fins de marketing.
         </p>
       </section>
@@ -166,7 +165,7 @@ export default function PrivacyPolicy() {
         <h2>7. Armazenamento e Segurança</h2>
         <h3>7.1 Localização dos Dados</h3>
         <p>
-          Os dados são armazenados em servidores localizados preferencialmente no Brasil 
+          Os dados são armazenados em servidores localizados preferencialmente no Brasil
           ou em países com nível adequado de proteção conforme reconhecido pela ANPD.
         </p>
 
@@ -182,7 +181,7 @@ export default function PrivacyPolicy() {
 
         <h3>7.3 Retenção de Dados</h3>
         <p>
-          Os dados são mantidos pelo tempo necessário para as finalidades estabelecidas ou 
+          Os dados são mantidos pelo tempo necessário para as finalidades estabelecidas ou
           conforme exigido por lei:
         </p>
         <ul>
@@ -198,7 +197,7 @@ export default function PrivacyPolicy() {
         <p>
           Conforme a LGPD, você tem os seguintes direitos sobre seus dados pessoais:
         </p>
-        
+
         <h3>8.1 Direitos Garantidos</h3>
         <ul>
           <li><strong>Confirmação e acesso:</strong> Saber se tratamos seus dados e acessá-los</li>
@@ -257,7 +256,7 @@ export default function PrivacyPolicy() {
 
         <h3>9.2 Gestão de Cookies</h3>
         <p>
-          Você pode gerenciar cookies através das configurações do seu navegador ou 
+          Você pode gerenciar cookies através das configurações do seu navegador ou
           através do nosso painel de preferências disponível na plataforma.
         </p>
       </section>
@@ -265,11 +264,11 @@ export default function PrivacyPolicy() {
       <section className="mb-8">
         <h2>10. Menores de Idade</h2>
         <p>
-          A plataforma EventSpace é destinada a usuários maiores de 18 anos. 
+          A plataforma EventSpace é destinada a usuários maiores de 18 anos.
           Não coletamos intencionalmente dados de menores de idade.
         </p>
         <p>
-          Caso tome conhecimento de que coletamos dados de menor de idade, 
+          Caso tome conhecimento de que coletamos dados de menor de idade,
           tomaremos medidas para excluir essas informações imediatamente.
         </p>
       </section>
@@ -277,8 +276,8 @@ export default function PrivacyPolicy() {
       <section className="mb-8">
         <h2>11. Transferência Internacional</h2>
         <p>
-          Alguns de nossos prestadores de serviços podem estar localizados fora do Brasil. 
-          Garantimos que essas transferências ocorram apenas para países com nível adequado 
+          Alguns de nossos prestadores de serviços podem estar localizados fora do Brasil.
+          Garantimos que essas transferências ocorram apenas para países com nível adequado
           de proteção ou mediante garantias específicas de proteção.
         </p>
         <p>
@@ -286,14 +285,13 @@ export default function PrivacyPolicy() {
         </p>
         <ul>
           <li>Stripe (EUA) - Certificação adequada</li>
-          <li>Supabase (EUA) - Acordo de transferência</li>
         </ul>
       </section>
 
       <section className="mb-8">
         <h2>12. Violação de Dados</h2>
         <p>
-          Em caso de incidente de segurança que possa acarretar risco aos direitos 
+          Em caso de incidente de segurança que possa acarretar risco aos direitos
           e liberdades dos titulares:
         </p>
         <ul>
@@ -307,7 +305,7 @@ export default function PrivacyPolicy() {
       <section className="mb-8">
         <h2>13. Alterações na Política</h2>
         <p>
-          Esta Política de Privacidade pode ser atualizada periodicamente para refletir 
+          Esta Política de Privacidade pode ser atualizada periodicamente para refletir
           mudanças em nossas práticas ou na legislação.
         </p>
         <p>
@@ -327,13 +325,13 @@ export default function PrivacyPolicy() {
         <h2>14. Reclamações e Recursos</h2>
         <h3>14.1 Canal Interno</h3>
         <p>
-          Para questões sobre tratamento de dados, contate primeiro nosso DPO através 
+          Para questões sobre tratamento de dados, contate primeiro nosso DPO através
           de privacidade@eventspace.com.br.
         </p>
 
         <h3>14.2 Autoridade Nacional</h3>
         <p>
-          Caso não fique satisfeito com nossa resposta, você pode apresentar reclamação 
+          Caso não fique satisfeito com nossa resposta, você pode apresentar reclamação
           à Autoridade Nacional de Proteção de Dados (ANPD):
         </p>
         <div className="bg-gray-50 p-4 rounded-lg not-prose">
@@ -360,8 +358,8 @@ export default function PrivacyPolicy() {
       <div className="mt-12 p-6 bg-green-50 border border-green-200 rounded-lg not-prose">
         <h3 className="text-green-900 font-semibold mb-2">Compromisso com a Privacidade</h3>
         <p className="text-green-800 text-sm">
-          O EventSpace está comprometido com a proteção da sua privacidade e o cumprimento 
-          integral da Lei Geral de Proteção de Dados. Tratamos seus dados com transparência, 
+          O EventSpace está comprometido com a proteção da sua privacidade e o cumprimento
+          integral da Lei Geral de Proteção de Dados. Tratamos seus dados com transparência,
           segurança e respeito aos seus direitos.
         </p>
       </div>
