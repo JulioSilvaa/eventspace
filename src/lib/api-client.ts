@@ -1,6 +1,6 @@
 /**
- * Centralized API Client for Marketplace API
- * Replaces Supabase client with REST API calls
+ * Centralized API Client for Lazer Marketplace API
+ * Handles all REST API communication with the backend
  */
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
@@ -99,6 +99,7 @@ class ApiClient {
       ...options.headers,
     }
 
+    // Add authorization header if we have a token
     const token = this.getToken()
     if (token) {
       (headers as Record<string, string>)['Authorization'] = `Bearer ${token}`
@@ -108,20 +109,15 @@ class ApiClient {
       let response = await fetch(url, {
         ...options,
         headers,
+        credentials: 'include', // Always include cookies
       })
 
-      // If unauthorized, try to refresh token and retry
-      if (response.status === 401 && token) {
+      // Handle 401 Unauthorized - try to refresh token
+      if (response.status === 401 && !endpoint.includes('/auth/refresh')) {
         const refreshed = await this.refreshToken()
         if (refreshed) {
-          const newToken = this.getToken()
-          if (newToken) {
-            (headers as Record<string, string>)['Authorization'] = `Bearer ${newToken}`
-          }
-          response = await fetch(url, {
-            ...options,
-            headers,
-          })
+          // Retry the request with new token
+          return this.request<T>(endpoint, options)
         }
       }
 

@@ -50,9 +50,9 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
       return { error: error.message }
     }
 
-    if (data?.accessToken && data?.user) {
-      // Store the token
-      apiClient.setToken(data.accessToken)
+    if (data?.user) {
+      // Store user ID for session persistence
+      localStorage.setItem('userId', data.user.id)
 
       // Fetch full user profile
       const { data: profileData, error: profileError } = await apiClient.get<User>(`/api/user/${data.user.id}`)
@@ -101,9 +101,9 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
       return { error: errorMessage }
     }
 
-    if (data?.accessToken && data?.user) {
-      // Store the token
-      apiClient.setToken(data.accessToken)
+    if (data?.user) {
+      // Store user ID for session persistence
+      localStorage.setItem('userId', data.user.id)
 
       // Map API user to profile format
       const profile: User = {
@@ -134,7 +134,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
 
   signOut: async () => {
     await apiClient.post('/auth/logout')
-    apiClient.clearToken()
+    localStorage.removeItem('userId')
     set({
       user: null,
       profile: null,
@@ -182,69 +182,49 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     set({ isLoading: true })
 
     try {
-      // Check if we have a token
-      const token = apiClient.getToken()
-
-      if (!token) {
-        set({
-          user: null,
-          profile: null,
-          isAuthenticated: false,
-          isLoading: false,
-          initialized: true,
-        })
-        return
-      }
-
-      // Try to refresh token to validate session
-      const refreshed = await apiClient.refreshToken()
-
-      if (!refreshed) {
-        set({
-          user: null,
-          profile: null,
-          isAuthenticated: false,
-          isLoading: false,
-          initialized: true,
-        })
-        return
-      }
-
-      // We need to get user info - try to decode token or fetch from API
-      // For now, we'll need to store user ID separately
+      // Check if we have a stored user ID
       const storedUserId = localStorage.getItem('userId')
 
-      if (storedUserId) {
-        const { data: profileData, error: profileError } = await apiClient.get<User>(`/api/user/${storedUserId}`)
-
-        if (profileError) {
-          console.error('Erro ao verificar profile:', profileError.message)
-          apiClient.clearToken()
-          localStorage.removeItem('userId')
-          set({
-            user: null,
-            profile: null,
-            isAuthenticated: false,
-            isLoading: false,
-            initialized: true,
-          })
-          return
-        }
-
-        if (profileData) {
-          set({
-            user: { id: profileData.id, email: profileData.email },
-            profile: profileData,
-            isAuthenticated: true,
-            isLoading: false,
-            initialized: true,
-          })
-          return
-        }
+      if (!storedUserId) {
+        set({
+          user: null,
+          profile: null,
+          isAuthenticated: false,
+          isLoading: false,
+          initialized: true,
+        })
+        return
       }
 
-      // No stored user ID, clear auth
-      apiClient.clearToken()
+      // Try to fetch user profile (cookies will be sent automatically)
+      const { data: profileData, error: profileError } = await apiClient.get<User>(`/api/user/${storedUserId}`)
+
+      if (profileError) {
+        console.error('Erro ao verificar profile:', profileError.message)
+        localStorage.removeItem('userId')
+        set({
+          user: null,
+          profile: null,
+          isAuthenticated: false,
+          isLoading: false,
+          initialized: true,
+        })
+        return
+      }
+
+      if (profileData) {
+        set({
+          user: { id: profileData.id, email: profileData.email },
+          profile: profileData,
+          isAuthenticated: true,
+          isLoading: false,
+          initialized: true,
+        })
+        return
+      }
+
+      // No profile data, clear auth
+      localStorage.removeItem('userId')
       set({
         user: null,
         profile: null,
