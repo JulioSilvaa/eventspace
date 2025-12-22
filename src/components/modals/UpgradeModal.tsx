@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { X, Crown, Star, Check, Zap } from 'lucide-react'
+import { X, Crown, Check, Zap } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 
 interface UpgradeModalProps {
@@ -13,13 +13,13 @@ interface UpgradeModalProps {
 
 const contextData = {
   create_ad: {
-    title: 'Limite de anúncios atingido!',
-    description: 'Você já criou o máximo de anúncios permitidos no seu plano atual.',
+    title: 'Faça upgrade para criar anúncios!',
+    description: 'Com o plano Profissional você pode criar anúncios e alcançar milhares de clientes.',
     benefits: [
-      'Mais anúncios ativos',
-      'Destaque nos resultados',
-      'Relatórios avançados',
-      'Suporte por email'
+      'Até 20 fotos profissionais',
+      'Relatórios detalhados',
+      'Suporte prioritário',
+      '0% de comissão sobre vendas'
     ]
   },
   feature_ad: {
@@ -34,7 +34,7 @@ const contextData = {
   },
   no_plan: {
     title: 'Escolha um plano para anunciar!',
-    description: 'Para criar anúncios, você precisa escolher um dos nossos planos pagos.',
+    description: 'Para criar anúncios, você precisa do plano Profissional.',
     benefits: [
       'Crie anúncios profissionais',
       'Receba contatos diretos',
@@ -47,25 +47,23 @@ const contextData = {
     description: 'Desbloqueie todo o potencial da sua conta.',
     benefits: [
       'Recursos profissionais',
-      'Suporte por email',
+      'Suporte prioritário',
       'Funcionalidades exclusivas',
       'Sem comissões sobre vendas'
     ]
   }
 }
 
-export default function UpgradeModal({ 
-  isOpen, 
-  onClose, 
+export default function UpgradeModal({
+  isOpen,
+  onClose,
   context,
   title: customTitle,
-  description: customDescription 
+  description: customDescription
 }: UpgradeModalProps) {
   const { profile } = useAuth()
   const navigate = useNavigate()
-  const [selectedPlan, setSelectedPlan] = useState<'basic' | 'premium'>('basic')
-  
-  
+
   // Handle ESC key to close modal
   useEffect(() => {
     const handleEsc = (event: KeyboardEvent) => {
@@ -73,65 +71,48 @@ export default function UpgradeModal({
         onClose()
       }
     }
-    
+
     if (isOpen) {
       document.addEventListener('keydown', handleEsc)
       // Prevent body scroll when modal is open
       document.body.style.overflow = 'hidden'
     }
-    
+
     return () => {
       document.removeEventListener('keydown', handleEsc)
       document.body.style.overflow = 'unset'
     }
   }, [isOpen, onClose])
-  
+
   if (!isOpen) return null
 
   const data = contextData[context]
   const finalTitle = customTitle || data.title
   const finalDescription = customDescription || data.description
 
-  const plans = [
-    {
-      id: 'basic',
-      name: 'Básico',
-      price: 'R$ 49,90',
-      period: '/mês',
-      features: [
-        'Até 3 anúncios ativos',
-        'Relatórios básicos',
-        'Suporte por email',
-        'Remove marca d\'água'
-      ],
-      popular: true
-    },
-    {
-      id: 'premium',
-      name: 'Premium',
-      price: 'R$ 79,90',
-      period: '/mês',
-      features: [
-        'Até 5 anúncios ativos',
-        'Anúncios destacados ilimitados',
-        'Até 10 fotos por anúncio',
-        'Relatórios avançados',
-        'Dashboard personalizado'
-      ],
-      popular: false
-    }
-  ]
+  const plan = {
+    id: 'pro',
+    name: 'Plano Profissional',
+    price: 'R$ 49,90',
+    period: '/mês',
+    features: [
+      'Até 20 fotos profissionais',
+      'Relatórios detalhados',
+      'Suporte prioritário',
+      '0% de comissão sobre vendas'
+    ]
+  }
 
   return (
-    <div 
-      className="fixed inset-0 z-[60] overflow-y-auto"
+    <div
+      className="fixed inset-0 z-[60] overflow-y-auto bg-black bg-opacity-50"
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           onClose()
         }
       }}
     >
-      <div 
+      <div
         className="flex min-h-screen items-center justify-center p-4"
         onClick={(e) => {
           if (e.target === e.currentTarget) {
@@ -140,14 +121,14 @@ export default function UpgradeModal({
         }}
       >
         {/* Modal */}
-        <div 
-          className="relative bg-white rounded-2xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+        <div
+          className="relative bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full flex items-center justify-center">
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
                 <Crown className="w-5 h-5 text-white" />
               </div>
               <div>
@@ -156,8 +137,12 @@ export default function UpgradeModal({
               </div>
             </div>
             <button
-              onClick={onClose}
+              onClick={() => {
+                console.log('Fechando modal...')
+                onClose()
+              }}
               className="text-gray-400 hover:text-gray-600 transition-colors"
+              type="button"
             >
               <X className="w-6 h-6" />
             </button>
@@ -170,7 +155,7 @@ export default function UpgradeModal({
                 <div>
                   <p className="text-sm font-medium text-indigo-900">Conta Gratuita</p>
                   <p className="text-indigo-700">
-                    Escolha um plano para começar a anunciar
+                    Faça upgrade para começar a anunciar
                   </p>
                 </div>
                 <div className="text-right">
@@ -198,59 +183,26 @@ export default function UpgradeModal({
             </div>
           </div>
 
-          {/* Plans */}
+          {/* Plan */}
           <div className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Escolha seu plano:
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              {plans.map((plan) => (
-                <div
-                  key={plan.id}
-                  className={`
-                    relative border-2 rounded-xl p-6 cursor-pointer transition-all
-                    ${selectedPlan === plan.id 
-                      ? 'border-primary-500 bg-primary-50' 
-                      : 'border-gray-200 hover:border-gray-300'
-                    }
-                  `}
-                  onClick={() => setSelectedPlan(plan.id as 'basic' | 'premium')}
-                >
-                  {plan.popular && (
-                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                      <div className="bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-3 py-1 rounded-full text-sm font-medium">
-                        Mais Popular
-                      </div>
-                    </div>
-                  )}
-                  
-                  <div className="text-center mb-4">
-                    <h4 className="text-xl font-bold text-gray-900 mb-2">{plan.name}</h4>
-                    <div className="flex items-baseline justify-center">
-                      <span className="text-3xl font-bold text-primary-600">{plan.price}</span>
-                      <span className="text-gray-500 ml-1">{plan.period}</span>
-                    </div>
-                  </div>
-                  
-                  <ul className="space-y-2">
-                    {plan.features.map((feature, index) => (
-                      <li key={index} className="flex items-center gap-2 text-sm text-gray-600">
-                        <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
-                  
-                  <input
-                    type="radio"
-                    name="plan"
-                    value={plan.id}
-                    checked={selectedPlan === plan.id}
-                    onChange={() => setSelectedPlan(plan.id as 'basic' | 'premium')}
-                    className="sr-only"
-                  />
+            <div className="border-2 border-blue-500 bg-blue-50 rounded-xl p-6 mb-6">
+              <div className="text-center mb-4">
+                <h4 className="text-2xl font-bold text-gray-900 mb-2">{plan.name}</h4>
+                <p className="text-sm text-gray-600 mb-4">O plano completo para seu negócio de eventos</p>
+                <div className="flex items-baseline justify-center">
+                  <span className="text-4xl font-bold text-blue-600">{plan.price}</span>
+                  <span className="text-gray-500 ml-1">{plan.period}</span>
                 </div>
-              ))}
+              </div>
+
+              <ul className="space-y-3 bg-white/60 p-4 rounded-lg">
+                {plan.features.map((feature, index) => (
+                  <li key={index} className="flex items-center gap-2 text-gray-700">
+                    <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
+                    {feature}
+                  </li>
+                ))}
+              </ul>
             </div>
 
             {/* Actions */}
@@ -258,16 +210,20 @@ export default function UpgradeModal({
               <button
                 onClick={() => {
                   onClose()
-                  navigate(`/checkout?plan=${selectedPlan}&context=${context}`)
+                  navigate(`/checkout?plan=pro&context=${context}`)
                 }}
-                className="flex-1 bg-gradient-to-r from-primary-600 to-primary-700 text-white px-6 py-3 rounded-lg hover:from-primary-700 hover:to-primary-800 transition-all font-medium text-center flex items-center justify-center gap-2"
+                className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all font-medium text-center flex items-center justify-center gap-2"
               >
                 <Zap className="w-5 h-5" />
                 Fazer Upgrade Agora
               </button>
               <button
-                onClick={onClose}
+                onClick={() => {
+                  console.log('Botão Depois clicado')
+                  onClose()
+                }}
                 className="flex-1 border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                type="button"
               >
                 Depois
               </button>
@@ -275,17 +231,17 @@ export default function UpgradeModal({
 
             {/* Trust indicators */}
             <div className="mt-6 text-center">
-              <div className="flex items-center justify-center gap-4 text-sm text-gray-500">
+              <div className="flex items-center justify-center gap-6 text-sm text-gray-600">
                 <div className="flex items-center gap-1">
-                  <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                  <Check className="w-4 h-4 text-green-500" />
                   <span>Sem compromisso</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                  <Check className="w-4 h-4 text-green-500" />
                   <span>Cancele quando quiser</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                  <Check className="w-4 h-4 text-green-500" />
                   <span>Suporte dedicado</span>
                 </div>
               </div>
