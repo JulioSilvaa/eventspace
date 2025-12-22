@@ -51,6 +51,11 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     }
 
     if (data?.user) {
+      // Set token globally
+      if (data.accessToken) {
+        apiClient.setToken(data.accessToken)
+      }
+
       // Store user ID for session persistence
       localStorage.setItem('userId', data.user.id)
 
@@ -105,6 +110,11 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     }
 
     if (data?.user) {
+      // Set token globally
+      if (data.accessToken) {
+        apiClient.setToken(data.accessToken)
+      }
+
       // Store user ID for session persistence
       localStorage.setItem('userId', data.user.id)
 
@@ -137,6 +147,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
 
   signOut: async () => {
     await apiClient.post('/auth/logout')
+    apiClient.clearToken()
     localStorage.removeItem('userId')
     set({
       user: null,
@@ -259,62 +270,27 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     const { profile } = get()
     if (!profile) return false
 
-    // Users must have active account and paid plan to create ads
-    if (profile.account_status !== 'active' || profile.plan_type === 'free') {
-      return false
-    }
-
-    const adsCount = profile.listings_count || 0
-    let adsLimit = 0
-
-    switch (profile.plan_type) {
-      case 'basic':
-        adsLimit = 3
-        break
-      case 'premium':
-        adsLimit = 5
-        break
-      default:
-        adsLimit = 0
-    }
-
-    return adsCount < adsLimit
+    // TODO: Re-enable plan restrictions when subscription system is implemented
+    // For now, allow all authenticated users to create ads
+    return true
   },
 
   getRemainingAds: () => {
-    const { profile } = get()
-    if (!profile) return 0
-
-    // Users must have active account and paid plan for ads allowance
-    if (profile.account_status !== 'active' || profile.plan_type === 'free') {
-      return 0
-    }
-
-    const adsCount = profile.listings_count || 0
-    let adsLimit = 0
-
-    switch (profile.plan_type) {
-      case 'basic':
-        adsLimit = 3
-        break
-      case 'premium':
-        adsLimit = 5
-        break
-      default:
-        adsLimit = 0
-    }
-
-    return Math.max(0, adsLimit - adsCount)
+    // TODO: Re-enable when subscription system is implemented
+    // For now, return unlimited
+    return 999
   },
 
   hasPaidPlan: () => {
-    const { profile } = get()
-    return profile?.account_status === 'active' && (profile?.plan_type === 'basic' || profile?.plan_type === 'premium')
+    // TODO: Re-enable when subscription system is implemented
+    // For now, treat all users as having paid plan
+    return true
   },
 
   canAccessDashboard: () => {
     const { profile } = get()
-    return profile?.account_status === 'active'
+    // Allow all authenticated users to access dashboard
+    return !!profile
   },
 
   refreshProfile: async () => {

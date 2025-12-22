@@ -63,6 +63,22 @@ export default function RecentActivity({
   const { user } = useAuth()
   const [activities, setActivities] = useState<ActivityDisplayProps[]>([])
 
+  // Helper para validar data antes de formatar
+  const safeFormatDistanceToNow = (date: any) => {
+    try {
+      const d = new Date(date)
+      if (isNaN(d.getTime())) {
+        return 'recentemente'
+      }
+      return formatDistanceToNow(d, {
+        addSuffix: true,
+        locale: ptBR
+      })
+    } catch (e) {
+      return 'recentemente'
+    }
+  }
+
   // Hook para métricas em tempo real
   const {
     metrics,
@@ -210,7 +226,7 @@ export default function RecentActivity({
         type: 'listing_created',
         title: '🎉 Anúncio Publicado',
         description: `"${ad.title}" foi publicado em ${ad.city}`,
-        timestamp: new Date(ad.created_at),
+        timestamp: new Date(ad.created_at || Date.now()),
         isPremium: false,
         metadata: {
           adTitle: ad.title,
@@ -684,10 +700,7 @@ export default function RecentActivity({
 
               <div className="flex-shrink-0">
                 <p className={`text-xs ${activity.locked ? 'text-gray-400' : 'text-gray-500'}`}>
-                  {formatDistanceToNow(activity.timestamp, {
-                    addSuffix: true,
-                    locale: ptBR
-                  })}
+                  {safeFormatDistanceToNow(activity.timestamp)}
                 </p>
               </div>
             </div>

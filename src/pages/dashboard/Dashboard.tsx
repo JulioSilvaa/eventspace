@@ -107,7 +107,7 @@ export default function Dashboard() {
         status: ad.status,
         views: ad.views_count || 0, // Default to 0 if views_count is undefined/null
         contacts: Math.floor((ad.views_count || 0) * 0.08),
-        createdAt: ad.created_at.split('T')[0]
+        createdAt: ad.created_at ? ad.created_at.split('T')[0] : new Date().toISOString().split('T')[0]
       }))
 
       // Garantir que todos os valores são números válidos

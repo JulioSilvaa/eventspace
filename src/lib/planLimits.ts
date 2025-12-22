@@ -7,8 +7,8 @@ export interface PlanLimits {
 
 export const PLAN_LIMITS: Record<string, PlanLimits> = {
   free: {
-    maxImages: 0, // Conta gratuita não pode criar anúncios
-    maxAds: 0,
+    maxImages: 5, // Permitir 5 imagens no plano gratuito
+    maxAds: 1,    // Permitir 1 anúncio no plano gratuito
     allowsFeatured: false,
     hasPriority: false
   },

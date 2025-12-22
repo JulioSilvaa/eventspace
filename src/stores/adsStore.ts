@@ -19,12 +19,19 @@ interface SpaceResponse {
   id: string
   title: string
   description: string
-  price: number
+  price_per_day?: number
+  price_per_weekend?: number
   price_type?: string
-  state: string
-  city: string
-  neighborhood?: string
-  postal_code?: string
+  address: {
+    street: string
+    number: string
+    complement?: string
+    neighborhood: string
+    city: string
+    state: string
+    zipcode: string
+    country: string
+  }
   status: string
   featured: boolean
   views_count?: number
@@ -33,7 +40,7 @@ interface SpaceResponse {
   contact_phone?: string
   created_at: string
   updated_at: string
-  images?: SpaceImage[]
+  images?: (string | SpaceImage)[]
   owner_id: string
   category_id?: number
 }
@@ -50,20 +57,35 @@ interface SpacesListResponse {
 
 // Map API response to Ad type
 function mapSpaceToAd(space: SpaceResponse): Ad {
+  // Handle price mapping
+  const price = space.price_per_day || space.price_per_weekend || 0
+
+  // Handle images which might be JSON strings from the database
+  const processedImages = space.images?.map(img => {
+    if (typeof img === 'string') {
+      try {
+        return JSON.parse(img) as SpaceImage
+      } catch {
+        return { thumbnail: img, medium: img, large: img } as SpaceImage
+      }
+    }
+    return img
+  }) || []
+
   return {
     id: space.id,
     user_id: space.owner_id,
     category_id: space.category_id || 1,
     title: space.title,
     description: space.description,
-    price: space.price,
+    price,
     price_type: (space.price_type as 'daily' | 'hourly' | 'event') || 'daily',
-    state: space.state,
-    city: space.city,
-    neighborhood: space.neighborhood,
-    postal_code: space.postal_code,
+    state: space.address?.state || '',
+    city: space.address?.city || '',
+    neighborhood: space.address?.neighborhood,
+    postal_code: space.address?.zipcode,
     status: space.status as 'active' | 'inactive' | 'pending' | 'rejected',
-    featured: space.featured,
+    featured: space.featured || false,
     views_count: space.views_count || 0,
     contacts_count: space.contacts_count || 0,
     contact_whatsapp: space.contact_whatsapp,
@@ -71,13 +93,13 @@ function mapSpaceToAd(space: SpaceResponse): Ad {
     created_at: space.created_at,
     updated_at: space.updated_at,
     delivery_available: false,
-    listing_images: space.images?.map((img, index) => ({
+    listing_images: processedImages.map((img, index) => ({
       id: `${space.id}-${index}`,
       listing_id: space.id,
       image_url: img.medium || img.large || img.thumbnail,
       display_order: index,
       created_at: space.created_at,
-    })) || [],
+    })),
   }
 }
 
@@ -111,7 +133,7 @@ interface AdsState {
   fetchPopularEquipment: (limit?: number) => Promise<void>
   fetchAdById: (id: string) => Promise<void>
   fetchUserAds: (userId: string) => Promise<void>
-  createAd: (adData: Partial<Ad>) => Promise<{ error?: string; data?: Ad }>
+  createAd: (adData: Partial<Ad>, imageFiles?: File[]) => Promise<{ error?: string; data?: Ad }>
   updateAd: (id: string, adData: Partial<Ad>) => Promise<{ error?: string }>
   deleteAd: (id: string) => Promise<{ error?: string }>
   setSearchFilters: (filters: SearchFilters) => void
@@ -317,24 +339,38 @@ export const useAdsStore = create<AdsState>((set, get) => ({
     })
   },
 
-  createAd: async (adData: Partial<Ad>) => {
-    // Map Ad type to API format
-    const spaceData = {
+  createAd: async (adData: any, imageFiles: File[] = []) => {
+    // Map Ad type to API format (backend expects SpaceEntity format)
+    const spaceData: any = {
       title: adData.title,
       description: adData.description,
-      price: adData.price,
-      price_type: adData.price_type,
-      state: adData.state,
-      city: adData.city,
-      neighborhood: adData.neighborhood,
-      postal_code: adData.postal_code,
-      contact_whatsapp: adData.contact_whatsapp,
-      contact_phone: adData.contact_phone,
-      category_id: adData.category_id,
-      availability_notes: adData.availability_notes,
-      delivery_available: adData.delivery_available,
-      delivery_fee: adData.delivery_fee,
-      delivery_radius_km: adData.delivery_radius_km,
+
+      // Address object (required by backend)
+      address: adData.address || {
+        street: '',
+        number: '',
+        complement: undefined,
+        neighborhood: '',
+        city: '',
+        state: '',
+        zipcode: '',
+        country: 'Brasil',
+      },
+
+      capacity: adData.capacity,
+
+      // Price mapping (backend uses price_per_day and price_per_weekend)
+      price_per_day: adData.price_per_day,
+      price_per_weekend: adData.price_per_weekend,
+
+      // Comfort array (backend combines all amenities/features/services)
+      comfort: adData.comfort || [],
+
+      // Images (if already present as URLs, though usually sent as files)
+      images: adData.images || [],
+
+      // Status
+      status: adData.status || 'active',
     }
 
     // Filter out undefined values
@@ -342,7 +378,13 @@ export const useAdsStore = create<AdsState>((set, get) => ({
       Object.entries(spaceData).filter(([, value]) => value !== undefined)
     )
 
-    const { data, error } = await apiClient.post<SpaceResponse>('/api/spaces', cleanData)
+    // Using uploadFiles to send as multipart/form-data which the backend expects
+    // when receiving files and data together
+    const { data, error } = await apiClient.uploadFiles<SpaceResponse>(
+      '/api/spaces',
+      imageFiles,
+      cleanData
+    )
 
     if (error) {
       console.error('Erro ao criar espaço:', error)

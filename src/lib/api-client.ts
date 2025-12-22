@@ -58,7 +58,7 @@ class ApiClient {
    */
   async refreshToken(): Promise<boolean> {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+      const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
         method: 'POST',
         credentials: 'include', // Include cookies
         headers: {
@@ -203,7 +203,7 @@ class ApiClient {
   async uploadFiles<T>(
     endpoint: string,
     files: File[],
-    additionalData?: Record<string, string>
+    additionalData?: Record<string, any>
   ): Promise<ApiResponse<T>> {
     const formData = new FormData()
 
@@ -213,19 +213,38 @@ class ApiClient {
 
     if (additionalData) {
       Object.entries(additionalData).forEach(([key, value]) => {
-        formData.append(key, value)
+        if (typeof value === 'object') {
+          formData.append(key, JSON.stringify(value))
+        } else {
+          formData.append(key, String(value))
+        }
       })
     }
 
-    const url = `${API_BASE_URL}${endpoint}`
-    const token = this.getToken()
+    const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`
+
+    // Add authorization header if we have a token
+    const getHeaders = (): Record<string, string> => {
+      const token = this.getToken()
+      return token ? { Authorization: `Bearer ${token}` } : {}
+    }
 
     try {
       const response = await fetch(url, {
         method: 'POST',
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        headers: getHeaders(),
         body: formData,
+        credentials: 'include', // Always include cookies
       })
+
+      // Handle 401 Unauthorized - try to refresh token
+      if (response.status === 401 && !endpoint.includes('/auth/refresh')) {
+        const refreshed = await this.refreshToken()
+        if (refreshed) {
+          // Retry the request with new token
+          return this.uploadFiles<T>(endpoint, files, additionalData)
+        }
+      }
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
@@ -233,6 +252,7 @@ class ApiClient {
           error: {
             message: errorData.message || errorData.error || 'Upload failed',
             status: response.status,
+            code: errorData.code,
           },
         }
       }

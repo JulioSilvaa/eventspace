@@ -169,22 +169,26 @@ interface CategoryResponse {
 
 export async function getCategories(type?: 'space' | 'advertiser') {
   try {
-    const params: Record<string, string | undefined> = {}
-    if (type) params.type = type
+    // TODO: Replace with API call when backend endpoint is ready
+    // For now, returning hardcoded categories
+    const staticCategories: CategoryResponse[] = [
+      { id: 1, name: 'Salão de Festas', type: 'space', slug: 'salao-de-festas' },
+      { id: 2, name: 'Chácara', type: 'space', slug: 'chacara' },
+      { id: 3, name: 'Área de Lazer', type: 'space', slug: 'area-de-lazer' },
+      { id: 4, name: 'Buffet', type: 'advertiser', slug: 'buffet' },
+      { id: 5, name: 'Decoração', type: 'advertiser', slug: 'decoracao' },
+      { id: 6, name: 'Fotografia', type: 'advertiser', slug: 'fotografia' },
+      { id: 7, name: 'Som e Iluminação', type: 'advertiser', slug: 'som-e-iluminacao' },
+    ]
 
-    // Note: The marketplace API may not have a dedicated categories endpoint
-    // This is a placeholder - adjust based on actual API
-    const { data, error } = await apiClient.get<CategoryResponse[]>('/api/categories', params)
-
-    if (error) {
-      console.error('Erro ao buscar categorias:', error)
-      // Return empty array instead of throwing
-      return []
+    // Filter by type if provided
+    if (type) {
+      return staticCategories.filter(cat => cat.type === type)
     }
 
-    return data || []
+    return staticCategories
   } catch (error) {
-    console.error('Erro na API de categorias:', error)
+    console.error('Erro ao buscar categorias:', error)
     return []
   }
 }
