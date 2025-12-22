@@ -55,13 +55,16 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
       localStorage.setItem('userId', data.user.id)
 
       // Fetch full user profile
-      const { data: profileData, error: profileError } = await apiClient.get<User>(`/api/user/${data.user.id}`)
+      const { data: profileResponse, error: profileError } = await apiClient.get<{ data: User }>(`/api/user/${data.user.id}`)
 
       if (profileError) {
         console.error('Erro ao buscar profile:', profileError.message)
         set({ isLoading: false })
         return { error: 'Erro ao carregar perfil do usuário' }
       }
+
+      // Extract profile from nested data property
+      const profileData = profileResponse?.data
 
       set({
         user: { id: data.user.id, email: data.user.email },
@@ -197,7 +200,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
       }
 
       // Try to fetch user profile (cookies will be sent automatically)
-      const { data: profileData, error: profileError } = await apiClient.get<User>(`/api/user/${storedUserId}`)
+      const { data: profileResponse, error: profileError } = await apiClient.get<{ data: User }>(`/api/user/${storedUserId}`)
 
       if (profileError) {
         console.error('Erro ao verificar profile:', profileError.message)
@@ -211,6 +214,9 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
         })
         return
       }
+
+      // Extract profile from nested data property
+      const profileData = profileResponse?.data
 
       if (profileData) {
         set({
@@ -315,7 +321,10 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     const { user } = get()
     if (!user) return
 
-    const { data: profileData } = await apiClient.get<User>(`/api/user/${user.id}`)
+    const { data: profileResponse } = await apiClient.get<{ data: User }>(`/api/user/${user.id}`)
+
+    // Extract profile from nested data property
+    const profileData = profileResponse?.data
 
     if (profileData) {
       set({ profile: profileData })
