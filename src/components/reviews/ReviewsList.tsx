@@ -25,14 +25,14 @@ export default function ReviewsList({ listingId, refreshTrigger }: ReviewsListPr
   const [isLoading, setIsLoading] = useState(true)
   const [averageRating, setAverageRating] = useState(0)
   const [isOwner, setIsOwner] = useState(false)
-  const toast = useToast()
+  const { error: toastError, success: toastSuccess, warning: toastWarning } = useToast()
 
   const fetchReviews = useCallback(async () => {
     try {
       const { data, error } = await reviewService.getListingReviews(listingId, 50) // Fetch up to 50 reviews
 
       if (error) {
-        toast.error('Erro ao carregar avaliações', 'Não foi possível carregar as avaliações. Tente recarregar a página.')
+        toastError('Erro ao carregar avaliações', 'Não foi possível carregar as avaliações. Tente recarregar a página.')
         return
       }
 
@@ -54,11 +54,11 @@ export default function ReviewsList({ listingId, refreshTrigger }: ReviewsListPr
       }
 
     } catch {
-      toast.error('Erro inesperado', 'Ocorreu um erro ao carregar as avaliações.')
+      toastError('Erro inesperado', 'Ocorreu um erro ao carregar as avaliações.')
     } finally {
       setIsLoading(false)
     }
-  }, [listingId, toast])
+  }, [listingId, toastError])
 
   const checkOwnership = useCallback(async () => {
     const isListingOwner = await reviewReplyService.checkIfUserOwnsListing(listingId)

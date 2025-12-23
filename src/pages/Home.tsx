@@ -12,10 +12,8 @@ export default function Home() {
   const {
     featuredAds,
     popularSpaces,
-    popularEquipment,
     fetchFeaturedAds,
     fetchPopularSpaces,
-    fetchPopularEquipment,
     isLoading
   } = useAdsStore()
 
@@ -23,8 +21,7 @@ export default function Home() {
   useEffect(() => {
     fetchFeaturedAds(4)
     fetchPopularSpaces(6)
-    fetchPopularEquipment(6)
-  }, [fetchFeaturedAds, fetchPopularSpaces, fetchPopularEquipment])
+  }, [fetchFeaturedAds, fetchPopularSpaces])
 
   // Usar apenas dados reais - sem fallback mockado
   const displayedFeaturedAds = featuredAds
@@ -452,57 +449,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Popular Equipment Section */}
-      <section className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Equipamentos Populares</h2>
-            <p className="text-xl text-gray-600">Os equipamentos mais alugados para deixar seu evento incrível</p>
-          </div>
-
-          {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {Array.from({ length: 6 }).map((_, index) => (
-                <div key={index} className="bg-white rounded-2xl shadow-lg overflow-hidden animate-pulse">
-                  <div className="h-48 bg-gray-200"></div>
-                  <div className="p-6">
-                    <div className="h-6 bg-gray-200 rounded mb-2"></div>
-                    <div className="h-4 bg-gray-200 rounded mb-4"></div>
-                    <div className="flex gap-2 mb-4">
-                      <div className="h-6 bg-gray-200 rounded w-16"></div>
-                      <div className="h-6 bg-gray-200 rounded w-20"></div>
-                    </div>
-                    <div className="h-10 bg-gray-200 rounded"></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {popularEquipment.slice(0, 6).map((equipment) => (
-                <AdCard
-                  key={equipment.id}
-                  ad={equipment}
-                  size="medium"
-                  showViewCount={false}
-                  showDate={false}
-                />
-              ))}
-            </div>
-          )}
-
-          <div className="text-center mt-12">
-            <Link
-              to="/equipamentos"
-              className="inline-flex items-center gap-2 bg-blue-600 text-white px-8 py-4 rounded-lg hover:bg-blue-700 transition-colors font-medium text-lg"
-            >
-              <Wrench className="w-5 h-5" />
-              Ver Todos os Equipamentos
-              <ChevronRight className="w-5 h-5" />
-            </Link>
-          </div>
-        </div>
-      </section>
 
       {/* How It Works Section */}
       <section className="py-20 bg-gray-50">

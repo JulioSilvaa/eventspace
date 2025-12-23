@@ -48,6 +48,8 @@ interface ActivityDisplayProps {
     performance_change?: number
     engagement_score?: number
     listingId?: string
+    comment?: string
+    reviewer_name?: string
   }
 }
 
@@ -205,7 +207,8 @@ export default function RecentActivity({
           adTitle,
           listingId: event.listing_id,
           contactType: event.event_type === 'contact_whatsapp' ? 'whatsapp' :
-            event.event_type === 'contact_phone' ? 'phone' : undefined
+            event.event_type === 'contact_phone' ? 'phone' : undefined,
+          ...event.metadata
         }
       })
     })
@@ -256,143 +259,6 @@ export default function RecentActivity({
     return activities
   }
 
-  // Gerar atividades premium com dados reais
-  const generatePremiumActivities = (userAds: Ad[]): ActivityDisplayProps[] => {
-    if (userPlan !== 'premium' || !metrics) return []
-
-    const activities: ActivityDisplayProps[] = []
-
-    // Insights geográficos reais
-    if (metrics.geographicInsights && metrics.geographicInsights.topCities.length > 0) {
-      const topCity = metrics.geographicInsights.topCities[0]
-      const growth = metrics.geographicInsights.trends.growth
-
-      activities.push({
-        id: 'premium-geo-insight',
-        type: 'geographic_insight',
-        title: '📍 Insight Geográfico',
-        description: `${topCity.percentage}% dos seus contatos vieram de ${topCity.city} ${metrics.geographicInsights.trends.period}`,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2),
-        isPremium: true,
-        actionable: true,
-        metadata: {
-          adTitle: userAds[0]?.title || 'Seus anúncios',
-          location: topCity.city,
-          growth: growth
-        }
-      })
-
-      // Insight sobre novas localizações
-      if (metrics.geographicInsights.trends.newLocations > 0) {
-        activities.push({
-          id: 'premium-geo-expansion',
-          type: 'geographic_insight',
-          title: '🌍 Expansão Geográfica',
-          description: `${metrics.geographicInsights.trends.newLocations} novas cidades descobriram seus anúncios esta semana`,
-          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 6),
-          isPremium: true,
-          actionable: true,
-          metadata: {
-            adTitle: userAds[0]?.title || 'Seus anúncios',
-            growth: metrics.geographicInsights.trends.newLocations
-          }
-        })
-      }
-    }
-
-    // Insights competitivos reais
-    if (metrics.competitiveInsights && Array.isArray(metrics.competitiveInsights) && metrics.competitiveInsights.length > 0) {
-      const competitiveData = metrics.competitiveInsights[0] // Usar o primeiro insight como exemplo
-
-      if (competitiveData.performance.overallRanking.percentile >= 75) {
-        activities.push({
-          id: 'premium-competitor-top',
-          type: 'competitor_analysis',
-          title: '🏆 Destaque na Categoria',
-          description: `Você está no ${competitiveData.performance.overallRanking.position} da categoria ${competitiveData.category}`,
-          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 4),
-          isPremium: true,
-          actionable: true,
-          metadata: {
-            adTitle: userAds[0]?.title || 'Seus anúncios',
-            competitorData: {
-              comparison: competitiveData.performance.overallRanking.percentile,
-              category: competitiveData.category
-            }
-          }
-        })
-      } else if (competitiveData.performance.viewsComparison.status === 'above') {
-        activities.push({
-          id: 'premium-competitor-views',
-          type: 'competitor_analysis',
-          title: '👀 Performance Superior',
-          description: `Suas visualizações estão ${Math.abs(competitiveData.performance.viewsComparison.percentage)}% acima da média da categoria`,
-          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 4),
-          isPremium: true,
-          actionable: true,
-          metadata: {
-            adTitle: userAds[0]?.title || 'Seus anúncios',
-            competitorData: {
-              comparison: competitiveData.performance.viewsComparison.percentage,
-              category: competitiveData.category
-            }
-          }
-        })
-      }
-
-      // Recomendação baseada na análise competitiva
-      if (competitiveData.recommendations && competitiveData.recommendations.length > 0) {
-        activities.push({
-          id: 'premium-competitor-recommendation',
-          type: 'competitor_analysis',
-          title: '💡 Recomendação Personalizada',
-          description: competitiveData.recommendations[0],
-          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 8),
-          isPremium: true,
-          actionable: true,
-          metadata: {
-            adTitle: userAds[0]?.title || 'Seus anúncios',
-            insight_type: 'recommendation'
-          }
-        })
-      }
-    }
-
-    return activities
-  }
-
-  // Gerar teasers premium para usuários não-premium
-  const generatePremiumTeasers = (): ActivityDisplayProps[] => {
-    if (userPlan === 'premium') return []
-
-    return [
-      {
-        id: 'teaser-geo',
-        type: 'geographic_insight',
-        title: '🔒 Análise Geográfica Premium',
-        description: 'Descubra de onde vêm seus melhores clientes',
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 6),
-        isPremium: true,
-        locked: true,
-        metadata: {
-          adTitle: userAds[0]?.title || 'Seus anúncios'
-        }
-      },
-      {
-        id: 'teaser-competitor',
-        type: 'competitor_analysis',
-        title: '🔒 Análise da Concorrência',
-        description: 'Compare seu desempenho com a concorrência',
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 8),
-        isPremium: true,
-        locked: true,
-        metadata: {
-          adTitle: userAds[0]?.title || 'Seus anúncios'
-        }
-      }
-    ]
-  }
-
   // Atualizar atividades quando métricas mudarem
   useEffect(() => {
     if (!metrics) return
@@ -413,16 +279,7 @@ export default function RecentActivity({
     )
     allActivities.push(...filteredStaticActivities)
 
-    // 3. Adicionar atividades premium ou teasers
-    if (userPlan === 'premium') {
-      const premiumActivities = generatePremiumActivities(userAds)
-      allActivities.push(...premiumActivities)
-    } else {
-      const teasers = generatePremiumTeasers()
-      allActivities.push(...teasers)
-    }
-
-    // 4. Remover duplicatas e ordenar por timestamp
+    // 3. Remover duplicatas e ordenar por timestamp
     const uniqueActivities = allActivities.filter((activity, index, arr) =>
       arr.findIndex(a => a.id === activity.id) === index
     )
@@ -431,7 +288,7 @@ export default function RecentActivity({
       .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
 
     setActivities(sortedActivities)
-  }, [metrics, userAds, userPlan])
+  }, [metrics, userAds])
 
   // Fallback quando não há dados
   useEffect(() => {
@@ -646,12 +503,21 @@ export default function RecentActivity({
                   {activity.description}
                 </p>
 
+                {activity.type === 'rating' && activity.metadata?.comment && (
+                  <div className="mt-2 p-2 bg-gray-50 rounded italic text-xs text-gray-500 border-l-2 border-primary-300">
+                    "{activity.metadata.comment}"
+                    {activity.metadata.reviewer_name && (
+                      <span className="block mt-1 font-semibold">— {activity.metadata.reviewer_name}</span>
+                    )}
+                  </div>
+                )}
+
                 {activity.metadata?.adTitle && !activity.locked && (
                   <div className="flex items-center justify-between mt-1">
                     <p className="text-xs text-gray-500">
                       Anúncio: {activity.metadata.adTitle}
                     </p>
-                    {activity.metadata?.listingId && (activity.type === 'view' || activity.type === 'contact') && (
+                    {activity.metadata?.listingId && (activity.type === 'view' || activity.type === 'contact' || activity.type === 'rating') && (
                       <Link
                         to={`/dashboard/avaliacoes?listing=${activity.metadata.listingId}`}
                         className="text-xs text-blue-600 hover:text-blue-700 font-medium"
@@ -705,20 +571,6 @@ export default function RecentActivity({
               </div>
             </div>
           ))}
-
-
-          {activities.length > 0 && userPlan !== 'premium' && (
-            <div className="pt-4 border-t border-gray-100">
-              <div className="text-right">
-                <p className="text-xs text-gray-500 mb-1">
-                  Insights avançados disponíveis
-                </p>
-                <button className="text-xs text-amber-600 hover:text-amber-700 font-medium">
-                  💎 Upgrade para Premium
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       )}
     </div>

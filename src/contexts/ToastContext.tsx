@@ -17,6 +17,11 @@ interface ToastContextType {
   addToast: (toast: Omit<Toast, 'id'>) => string
   removeToast: (id: string) => void
   updateToast: (id: string, updates: Partial<Toast>) => void
+  success: (title: string, message?: string, options?: Partial<Toast>) => string
+  error: (title: string, message?: string, options?: Partial<Toast>) => string
+  warning: (title: string, message?: string, options?: Partial<Toast>) => string
+  info: (title: string, message?: string, options?: Partial<Toast>) => string
+  loading: (title: string, message?: string) => string
 }
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined)
@@ -54,21 +59,6 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     ))
   }, [])
 
-  return (
-    <ToastContext.Provider value={{ toasts, addToast, removeToast, updateToast }}>
-      {children}
-    </ToastContext.Provider>
-  )
-}
-
-export function useToast() {
-  const context = useContext(ToastContext)
-  if (context === undefined) {
-    throw new Error('useToast must be used within a ToastProvider')
-  }
-
-  const { addToast, removeToast, updateToast } = context
-
   // Helper functions for different toast types
   const success = useCallback((title: string, message?: string, options?: Partial<Toast>) => {
     return addToast({ type: 'success', title, message, ...options })
@@ -90,14 +80,29 @@ export function useToast() {
     return addToast({ type: 'loading', title, message, duration: 0 })
   }, [addToast])
 
-  return {
-    ...context,
+  const contextValue = React.useMemo(() => ({
+    toasts,
+    addToast,
+    removeToast,
+    updateToast,
     success,
     error,
     warning,
     info,
-    loading,
-    removeToast,
-    updateToast
+    loading
+  }), [toasts, addToast, removeToast, updateToast, success, error, warning, info, loading])
+
+  return (
+    <ToastContext.Provider value={contextValue}>
+      {children}
+    </ToastContext.Provider>
+  )
+}
+
+export function useToast() {
+  const context = useContext(ToastContext)
+  if (context === undefined) {
+    throw new Error('useToast must be used within a ToastProvider')
   }
+  return context
 }

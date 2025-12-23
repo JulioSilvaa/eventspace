@@ -25,7 +25,7 @@ interface ReviewWithReply {
 export default function ReviewsManagement() {
   const [searchParams] = useSearchParams()
   const specificListingId = searchParams.get('listing')
-  
+
   const [reviews, setReviews] = useState<ReviewWithReply[]>([])
   const [pendingReviews, setPendingReviews] = useState<ReviewWithReply[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -39,10 +39,10 @@ export default function ReviewsManagement() {
   const fetchReviews = async () => {
     try {
       setIsLoading(true)
-      
+
       // Buscar todas as avaliações com respostas
       const { data: reviewsWithReplies, error: reviewsError } = await reviewReplyService.getReviewsWithReplies(specificListingId || undefined)
-      
+
       if (reviewsError) {
         console.error('Erro ao buscar avaliações:', reviewsError)
         return
@@ -51,15 +51,15 @@ export default function ReviewsManagement() {
       setReviews(reviewsWithReplies)
 
       // Buscar avaliações pendentes
-      const { data: pending, error: pendingError } = await reviewReplyService.getPendingReplies()
-      
+      const { data: pending, error: pendingError } = await reviewReplyService.getPendingReplies(specificListingId || undefined)
+
       if (pendingError) {
         console.error('Erro ao buscar avaliações pendentes:', pendingError)
         return
       }
 
       setPendingReviews(pending)
-      
+
     } catch (error) {
       console.error('Erro ao carregar dados:', error)
     } finally {
@@ -68,19 +68,19 @@ export default function ReviewsManagement() {
   }
 
   const handleReplyCreated = (newReply: ReviewReplyType) => {
-    setReviews(prev => prev.map(review => 
-      review.id === newReply.review_id 
+    setReviews(prev => prev.map(review =>
+      review.id === newReply.review_id
         ? { ...review, reply: newReply }
         : review
     ))
-    
+
     // Remove da lista de pendentes
     setPendingReviews(prev => prev.filter(review => review.id !== newReply.review_id))
   }
 
   const handleReplyUpdated = (updatedReply: ReviewReplyType) => {
-    setReviews(prev => prev.map(review => 
-      review.id === updatedReply.review_id 
+    setReviews(prev => prev.map(review =>
+      review.id === updatedReply.review_id
         ? { ...review, reply: updatedReply }
         : review
     ))
@@ -156,7 +156,7 @@ export default function ReviewsManagement() {
                 {hasSpecificListing ? 'Avaliações do Anúncio' : 'Gerenciar Avaliações'}
               </h1>
               <p className="text-gray-600">
-                {hasSpecificListing 
+                {hasSpecificListing
                   ? 'Responda às avaliações deste anúncio específico'
                   : 'Responda às avaliações dos seus anúncios'
                 }
@@ -181,7 +181,7 @@ export default function ReviewsManagement() {
               </div>
             </div>
           </div>
-          
+
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <div className="flex items-center gap-3">
               <div className="bg-orange-100 p-2 rounded-lg">
@@ -193,7 +193,7 @@ export default function ReviewsManagement() {
               </div>
             </div>
           </div>
-          
+
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <div className="flex items-center gap-3">
               <div className="bg-green-100 p-2 rounded-lg">
@@ -214,21 +214,19 @@ export default function ReviewsManagement() {
               <nav className="-mb-px flex">
                 <button
                   onClick={() => setActiveTab('all')}
-                  className={`py-3 px-6 text-sm font-medium ${
-                    activeTab === 'all'
+                  className={`py-3 px-6 text-sm font-medium ${activeTab === 'all'
                       ? 'border-b-2 border-primary-500 text-primary-600'
                       : 'text-gray-500 hover:text-gray-700'
-                  }`}
+                    }`}
                 >
                   Todas as Avaliações ({reviews.length})
                 </button>
                 <button
                   onClick={() => setActiveTab('pending')}
-                  className={`py-3 px-6 text-sm font-medium ${
-                    activeTab === 'pending'
+                  className={`py-3 px-6 text-sm font-medium ${activeTab === 'pending'
                       ? 'border-b-2 border-primary-500 text-primary-600'
                       : 'text-gray-500 hover:text-gray-700'
-                  }`}
+                    }`}
                 >
                   Pendentes ({pendingReviews.length})
                 </button>
@@ -245,9 +243,9 @@ export default function ReviewsManagement() {
               {activeTab === 'pending' ? 'Nenhuma avaliação pendente' : 'Nenhuma avaliação encontrada'}
             </h3>
             <p className="text-gray-500">
-              {activeTab === 'pending' 
+              {activeTab === 'pending'
                 ? 'Todas as suas avaliações já foram respondidas!'
-                : hasSpecificListing 
+                : hasSpecificListing
                   ? 'Este anúncio ainda não recebeu avaliações.'
                   : 'Seus anúncios ainda não receberam avaliações.'
               }
@@ -278,7 +276,7 @@ export default function ReviewsManagement() {
                         </div>
                       </div>
                     </div>
-                    
+
                     {/* Anúncio Info */}
                     <div className="bg-gray-50 rounded-lg p-3 mb-3">
                       <p className="text-sm text-gray-600">
@@ -289,7 +287,7 @@ export default function ReviewsManagement() {
                       </p>
                     </div>
                   </div>
-                  
+
                   <button
                     onClick={() => toggleExpanded(review.id)}
                     className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"

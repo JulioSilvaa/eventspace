@@ -101,13 +101,14 @@ class ReviewReplyService {
         ? `/api/reviews/dashboard?listing_id=${listingId}`
         : '/api/reviews/dashboard'
 
-      const { data, error } = await apiClient.get<any[]>(endpoint)
+      const { data, error } = await apiClient.get<{ reviews: any[]; total: number }>(endpoint)
 
       if (error) {
         return { data: [], error: error.message || 'Erro ao buscar avaliações' }
       }
 
-      return { data: data || [] }
+      // Extract reviews array from response object
+      return { data: data?.reviews || [] }
     } catch (error) {
       return { data: [], error: 'Erro inesperado ao buscar avaliações' }
     }
@@ -116,67 +117,31 @@ class ReviewReplyService {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async getReviewsWithReplies(listingId?: string): Promise<{ data: any[]; error?: string }> {
     try {
-      // Backend can likely support an 'include_replies' param, or we can stitch it manually like before.
-      // Assuming backend returns filtered list or we manually fetch.
-      // Let's stick to the manual stitching if backend is just returning flat list or simple structure.
-      // Actually, let's reuse getUserReviews and then fetch replies if not included.
-      // But simpler is to assume backend sends what we need if we ask.
-
+      // Backend now returns replies directly in the dashboard endpoint
       const { data: reviews, error: reviewsError } = await this.getUserReviews(listingId)
 
       if (reviewsError) return { data: [], error: reviewsError }
 
-      if (reviews.length === 0) return { data: [], error: undefined }
-
-      // If the backend dashboard endpoint already includes replies (which it should for efficiency), we are good.
-      // If not, we fetch them. I'll preserve the fetch logic just in case backend is simple.
-      // Checking if 'reply' is already in data.
-      if (reviews[0] && 'reply' in reviews[0]) {
-        return { data: reviews }
-      }
-
-      const reviewIds = reviews.map(review => review.id)
-      const { data: replies } = await this.getRepliesByReviewIds(reviewIds)
-
-      const reviewsWithReplies = reviews.map(review => ({
-        ...review,
-        reply: replies.find(reply => reply.review_id === review.id) || null
-      }))
-
-      return { data: reviewsWithReplies }
+      return { data: reviews }
     } catch (error) {
       return { data: [], error: 'Erro inesperado' }
     }
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async getPendingReplies(): Promise<{ data: any[]; error?: string }> {
+  async getPendingReplies(listingId?: string): Promise<{ data: any[]; error?: string }> {
     try {
-      // Can ask backend to filter
-      const { data, error } = await apiClient.get<any[]>('/api/reviews/dashboard?status=pending')
+      const endpoint = listingId
+        ? `/api/reviews/dashboard?status=pending&listing_id=${listingId}`
+        : '/api/reviews/dashboard?status=pending'
 
-      if (!error && data) {
-        return { data }
+      const { data, error } = await apiClient.get<{ reviews: any[]; total: number }>(endpoint)
+
+      if (!error && data?.reviews) {
+        return { data: data.reviews }
       }
 
-      // Fallback to manual filter if endpoint ignores status param or errors 
-      // (though arguably we should fix backend, but frontend resilience is good)
-      const { data: reviews, error: fetchError } = await this.getUserReviews()
-
-      if (fetchError) return { data: [], error: fetchError }
-
-      const reviewIds = reviews.map(review => review.id)
-
-      if (reviewIds.length === 0) return { data: [] }
-
-      const { data: replies } = await this.getRepliesByReviewIds(reviewIds)
-      const repliedReviewIds = replies.map(reply => reply.review_id)
-
-      const pendingReviews = reviews.filter(review =>
-        !repliedReviewIds.includes(review.id)
-      )
-
-      return { data: pendingReviews }
+      return { data: [], error: error?.message || 'Erro ao buscar pendentes' }
     } catch (error) {
       return { data: [], error: 'Erro inesperado' }
     }

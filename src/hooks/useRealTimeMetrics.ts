@@ -190,10 +190,10 @@ export function useEventTracking(listingId?: string) {
   }
 
   const trackView = async () => {
-    if (!user?.id || !listingId) return
+    if (!listingId) return
     await realTimeService.trackEvent({
       listing_id: listingId,
-      user_id: user.id,
+      user_id: user?.id, // Optional - allows anonymous tracking
       event_type: 'view'
     })
   }

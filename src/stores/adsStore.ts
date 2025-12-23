@@ -43,6 +43,8 @@ interface SpaceResponse {
   images?: (string | SpaceImage)[]
   owner_id: string
   category_id?: number
+  average_rating?: number
+  reviews_count?: number
 }
 
 interface SpacesListResponse {
@@ -88,6 +90,8 @@ function mapSpaceToAd(space: SpaceResponse): Ad {
     featured: space.featured || false,
     views_count: space.views_count || 0,
     contacts_count: space.contacts_count || 0,
+    rating: space.average_rating,
+    reviews_count: space.reviews_count || 0,
     contact_whatsapp: space.contact_whatsapp,
     contact_phone: space.contact_phone,
     created_at: space.created_at,
@@ -100,6 +104,12 @@ function mapSpaceToAd(space: SpaceResponse): Ad {
       display_order: index,
       created_at: space.created_at,
     })),
+    categories: {
+      id: space.category_id || 1,
+      name: 'Espaço',
+      type: 'space',
+      slug: 'espaco',
+    },
   }
 }
 

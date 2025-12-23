@@ -15,7 +15,7 @@ interface AuthState {
   signUp: (email: string, password: string, userData: Partial<User>) => Promise<{ error?: string }>
   signOut: () => Promise<void>
   updateProfile: (data: Partial<User>) => Promise<{ error?: string }>
-  changePassword: (newPassword: string) => Promise<{ error?: string }>
+  changePassword: (currentPassword: string, newPassword: string) => Promise<{ error?: string }>
   checkAuth: () => Promise<void>
   setLoading: (loading: boolean) => void
 
@@ -25,6 +25,30 @@ interface AuthState {
   hasPaidPlan: () => boolean
   canAccessDashboard: () => boolean
   refreshProfile: () => Promise<void>
+}
+
+const mapApiUserToUser = (apiUser: any): User => {
+  return {
+    id: apiUser.id,
+    email: apiUser.email,
+    full_name: apiUser.name || apiUser.full_name || '',
+    phone: apiUser.phone,
+    plan_type: apiUser.plan_type || 'free',
+    plan_expires_at: apiUser.plan_expires_at,
+    account_status: apiUser.status || apiUser.account_status || 'active',
+    state: apiUser.state || '',
+    city: apiUser.city || '',
+    region: apiUser.region,
+    listings_count: apiUser.listings_count,
+    created_at: apiUser.created_at,
+    updated_at: apiUser.updated_at,
+    terms_accepted_at: apiUser.terms_accepted_at,
+    privacy_accepted_at: apiUser.privacy_accepted_at,
+    terms_version: apiUser.terms_version,
+    privacy_version: apiUser.privacy_version,
+    marketing_consent: apiUser.marketing_consent,
+    marketing_consent_at: apiUser.marketing_consent_at,
+  }
 }
 
 export const useAuthStore = create<AuthState>()((set, get) => ({
@@ -73,7 +97,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
 
       set({
         user: { id: data.user.id, email: data.user.email },
-        profile: profileData || null,
+        profile: profileData ? mapApiUserToUser(profileData) : null,
         isAuthenticated: true,
         isLoading: false,
         initialized: true,
@@ -118,24 +142,13 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
       // Store user ID for session persistence
       localStorage.setItem('userId', data.user.id)
 
-      // Map API user to profile format
-      const profile: User = {
-        id: data.user.id,
-        email: data.user.email,
-        full_name: userData.full_name || data.user.name || '',
-        phone: userData.phone,
-        plan_type: 'free',
-        account_status: 'inactive',
-        state: userData.state || '',
-        city: userData.city || '',
-        region: userData.region,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }
-
       set({
         user: { id: data.user.id, email: data.user.email },
-        profile,
+        profile: mapApiUserToUser({
+          ...data.user,
+          ...userData,
+          status: data.user.status || 'active'
+        }),
         isAuthenticated: true,
         isLoading: false,
         initialized: true,
@@ -176,9 +189,10 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     return {}
   },
 
-  changePassword: async (newPassword: string) => {
+  changePassword: async (currentPassword: string, newPassword: string) => {
     try {
-      const { error } = await apiClient.post('/auth/reset-password', {
+      const { error } = await apiClient.post('/auth/change-password', {
+        currentPassword,
         newPassword
       })
 
@@ -232,7 +246,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
       if (profileData) {
         set({
           user: { id: profileData.id, email: profileData.email },
-          profile: profileData,
+          profile: mapApiUserToUser(profileData),
           isAuthenticated: true,
           isLoading: false,
           initialized: true,
@@ -303,7 +317,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     const profileData = profileResponse?.data
 
     if (profileData) {
-      set({ profile: profileData })
+      set({ profile: mapApiUserToUser(profileData) })
     }
   },
 }))
