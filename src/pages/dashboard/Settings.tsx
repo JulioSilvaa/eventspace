@@ -1,18 +1,24 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ArrowLeft,
   User,
   Shield,
-  CreditCard,
   Bell,
   Trash2,
+  Home,
+  MapPin,
+  Phone,
+  Save,
+  Loader2,
   Settings as SettingsIcon
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
-import SubscriptionCard from '@/components/dashboard/SubscriptionCard'
+import { apiClient } from '@/lib/api-client'
+import { maskPhone, maskCEP, unmask } from '@/utils/masks'
+import { Instagram, Facebook } from 'lucide-react'
 
-type SettingsTab = 'personal' | 'security' | 'subscription' | 'privacy' | 'account'
+type SettingsTab = 'personal' | 'security' | 'property' | 'account'
 
 export default function Settings() {
   const { profile } = useAuth()
@@ -23,7 +29,7 @@ export default function Settings() {
       id: 'personal' as SettingsTab,
       name: 'Informações Pessoais',
       icon: User,
-      description: 'Nome, telefone e localização'
+      description: 'Email, nome e telefone'
     },
     {
       id: 'security' as SettingsTab,
@@ -32,16 +38,10 @@ export default function Settings() {
       description: 'Senha e email'
     },
     {
-      id: 'subscription' as SettingsTab,
-      name: 'Assinatura',
-      icon: CreditCard,
-      description: 'Plano e pagamentos'
-    },
-    {
-      id: 'privacy' as SettingsTab,
-      name: 'Privacidade',
-      icon: Bell,
-      description: 'Notificações e consentimentos'
+      id: 'property' as SettingsTab,
+      name: 'Meu Anúncio',
+      icon: Home,
+      description: 'Endereço, telefone e dados'
     },
     {
       id: 'account' as SettingsTab,
@@ -52,73 +52,65 @@ export default function Settings() {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-16">
-      <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-4 mb-6">
+    <div className="min-h-screen bg-[#F8FAFC] pt-16">
+      <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+          <div>
             <Link
               to="/dashboard"
-              className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 transition-colors"
+              className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-primary-600 transition-colors mb-4 group"
             >
-              <ArrowLeft className="w-4 h-4 mr-1" />
+              <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
               Voltar ao Dashboard
             </Link>
-          </div>
-
-          <div className="flex items-center gap-3 mb-4">
-            <div className="bg-primary-100 p-3 rounded-lg">
-              <SettingsIcon className="w-8 h-8 text-primary-600" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Configurações</h1>
-              <p className="text-gray-600 mt-1">
-                Gerencie suas informações pessoais e preferências da conta
-              </p>
+            <div className="flex items-center gap-4">
+              <div className="bg-primary-600 p-3 rounded-2xl shadow-lg shadow-primary-500/20">
+                <SettingsIcon className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-4xl font-black text-gray-900 tracking-tight">Configurações</h1>
+                <p className="text-gray-500 font-medium">Personalize sua experiência na plataforma</p>
+              </div>
             </div>
           </div>
 
-          {/* Profile Info Header */}
-          {profile && profile.full_name && (
-            <div className="bg-white rounded-lg p-4 border border-gray-200">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
-                  <span className="text-lg font-semibold text-primary-600">
-                    {profile.full_name.charAt(0).toUpperCase()}
-                  </span>
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">{profile.full_name}</h3>
-                  <p className="text-sm text-gray-600">{profile.email}</p>
-                  <p className="text-xs text-gray-500">
-                    Plano {profile.plan_type || 'free'} • {profile.city || 'N/A'}, {profile.state || 'N/A'}
-                  </p>
-                </div>
+          {profile && (
+            <div className="bg-white px-6 py-4 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-700 rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-inner">
+                {profile.full_name?.charAt(0).toUpperCase() || 'U'}
+              </div>
+              <div>
+                <div className="text-sm font-bold text-gray-900">{profile.full_name}</div>
+                <div className="text-xs font-medium text-gray-500">{profile.email}</div>
               </div>
             </div>
           )}
         </div>
 
-        {/* Settings Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Sidebar Navigation */}
-          <div className="lg:col-span-1">
-            <nav className="space-y-2">
+        {/* Settings Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+          {/* Enhanced Sidebar */}
+          <div className="lg:col-span-3">
+            <nav className="space-y-3 sticky top-24">
               {tabs.map((tab) => {
                 const Icon = tab.icon
+                const isActive = activeTab === tab.id
                 return (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`w-full flex items-center gap-3 p-3 rounded-lg text-left transition-colors ${activeTab === tab.id
-                        ? 'bg-primary-50 text-primary-700 border border-primary-200'
-                        : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
+                    className={`w-full group flex items-center gap-4 p-4 rounded-2xl transition-all duration-300 ${isActive
+                      ? 'bg-white text-primary-600 shadow-md shadow-gray-200/50 border border-gray-100'
+                      : 'text-gray-500 hover:bg-white hover:text-gray-900 hover:shadow-sm'
                       }`}
                   >
-                    <Icon className="w-5 h-5" />
-                    <div>
-                      <div className="font-medium">{tab.name}</div>
-                      <div className="text-xs text-gray-500">{tab.description}</div>
+                    <div className={`p-2 rounded-xl transition-colors ${isActive ? 'bg-primary-50' : 'bg-gray-100 group-hover:bg-gray-200'}`}>
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    <div className="text-left">
+                      <div className="font-bold text-sm leading-tight">{tab.name}</div>
+                      <div className="text-[10px] uppercase tracking-wider font-bold opacity-60 mt-0.5">{tab.description}</div>
                     </div>
                   </button>
                 )
@@ -126,38 +118,30 @@ export default function Settings() {
             </nav>
           </div>
 
-          {/* Main Content */}
-          <div className="lg:col-span-3">
-            <div className="bg-white rounded-lg border border-gray-200">
-              {/* Tab Header */}
-              <div className="border-b border-gray-200 p-6">
-                <div className="flex items-center gap-3">
-                  {(() => {
-                    const activeTabData = tabs.find(tab => tab.id === activeTab)
-                    const Icon = activeTabData?.icon || SettingsIcon
-                    return (
-                      <>
-                        <Icon className="w-6 h-6 text-gray-700" />
-                        <div>
-                          <h2 className="text-xl font-semibold text-gray-900">
-                            {activeTabData?.name}
-                          </h2>
-                          <p className="text-sm text-gray-600">
-                            {activeTabData?.description}
-                          </p>
-                        </div>
-                      </>
-                    )
-                  })()}
-                </div>
+          {/* Main Content Area */}
+          <div className="lg:col-span-9">
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="flex items-center gap-3 mb-8 px-2">
+                {(() => {
+                  const activeTabData = tabs.find(tab => tab.id === activeTab)
+                  const Icon = activeTabData?.icon || SettingsIcon
+                  return (
+                    <>
+                      <div className="w-1.5 h-8 bg-primary-600 rounded-full" />
+                      <div>
+                        <h2 className="text-2xl font-black text-gray-900">{activeTabData?.name}</h2>
+                        <p className="text-sm font-medium text-gray-500">{activeTabData?.description}</p>
+                      </div>
+                    </>
+                  )
+                })()}
               </div>
 
               {/* Tab Content */}
               <div className="p-6">
                 {activeTab === 'personal' && <PersonalInformationSection />}
                 {activeTab === 'security' && <SecuritySection />}
-                {activeTab === 'subscription' && <SubscriptionSection />}
-                {activeTab === 'privacy' && <PrivacySection />}
+                {activeTab === 'property' && <PropertySection />}
                 {activeTab === 'account' && <AccountManagementSection />}
               </div>
             </div>
@@ -170,22 +154,57 @@ export default function Settings() {
 
 // Personal Information Section
 function PersonalInformationSection() {
-  const { profile, updateProfile } = useAuth()
+  const { profile, updateProfile, user } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
+  const [isFetching, setIsFetching] = useState(false)
   const [formData, setFormData] = useState({
-    full_name: profile?.full_name || '',
-    phone: profile?.phone || '',
-    state: profile?.state || '',
-    city: profile?.city || '',
-    region: profile?.region || ''
+    full_name: '',
+    email: '',
+    phone: '',
+    whatsapp: '',
+    facebook_url: '',
+    instagram_url: ''
   })
+
+  // Load user data from database
+  useEffect(() => {
+    const loadUserData = async () => {
+      if (!user?.id) return
+
+      setIsFetching(true)
+      try {
+        const { data, error } = await apiClient.get<{ data: any }>(`/api/user/${user.id}`)
+
+        if (!error && data?.data) {
+          setFormData({
+            full_name: data.data.name || data.data.full_name || '',
+            email: data.data.email || '',
+            phone: maskPhone(data.data.phone || ''),
+            whatsapp: maskPhone(data.data.whatsapp || ''),
+            facebook_url: data.data.facebook_url || '',
+            instagram_url: data.data.instagram_url || ''
+          })
+        }
+      } catch (err) {
+        console.error('Error loading user data:', err)
+      } finally {
+        setIsFetching(false)
+      }
+    }
+
+    loadUserData()
+  }, [user?.id])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
 
     try {
-      const result = await updateProfile(formData)
+      const result = await updateProfile({
+        ...formData,
+        phone: unmask(formData.phone),
+        whatsapp: unmask(formData.whatsapp)
+      })
       if (result.error) {
         alert('Erro ao atualizar perfil: ' + result.error)
       } else {
@@ -199,90 +218,156 @@ function PersonalInformationSection() {
     }
   }
 
+  if (isFetching) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-8 h-8 text-primary-600 animate-spin" />
+      </div>
+    )
+  }
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label htmlFor="full_name" className="block text-sm font-medium text-gray-700 mb-2">
-            Nome Completo
-          </label>
-          <input
-            type="text"
-            id="full_name"
-            value={formData.full_name}
-            onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-            required
-          />
-        </div>
+    <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="p-8">
+        <form onSubmit={handleSubmit} className="space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="md:col-span-2">
+              <label htmlFor="full_name" className="block text-sm font-bold text-gray-700 mb-2 px-1">
+                Nome Completo
+              </label>
+              <div className="relative group">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary-500 transition-colors">
+                  <User className="w-5 h-5" />
+                </div>
+                <input
+                  type="text"
+                  id="full_name"
+                  value={formData.full_name}
+                  onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                  className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all outline-none font-medium"
+                  required
+                />
+              </div>
+            </div>
 
-        <div>
-          <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-            Telefone
-          </label>
-          <input
-            type="tel"
-            id="phone"
-            value={formData.phone}
-            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-            placeholder="(11) 99999-9999"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-          />
-        </div>
+            <div>
+              <label htmlFor="email" className="block text-sm font-bold text-gray-700 mb-2 px-1">
+                Endereço de Email
+              </label>
+              <div className="relative group">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                  <Bell className="w-5 h-5" />
+                </div>
+                <input
+                  type="email"
+                  id="email"
+                  value={formData.email}
+                  disabled
+                  className="w-full pl-12 pr-28 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-gray-400 cursor-not-allowed font-medium"
+                />
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 bg-white px-3 py-1 rounded-lg border border-gray-100 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                  Protegido
+                </div>
+              </div>
+              <p className="mt-3 text-xs text-gray-400 font-bold px-1 italic">
+                * Para alterar o email de acesso, entre em contato com nosso suporte técnico.
+              </p>
+            </div>
 
-        <div>
-          <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-2">
-            Estado
-          </label>
-          <input
-            type="text"
-            id="state"
-            value={formData.state}
-            onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-            required
-          />
-        </div>
+            <div>
+              <label htmlFor="phone" className="block text-sm font-bold text-gray-700 mb-2 px-1">
+                Telefone de Recado
+              </label>
+              <div className="relative group">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary-500 transition-colors">
+                  <Phone className="w-5 h-5" />
+                </div>
+                <input
+                  type="tel"
+                  id="phone"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: maskPhone(e.target.value) })}
+                  placeholder="(00) 00000-0000"
+                  className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all outline-none font-medium"
+                />
+              </div>
+            </div>
 
-        <div>
-          <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">
-            Cidade
-          </label>
-          <input
-            type="text"
-            id="city"
-            value={formData.city}
-            onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-            required
-          />
-        </div>
+            <div>
+              <label htmlFor="whatsapp" className="block text-sm font-bold text-gray-700 mb-2 px-1">
+                WhatsApp Principal
+              </label>
+              <div className="relative group">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary-500 transition-colors">
+                  <Phone className="w-5 h-5" />
+                </div>
+                <input
+                  type="tel"
+                  id="whatsapp"
+                  value={formData.whatsapp}
+                  onChange={(e) => setFormData({ ...formData, whatsapp: maskPhone(e.target.value) })}
+                  placeholder="(00) 00000-0000"
+                  className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all outline-none font-medium"
+                />
+              </div>
+            </div>
 
-        <div className="md:col-span-2">
-          <label htmlFor="region" className="block text-sm font-medium text-gray-700 mb-2">
-            Região (Opcional)
-          </label>
-          <input
-            type="text"
-            id="region"
-            value={formData.region}
-            onChange={(e) => setFormData({ ...formData, region: e.target.value })}
-            placeholder="Centro, Zona Sul, etc."
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-          />
-        </div>
+            <div>
+              <label htmlFor="facebook" className="block text-sm font-bold text-gray-700 mb-2 px-1">
+                Link do Facebook
+              </label>
+              <div className="relative group">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary-500 transition-colors">
+                  <Facebook className="w-5 h-5" />
+                </div>
+                <input
+                  type="url"
+                  id="facebook"
+                  value={formData.facebook_url}
+                  onChange={(e) => setFormData({ ...formData, facebook_url: e.target.value })}
+                  placeholder="https://facebook.com/seu-perfil"
+                  className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all outline-none font-medium"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="instagram" className="block text-sm font-bold text-gray-700 mb-2 px-1">
+                Link do Instagram
+              </label>
+              <div className="relative group">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary-500 transition-colors">
+                  <Instagram className="w-5 h-5" />
+                </div>
+                <input
+                  type="url"
+                  id="instagram"
+                  value={formData.instagram_url}
+                  onChange={(e) => setFormData({ ...formData, instagram_url: e.target.value })}
+                  placeholder="https://instagram.com/seu-perfil"
+                  className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all outline-none font-medium"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end border-t border-gray-50 pt-8">
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="flex items-center gap-2 px-10 py-4 bg-primary-600 text-white font-black rounded-2xl hover:bg-primary-700 shadow-xl shadow-primary-500/20 transition-all active:scale-95 disabled:opacity-50"
+            >
+              {isLoading ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <Save className="w-5 h-5" />
+              )}
+              SALVAR ALTERAÇÕES
+            </button>
+          </div>
+        </form>
       </div>
-
-      <div className="flex justify-end">
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="px-6 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isLoading ? 'Salvando...' : 'Salvar Alterações'}
-        </button>
-      </div>
-    </form>
+    </div>
   )
 }
 
@@ -309,9 +394,14 @@ function SecuritySection() {
       return
     }
 
+    if (!passwordData.currentPassword) {
+      alert('Por favor, informe sua senha atual')
+      return
+    }
+
     setIsLoading(true)
     try {
-      const result = await changePassword(passwordData.newPassword)
+      const result = await changePassword(passwordData.currentPassword, passwordData.newPassword)
       if (result.error) {
         alert('Erro ao alterar senha: ' + result.error)
       } else {
@@ -328,200 +418,416 @@ function SecuritySection() {
 
   return (
     <div className="space-y-8">
-      {/* Change Password */}
-      <div>
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Alterar Senha</h3>
-        <form onSubmit={handlePasswordChange} className="space-y-4 max-w-md">
-          <div>
-            <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 mb-2">
-              Senha Atual
-            </label>
-            <input
-              type="password"
-              id="currentPassword"
-              value={passwordData.currentPassword}
-              onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-              required
-            />
+      {/* Change Password Card */}
+      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
+        <div className="flex items-center gap-3 mb-8">
+          <div className="p-2 bg-amber-50 rounded-xl text-amber-600">
+            <Shield className="w-5 h-5" />
+          </div>
+          <h3 className="text-xl font-bold text-gray-900">Alterar Senha de Acesso</h3>
+        </div>
+
+        <form onSubmit={handlePasswordChange} className="space-y-6 max-w-xl">
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="currentPassword" className="block text-sm font-bold text-gray-700 mb-2 px-1">
+                Senha Atual
+              </label>
+              <input
+                type="password"
+                id="currentPassword"
+                value={passwordData.currentPassword}
+                onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                className="w-full px-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all outline-none font-medium"
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label htmlFor="newPassword" className="block text-sm font-bold text-gray-700 mb-2 px-1">
+                  Nova Senha
+                </label>
+                <input
+                  type="password"
+                  id="newPassword"
+                  value={passwordData.newPassword}
+                  onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                  className="w-full px-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all outline-none font-medium"
+                  required
+                  minLength={6}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="confirmPassword" className="block text-sm font-bold text-gray-700 mb-2 px-1">
+                  Confirmar Nova Senha
+                </label>
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  value={passwordData.confirmPassword}
+                  onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                  className="w-full px-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all outline-none font-medium"
+                  required
+                  minLength={6}
+                />
+              </div>
+            </div>
           </div>
 
-          <div>
-            <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-2">
-              Nova Senha
-            </label>
-            <input
-              type="password"
-              id="newPassword"
-              value={passwordData.newPassword}
-              onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-              required
-              minLength={6}
-            />
+          <div className="pt-2">
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="flex items-center gap-2 px-8 py-4 bg-primary-600 text-white font-black rounded-2xl hover:bg-primary-700 shadow-lg shadow-primary-500/20 transition-all active:scale-95 disabled:opacity-50"
+            >
+              {isLoading ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <Shield className="w-5 h-5" />
+              )}
+              ATUALIZAR SENHA AGORA
+            </button>
           </div>
-
-          <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
-              Confirmar Nova Senha
-            </label>
-            <input
-              type="password"
-              id="confirmPassword"
-              value={passwordData.confirmPassword}
-              onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-              required
-              minLength={6}
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="px-6 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isLoading ? 'Alterando...' : 'Alterar Senha'}
-          </button>
         </form>
       </div>
 
-      {/* Change Email */}
-      <div className="border-t pt-8">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Alterar Email</h3>
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-          <p className="text-sm text-yellow-800">
-            Para alterar seu email, entre em contato com o suporte através do email: suporte@eventspace.com.br
-          </p>
+      {/* Change Email Card */}
+      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-2 bg-blue-50 rounded-xl text-blue-600">
+            <Bell className="w-5 h-5" />
+          </div>
+          <h3 className="text-xl font-bold text-gray-900">Email da Conta</h3>
+        </div>
+
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 p-6 bg-blue-50/50 rounded-2xl border border-blue-100">
+          <div className="space-y-1">
+            <p className="text-sm font-bold text-blue-900">Segurança de Email</p>
+            <p className="text-sm text-blue-700/80 font-medium max-w-lg">
+              Por medidas de segurança, a alteração de email exige validação manual.
+              Entre em contato conosco para iniciar o processo.
+            </p>
+          </div>
+          <a
+            href="mailto:suporte@eventspace.com.br"
+            className="flex items-center justify-center gap-2 px-6 py-3 bg-white text-blue-600 font-bold rounded-xl border border-blue-200 hover:bg-blue-600 hover:text-white transition-all whitespace-nowrap"
+          >
+            Falar com Suporte
+          </a>
         </div>
       </div>
     </div>
   )
 }
 
-// Subscription Section
-function SubscriptionSection() {
-  return (
-    <div>
-      <div className="mb-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-2">Gerenciar Assinatura</h3>
-        <p className="text-sm text-gray-600">
-          Visualize e gerencie sua assinatura atual, métodos de pagamento e histórico de cobrança.
-        </p>
-      </div>
 
-      <SubscriptionCard />
-    </div>
-  )
-}
 
-// Privacy Section
-function PrivacySection() {
-  const { profile, updateProfile } = useAuth()
-  const [isLoading, setIsLoading] = useState(false)
-  const [preferences, setPreferences] = useState({
-    marketing_consent: profile?.marketing_consent || false,
-    email_notifications: true, // This would come from user preferences
-    sms_notifications: false
+// Property Section (Meu Anúncio)
+function PropertySection() {
+  const { user } = useAuth()
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
+  const [spaceId, setSpaceId] = useState<string | null>(null)
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    price_per_day: 0,
+    capacity: 0,
+    phone: '',
+    address: {
+      street: '',
+      number: '',
+      neighborhood: '',
+      city: '',
+      state: '',
+      zipcode: '',
+      country: 'Brasil'
+    }
   })
 
-  const handleSavePreferences = async () => {
-    setIsLoading(true)
+  useEffect(() => {
+    async function loadSpace() {
+      if (!user?.id) return
+
+      try {
+        const { data, error } = await apiClient.get<any>(`/api/spaces?owner_id=${user.id}`)
+
+        if (error) {
+          console.error('Error loading space:', error)
+          return
+        }
+
+        const spaces = data?.spaces || []
+        if (spaces.length > 0) {
+          const space = spaces[0]
+          setSpaceId(space.id)
+          setFormData({
+            title: space.title || '',
+            description: space.description || '',
+            price_per_day: space.price_per_day || 0,
+            capacity: space.capacity || 0,
+            phone: maskPhone(space.contact_phone || ''),
+            address: {
+              street: space.address?.street || '',
+              number: space.address?.number || '',
+              neighborhood: space.address?.neighborhood || '',
+              city: space.address?.city || '',
+              state: space.address?.state || '',
+              zipcode: maskCEP(space.address?.zipcode || space.address?.postal_code || ''),
+              country: space.address?.country || 'Brasil'
+            }
+          })
+        }
+      } catch (err) {
+        console.error('Unexpected error loading space:', err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadSpace()
+  }, [user?.id])
+
+  const handleUpdateSpace = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!spaceId) return
+
+    setIsSaving(true)
     try {
-      const result = await updateProfile({
-        marketing_consent: preferences.marketing_consent,
-        marketing_consent_at: preferences.marketing_consent ? new Date().toISOString() : undefined
+      const { error } = await apiClient.patch(`/api/spaces/${spaceId}`, {
+        ...formData,
+        phone: unmask(formData.phone),
+        contact_phone: unmask(formData.phone), // Map phone back to backend field
+        address: {
+          ...formData.address,
+          zipcode: unmask(formData.address.zipcode)
+        }
       })
 
-      if (result.error) {
-        alert('Erro ao atualizar preferências: ' + result.error)
+      if (error) {
+        alert('Erro ao atualizar anúncio: ' + error.message)
       } else {
-        alert('Preferências atualizadas com sucesso!')
+        alert('Anúncio atualizado com sucesso!')
       }
     } catch (err) {
-      console.error('Error updating preferences:', err)
-      alert('Erro inesperado ao atualizar preferências')
+      console.error('Error updating space:', err)
+      alert('Erro inesperado ao atualizar anúncio')
     } finally {
-      setIsLoading(false)
+      setIsSaving(false)
     }
   }
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-8 h-8 text-primary-600 animate-spin" />
+      </div>
+    )
+  }
+
+  if (!spaceId) {
+    return (
+      <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
+        <Home className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+        <h3 className="text-lg font-medium text-gray-900">Nenhum anúncio encontrado</h3>
+        <p className="text-gray-500 mb-6">Você ainda não possui um imóvel cadastrado.</p>
+        <Link
+          to="/dashboard/anunciar"
+          className="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+        >
+          Criar meu primeiro anúncio
+        </Link>
+      </div>
+    )
+  }
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Preferências de Comunicação</h3>
-
-        <div className="space-y-4">
-          <div className="flex items-start">
-            <div className="flex items-center h-5">
-              <input
-                type="checkbox"
-                id="marketing_consent"
-                checked={preferences.marketing_consent}
-                onChange={(e) => setPreferences({ ...preferences, marketing_consent: e.target.checked })}
-                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-              />
-            </div>
-            <div className="ml-3 text-sm">
-              <label htmlFor="marketing_consent" className="font-medium text-gray-700">
-                Receber emails de marketing
-              </label>
-              <p className="text-gray-500">
-                Receba ofertas especiais, novidades e dicas por email.
-              </p>
-            </div>
+    <form onSubmit={handleUpdateSpace} className="space-y-8">
+      {/* Basic Info Card */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
+            <Home className="w-5 h-5" />
           </div>
-
-          <div className="flex items-start">
-            <div className="flex items-center h-5">
-              <input
-                type="checkbox"
-                id="email_notifications"
-                checked={preferences.email_notifications}
-                onChange={(e) => setPreferences({ ...preferences, email_notifications: e.target.checked })}
-                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-              />
-            </div>
-            <div className="ml-3 text-sm">
-              <label htmlFor="email_notifications" className="font-medium text-gray-700">
-                Notificações por email
-              </label>
-              <p className="text-gray-500">
-                Receba notificações sobre seus anúncios e atividades da conta.
-              </p>
-            </div>
-          </div>
+          <h3 className="text-xl font-bold text-gray-900">Dados Básicos</h3>
         </div>
 
-        <div className="mt-6">
-          <button
-            onClick={handleSavePreferences}
-            disabled={isLoading}
-            className="px-6 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isLoading ? 'Salvando...' : 'Salvar Preferências'}
-          </button>
+        <div className="space-y-6">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Título do Anúncio</label>
+            <input
+              type="text"
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all outline-none"
+              placeholder="Ex: Chácara Bela Vista"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Descrição</label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all outline-none min-h-[120px]"
+              placeholder="Descreva as principais características do seu espaço..."
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Preço por Dia (R$)</label>
+              <input
+                type="number"
+                value={formData.price_per_day}
+                onChange={(e) => setFormData({ ...formData, price_per_day: parseFloat(e.target.value) })}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all outline-none"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Capacidade (Pessoas)</label>
+              <input
+                type="number"
+                value={formData.capacity}
+                onChange={(e) => setFormData({ ...formData, capacity: parseInt(e.target.value) })}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all outline-none"
+                required
+              />
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Privacy Information */}
-      <div className="border-t pt-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Informações de Privacidade</h3>
-        <div className="bg-gray-50 rounded-lg p-4">
-          <div className="text-sm text-gray-600 space-y-2">
-            <p><strong>Termos aceitos em:</strong> {profile?.terms_accepted_at ? new Date(profile.terms_accepted_at).toLocaleDateString() : 'N/A'}</p>
-            <p><strong>Política de privacidade aceita em:</strong> {profile?.privacy_accepted_at ? new Date(profile.privacy_accepted_at).toLocaleDateString() : 'N/A'}</p>
-            <p><strong>Consentimento de marketing:</strong> {profile?.marketing_consent_at ? new Date(profile.marketing_consent_at).toLocaleDateString() : 'Não concedido'}</p>
+      {/* Address & Contact Card */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-2 bg-purple-50 rounded-lg text-purple-600">
+            <MapPin className="w-5 h-5" />
+          </div>
+          <h3 className="text-xl font-bold text-gray-900">Endereço e Contato</h3>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="md:col-span-2">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Rua / Logradouro</label>
+            <input
+              type="text"
+              value={formData.address.street}
+              onChange={(e) => setFormData({
+                ...formData,
+                address: { ...formData.address, street: e.target.value }
+              })}
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all outline-none"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Número</label>
+            <input
+              type="text"
+              value={formData.address.number}
+              onChange={(e) => setFormData({
+                ...formData,
+                address: { ...formData.address, number: e.target.value }
+              })}
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all outline-none"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Bairro</label>
+            <input
+              type="text"
+              value={formData.address.neighborhood}
+              onChange={(e) => setFormData({
+                ...formData,
+                address: { ...formData.address, neighborhood: e.target.value }
+              })}
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all outline-none"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">CEP</label>
+            <input
+              type="text"
+              value={formData.address.zipcode}
+              onChange={(e) => setFormData({
+                ...formData,
+                address: { ...formData.address, zipcode: maskCEP(e.target.value) }
+              })}
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all outline-none"
+              placeholder="00000-000"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Cidade / Estado</label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={formData.address.city}
+                readOnly
+                className="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-xl text-gray-500 cursor-not-allowed"
+              />
+              <input
+                type="text"
+                value={formData.address.state}
+                readOnly
+                className="w-20 px-4 py-3 bg-gray-100 border border-gray-200 rounded-xl text-gray-500 cursor-not-allowed text-center"
+              />
+            </div>
+          </div>
+
+          <div className="md:col-span-2 border-t pt-6 mt-2">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-green-50 rounded-lg text-green-600">
+                <Phone className="w-5 h-5" />
+              </div>
+              <h4 className="font-bold text-gray-900">Contato (WhatsApp)</h4>
+            </div>
+            <input
+              type="tel"
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: maskPhone(e.target.value) })}
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all outline-none"
+              placeholder="(00) 00000-0000"
+              required
+            />
           </div>
         </div>
       </div>
-    </div>
+
+      <div className="flex justify-end pt-4">
+        <button
+          type="submit"
+          disabled={isSaving}
+          className="flex items-center gap-2 px-8 py-4 bg-primary-600 text-white font-bold rounded-2xl hover:bg-primary-700 shadow-lg shadow-primary-500/20 transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100"
+        >
+          {isSaving ? (
+            <Loader2 className="w-5 h-5 animate-spin" />
+          ) : (
+            <Save className="w-5 h-5" />
+          )}
+          Salvar Alterações
+        </button>
+      </div>
+    </form>
   )
 }
 
 // Account Management Section
 function AccountManagementSection() {
-  const { profile } = useAuth()
+  const { profile, signOut, user } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
 
   const handleExportData = async () => {
@@ -538,104 +844,181 @@ function AccountManagementSection() {
   }
 
   const handleDeactivateAccount = async () => {
-    if (!confirm('Tem certeza que deseja desativar sua conta? Esta ação pode ser revertida entrando em contato conosco.')) {
+    if (!confirm('Tem certeza que deseja desativar sua conta? Seus anúncios não serão mais exibidos na plataforma.')) {
       return
     }
 
     setIsLoading(true)
     try {
-      // TODO: Implement account deactivation
-      alert('Funcionalidade de desativação será implementada em breve')
-    } catch (err) {
+      const { error } = await apiClient.patch(`/api/user/${user?.id}`, {
+        status: 1 // UserIsActive.INATIVO = 1
+      })
+
+      if (error) {
+        throw new Error(error.message)
+      }
+
+      alert('Sua conta foi desativada com sucesso. Você será desconectado.')
+      await signOut()
+    } catch (err: any) {
       console.error('Error deactivating account:', err)
-      alert('Erro ao desativar conta')
+      alert('Erro ao desativar conta: ' + err.message)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleReactivateAccount = async () => {
+    setIsLoading(true)
+    try {
+      const { error } = await apiClient.patch(`/api/user/${user?.id}`, {
+        status: 0 // UserIsActive.ATIVO = 0
+      })
+
+      if (error) {
+        throw new Error(error.message)
+      }
+
+      alert('Sua conta foi reativada com sucesso! Seus anúncios voltarão a ficar visíveis.')
+      // Refresh page to update profile status
+      window.location.reload()
+    } catch (err: any) {
+      console.error('Error reactivating account:', err)
+      alert('Erro ao reativar conta: ' + err.message)
     } finally {
       setIsLoading(false)
     }
   }
 
   const handleDeleteAccount = async () => {
-    if (!confirm('ATENÇÃO: Esta ação é irreversível! Tem certeza que deseja excluir permanentemente sua conta e todos os seus dados?')) {
-      return
-    }
+    const confirmation = prompt('ATENÇÃO: Esta ação é irreversível! Seus anúncios e dados serão excluídos permanentemente. Digite "EXCLUIR" para confirmar:')
 
-    if (!confirm('Digite "EXCLUIR" para confirmar a exclusão da conta:') ||
-      prompt('Digite "EXCLUIR" para confirmar:') !== 'EXCLUIR') {
+    if (confirmation !== 'EXCLUIR') {
+      alert('Confirmação inválida. A conta não foi excluída.')
       return
     }
 
     setIsLoading(true)
     try {
-      // TODO: Implement account deletion
-      alert('Funcionalidade de exclusão será implementada em breve')
-    } catch (err) {
+      const { error } = await apiClient.delete(`/api/user/${user?.id}`)
+
+      if (error) {
+        throw new Error(error.message)
+      }
+
+      alert('Sua conta foi excluída permanentemente. Sentiremos sua falta!')
+      await signOut()
+    } catch (err: any) {
       console.error('Error deleting account:', err)
-      alert('Erro ao excluir conta')
+      alert('Erro ao excluir conta: ' + err.message)
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <div className="space-y-8">
-      {/* Account Info */}
-      <div>
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Informações da Conta</h3>
-        <div className="bg-gray-50 rounded-lg p-4">
-          <div className="text-sm text-gray-600 space-y-2">
-            <p><strong>ID da conta:</strong> {profile?.id}</p>
-            <p><strong>Conta criada em:</strong> {profile?.created_at ? new Date(profile.created_at).toLocaleDateString() : 'N/A'}</p>
-            <p><strong>Última atualização:</strong> {profile?.updated_at ? new Date(profile.updated_at).toLocaleDateString() : 'N/A'}</p>
-            <p><strong>Status da conta:</strong> {profile?.account_status === 'active' ? 'Ativa' : 'Inativa'}</p>
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      {/* Account Info Card */}
+      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
+        <div className="flex items-center gap-3 mb-8">
+          <div className="p-2 bg-indigo-50 rounded-xl text-indigo-600">
+            <User className="w-5 h-5" />
+          </div>
+          <h3 className="text-xl font-bold text-gray-900 tracking-tight">Identidade da Conta</h3>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="p-5 bg-gray-50 rounded-2xl border border-gray-100">
+            <div className="text-[10px] uppercase font-black text-gray-400 tracking-widest mb-1">ID Único</div>
+            <div className="text-sm font-bold text-gray-700 break-all">{profile?.id}</div>
+          </div>
+          <div className="p-5 bg-gray-50 rounded-2xl border border-gray-100">
+            <div className="text-[10px] uppercase font-black text-gray-400 tracking-widest mb-1">Status Atual</div>
+            <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${profile?.account_status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+              <div className={`w-1.5 h-1.5 rounded-full ${profile?.account_status === 'active' ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
+              {profile?.account_status === 'active' ? 'Ativa' : 'Inativa'}
+            </div>
+          </div>
+          <div className="p-5 bg-gray-50 rounded-2xl border border-gray-100">
+            <div className="text-[10px] uppercase font-black text-gray-400 tracking-widest mb-1">Membro Desde</div>
+            <div className="text-sm font-bold text-gray-700">{profile?.created_at ? new Date(profile.created_at).toLocaleString() : 'N/A'}</div>
+          </div>
+          <div className="p-5 bg-gray-50 rounded-2xl border border-gray-100">
+            <div className="text-[10px] uppercase font-black text-gray-400 tracking-widest mb-1">Última Atividade</div>
+            <div className="text-sm font-bold text-gray-700">{profile?.updated_at ? new Date(profile.updated_at).toLocaleString() : 'N/A'}</div>
           </div>
         </div>
       </div>
 
-      {/* Data Export */}
-      <div>
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Exportar Dados</h3>
-        <p className="text-sm text-gray-600 mb-4">
-          Baixe uma cópia de todos os seus dados armazenados em nossa plataforma.
-        </p>
+      {/* Export Data Card */}
+      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-2 bg-primary-50 rounded-xl text-primary-600">
+            <Save className="w-5 h-5" />
+          </div>
+          <h3 className="text-xl font-bold text-gray-900 tracking-tight">Portabilidade de Dados</h3>
+        </div>
+        <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100 mb-6 font-medium text-gray-600 text-sm leading-relaxed">
+          Baixe uma cópia completa de todos os seus dados armazenados em nossa plataforma, seguindo as diretrizes da LGPD.
+        </div>
         <button
           onClick={handleExportData}
           disabled={isLoading}
-          className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full md:w-auto px-8 py-4 bg-primary-600 text-white font-black rounded-2xl hover:bg-primary-700 shadow-lg shadow-primary-500/20 transition-all active:scale-95 disabled:opacity-50"
         >
-          {isLoading ? 'Exportando...' : 'Exportar Meus Dados'}
+          {isLoading ? 'PREPARANDO DADOS...' : 'EXPORTAR MEUS DADOS'}
         </button>
       </div>
 
-      {/* Danger Zone */}
-      <div className="border-t pt-8">
-        <h3 className="text-lg font-medium text-red-900 mb-4">Zona de Perigo</h3>
+      {/* Danger Zone Card */}
+      <div className="bg-red-50/30 rounded-3xl border-2 border-red-100 p-8">
+        <div className="flex items-center gap-3 mb-8">
+          <div className="p-2 bg-red-100 rounded-xl text-red-600">
+            <Trash2 className="w-5 h-5" />
+          </div>
+          <h3 className="text-xl font-black text-red-900 tracking-tight italic">Zona de Risco</h3>
+        </div>
 
-        <div className="space-y-4">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <h4 className="font-medium text-red-900 mb-2">Desativar Conta</h4>
-            <p className="text-sm text-red-700 mb-3">
-              Desative temporariamente sua conta. Você pode reativá-la entrando em contato conosco.
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="space-y-4">
+            <div className="font-bold text-red-900">
+              {profile?.account_status === 'active' ? 'Desativação Temporária' : 'Reativação de Conta'}
+            </div>
+            <p className="text-sm text-red-800/70 font-medium">
+              {profile?.account_status === 'active'
+                ? 'Seus anúncios ficarão ocultos para outros usuários enquanto sua conta estiver inativa.'
+                : 'Sua conta está desativada. Reative-a para que seus anúncios voltem a aparecer na plataforma.'}
             </p>
-            <button
-              onClick={handleDeactivateAccount}
-              disabled={isLoading}
-              className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-            >
-              Desativar Conta
-            </button>
+            {profile?.account_status === 'active' ? (
+              <button
+                onClick={handleDeactivateAccount}
+                disabled={isLoading}
+                className="px-6 py-3 bg-white text-red-600 font-bold rounded-xl border border-red-200 hover:bg-red-600 hover:text-white transition-all shadow-sm"
+              >
+                Desativar Conta
+              </button>
+            ) : (
+              <button
+                onClick={handleReactivateAccount}
+                disabled={isLoading}
+                className="px-6 py-3 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition-all shadow-md shadow-green-500/10"
+              >
+                Reativar Minha Conta
+              </button>
+            )}
           </div>
 
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <h4 className="font-medium text-red-900 mb-2">Excluir Conta</h4>
-            <p className="text-sm text-red-700 mb-3">
-              Exclua permanentemente sua conta e todos os dados associados. Esta ação não pode ser desfeita.
+          <div className="space-y-4">
+            <div className="font-bold text-red-900">Exclusão Permanente</div>
+            <p className="text-sm text-red-800/70 font-medium whitespace-pre-wrap">
+              Ação irreversível! Apaga permanentemente TODOS os seus anúncios, avaliações, mensagens e histórico.
             </p>
             <button
               onClick={handleDeleteAccount}
               disabled={isLoading}
-              className="px-4 py-2 bg-red-800 text-white rounded-md hover:bg-red-900 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              className="px-6 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-all shadow-md shadow-red-500/10"
             >
-              Excluir Conta Permanentemente
+              Excluir Permanentemente
             </button>
           </div>
         </div>

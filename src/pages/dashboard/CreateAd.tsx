@@ -26,6 +26,7 @@ import { AMENITY_LABELS } from '@/constants/amenities'
 import { getBrazilianStates } from '@/lib/api/search'
 import { getMaxImagesForPlan } from '@/lib/planLimits'
 import Tooltip from '@/components/ui/Tooltip'
+import { maskPhone as utilMaskPhone, maskCEP as utilMaskCEP, unmask } from '@/utils/masks'
 
 // Import apiClient for fetching categories
 import { apiClient } from '@/lib/api-client'
@@ -145,8 +146,7 @@ const createListingSchema = z.object({
   // Step 6: Contato
   contactPhone: z.string()
     .min(1, 'Telefone é obrigatório')
-    .max(25, 'Telefone muito longo')
-    .regex(/^\(\d{2}\)\s\d{4,5}-\d{4}$/, 'Formato: (11) 99999-9999'),
+    .max(25, 'Telefone muito longo'),
   contactWhatsapp: z.string()
     .max(25, 'WhatsApp muito longo')
     .optional(),
@@ -308,19 +308,6 @@ export default function CreateAd() {
     }
   }, []) // Empty dependency array means this runs once on mount and cleanup runs only on unmount
 
-  const maskPhone = (value: string) => {
-    const numbers = value.replace(/\D/g, '').slice(0, 11)
-    if (numbers.length <= 10) {
-      return numbers.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3').replace(/-$/, '')
-    } else {
-      return numbers.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3').replace(/-$/, '')
-    }
-  }
-
-  const maskCEP = (value: string) => {
-    const numbers = value.replace(/\D/g, '').slice(0, 8)
-    return numbers.replace(/(\d{5})(\d{0,3})/, '$1-$2').replace(/-$/, '')
-  }
 
   // Refined currency mask for better typing experience
   const maskCurrency = (value: string) => {
@@ -680,7 +667,7 @@ export default function CreateAd() {
                 required
                 hint="CEP para facilitar a localização"
                 {...register('postal_code')}
-                onChange={(e) => handleMaskedChange(e, maskCEP, 'postal_code')}
+                onChange={(e) => handleMaskedChange(e, utilMaskCEP, 'postal_code')}
               />
 
               <FormField
@@ -829,7 +816,7 @@ export default function CreateAd() {
               error={errors.contactPhone}
               required
               {...register('contactPhone')}
-              onChange={(e) => handleMaskedChange(e, maskPhone, 'contactPhone')}
+              onChange={(e) => handleMaskedChange(e, utilMaskPhone, 'contactPhone')}
             />
 
             <FormField
@@ -839,7 +826,7 @@ export default function CreateAd() {
               placeholder="(11) 99999-9999 (opcional)"
               error={errors.contactWhatsapp}
               {...register('contactWhatsapp')}
-              onChange={(e) => handleMaskedChange(e, maskPhone, 'contactWhatsapp')}
+              onChange={(e) => handleMaskedChange(e, utilMaskPhone, 'contactWhatsapp')}
             />
 
             <FormField
