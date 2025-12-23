@@ -1,26 +1,26 @@
-# EventSpace - Plataforma Nacional de Aluguel de Equipamentos e Espaços
+# EventSpace - Plataforma Nacional de Aluguel de Espaços
 
-Uma plataforma moderna construída com Vite + React + TypeScript + Supabase para conectar organizadores de eventos com fornecedores de equipamentos e espaços em todo o Brasil.
+Uma plataforma moderna construída com Vite + React + TypeScript, integrada a uma API Marketplace personalizada para conectar organizadores de eventos com proprietários de espaços em todo o Brasil.
 
 ## 🚀 Características Principais
 
 - **Negociação Direta**: 0% de comissão sobre aluguéis
-- **Sistema de Trial**: 7 dias gratuitos para testar a plataforma
-- **Planos Inteligentes**: Básico (R$ 49,90) e Premium (R$ 79,90)
-- **Upgrade Contextual**: Modais estratégicos para conversão
-- **Cobertura Nacional**: Busca por estado e cidade
-- **Transparência Total**: Modelo de negócio claro
-- **Interface Moderna**: Design responsivo e intuitivo
-- **Autenticação Segura**: Sistema completo de login/cadastro
+- **Sistema de Trial**: Período gratuito para testar a plataforma
+- **Assinaturas via Stripe**: Fluxo completo de pagamento e ativação de planos
+- **Gestão de Avaliações**: Sistema bidirecional de avaliações e respostas dos proprietários
+- **Métricas em Tempo Real**: Dashboard dinâmico com visualizações e contatos
+- **Cobertura Nacional**: Busca por estado e cidade com máscaras automáticas
+- **Interface Moderna**: Design responsivo e intuitivo com Vanilla CSS
 
 ## 📋 Stack Tecnológica
 
 - **Frontend**: Vite + React 18 + TypeScript
-- **Styling**: Tailwind CSS
+- **Styling**: Vanilla CSS (Premium Design System)
 - **Roteamento**: React Router v6
 - **Estado**: Zustand
-- **Backend**: Supabase (Database + Auth + Storage)
-- **Forms**: React Hook Form + Zod
+- **Backend**: Marketplace API (Express + Prisma + PostgreSQL)
+- **Pagamentos**: Stripe Integration
+- **Forms**: React Hook Form + Zod + Input Masks
 - **Icons**: Lucide React
 
 ## 🏗 Estrutura do Projeto
@@ -28,43 +28,39 @@ Uma plataforma moderna construída com Vite + React + TypeScript + Supabase para
 ```
 src/
 ├── components/         # Componentes reutilizáveis
+│   ├── dashboard/     # Cards de métricas, atividade recente
 │   ├── layout/        # Header, Footer, etc.
-│   ├── ui/            # Componentes base
-│   └── forms/         # Formulários
+│   ├── reviews/       # Sistema de avaliação e respostas
+│   └── ui/            # Componentes base e modais
 ├── pages/             # Páginas da aplicação
 │   ├── auth/          # Login, Cadastro
-│   ├── dashboard/     # Painel do usuário
-│   ├── public/        # Páginas públicas
-│   └── admin/         # Painel administrativo
-├── lib/               # Configurações e utilitários
-├── hooks/             # Custom hooks
-├── stores/            # Zustand stores
-├── types/             # TypeScript types
-└── App.tsx           # Componente principal com rotas
+│   ├── dashboard/     # Painel de controle, Configurações, Avaliações
+│   └── public/        # Home, Busca, Detalhes do Anúncio
+├── lib/               # Configurações de API e utilitários
+├── hooks/             # Hooks de autenticação e métricas
+├── stores/            # Zustand stores (Auth, Ads)
+├── types/             # Definições de tipos TypeScript
+└── utils/             # Máscaras de input (CPF, CEP, Telefone)
 ```
 
 ## 🎯 Rotas Principais
 
 ### Públicas
 - `/` - Homepage
-- `/equipamentos` - Listagem de equipamentos
-- `/espacos` - Listagem de espaços
-- `/equipamentos/:id` - Detalhes do equipamento
-- `/espacos/:id` - Detalhes do espaço
+- `/espacos` - Busca e filtragem de espaços
+- `/espacos/:id` - Detalhes do espaço com avaliações públicas
 
 ### Autenticação
-- `/login` - Login
-- `/cadastro` - Cadastro
-- `/recuperar-senha` - Recuperação de senha
+- `/login` - Login seguro com HttpOnly cookies
+- `/cadastro` - Cadastro de novos proprietários
+- `/recuperar-senha` - Fluxo de reset de senha
 
 ### Dashboard
-- `/dashboard` - Painel principal
-- `/meus-anuncios` - Gerenciar anúncios
-- `/criar-anuncio` - Criar novo anúncio
-- `/planos` - Planos de assinatura
-
-### Admin
-- `/admin` - Painel administrativo
+- `/dashboard` - Painel principal com métricas reais e atividade recente
+- `/dashboard/meus-anuncios` - Gerenciar anúncios existentes
+- `/dashboard/criar-anuncio` - Assistente de criação de anúncios (Multi-step)
+- `/dashboard/avaliacoes` - Gestão centralizada de comentários e respostas
+- `/dashboard/configuracoes` - Gestão de perfil e redes sociais
 
 ## 🛠 Como Executar
 
@@ -77,80 +73,31 @@ npm install
 ```bash
 cp .env.example .env
 ```
-Edite o arquivo `.env` com suas credenciais do Supabase.
+Edite o arquivo `.env` com a URL da Marketplace API (padrão: `http://localhost:5000`).
 
 3. **Executar em desenvolvimento**:
 ```bash
 npm run dev
 ```
 
-4. **Build para produção**:
-```bash
-npm run build
-```
+## ✅ Funcionalidades Recentes
 
-## 🎨 Design System
+### Dashboard de Métricas Real-time
+- Integração total com o backend para contagem de visualizações, contatos e favoritos.
+- Feed de "Atividade Recente" que mostra interações em tempo real.
 
-### Cores Principais
-- **Primary**: Azul (#3b82f6) - Botões e elementos principais
-- **Success**: Verde (#22c55e) - Indicadores de sucesso
-- **Warning**: Laranja (#f59e0b) - Alertas e destaques
+### Sistema de Avaliações (Fim a Fim)
+- Usuários públicos podem avaliar anúncios.
+- Proprietários recebem notificações no dashboard.
+- Tela dedicada para responder e editar respostas às avaliações.
 
-### Componentes Base
-- Botões com estados hover/focus
-- Formulários com validação
-- Cards responsivos
-- Grid layout flexível
+### Gestão de Perfil Social
+- Adição de campos para WhatsApp, Instagram e Facebook no perfil do usuário.
+- Exibição dinâmica de ícones sociais nas páginas de detalhes dos anúncios.
 
-## 🔐 Autenticação
-
-Sistema completo implementado com Supabase Auth:
-- Cadastro com email/senha
-- Login seguro
-- Recuperação de senha
-- Perfis de usuário com localização
-- Sessões persistentes
-
-## 📱 Deploy
-
-Otimizado para deploy em:
-- **Vercel** (recomendado)
-- **Netlify**
-- **GitHub Pages**
-
-Configure redirects para SPA no provedor escolhido.
-
-## ✅ Funcionalidades Implementadas
-
-### Sistema Completo de Trial e Planos
-- **Trial de 7 dias**: Cadastro automático com 1 anúncio gratuito
-- **Upgrade Inteligente**: Modais contextuais nos pontos estratégicos
-- **Planos Restructurados**: 
-  - Trial: 7 dias grátis (1 anúncio)
-  - Básico: R$ 49,90/mês (3 anúncios)
-  - Premium: R$ 79,90/mês (5 anúncios + destaque)
-
-### Dashboard Avançado
-- **Indicadores de Trial**: Progresso visual com dias e anúncios restantes
-- **Métricas em Tempo Real**: Contadores de anúncios e limites por plano
-- **Ações Rápidas**: Acesso direto às funcionalidades principais
-
-### Sistema de Conversão
-- **Checkout Contextual**: Direcionamento estratégico para upgrade
-- **4 Contextos de Modal**: create_ad, feature_ad, trial_ending, generic
-- **Página de Pricing**: Comparação clara dos planos com benefícios
-
-## 📈 Próximos Passos
-
-1. ~~**Sistema de Trial**: Implementado ✅~~
-2. ~~**Upgrade Contextual**: Implementado ✅~~
-3. **Sistema de Upload**: Imagens para anúncios
-4. **Pagamentos**: Integração com Stripe/PIX
-5. **Admin Panel**: Gestão da plataforma
-
-## 🤝 Contribuição
-
-Este projeto segue o plano detalhado em `claude_code_tasks.md`. Cada etapa está documentada e pronta para implementação.
+### Experiência de Usuário (UX)
+- Máscaras automáticas para campos sensíveis (Telefone, CEP).
+- Validações de formulário em tempo real com feedback visual.
 
 ---
 
