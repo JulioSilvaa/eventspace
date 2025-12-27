@@ -526,7 +526,7 @@ function SecuritySection() {
 
 // Property Section (Meu Anúncio)
 function PropertySection() {
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [spaceId, setSpaceId] = useState<string | null>(null)
@@ -536,6 +536,7 @@ function PropertySection() {
     price_per_day: 0,
     capacity: 0,
     phone: '',
+    whatsapp: '',
     address: {
       street: '',
       number: '',
@@ -563,12 +564,18 @@ function PropertySection() {
         if (spaces.length > 0) {
           const space = spaces[0]
           setSpaceId(space.id)
+
+          // Pre-fill with priority: Space Data > User Profile Data
           setFormData({
             title: space.title || '',
             description: space.description || '',
             price_per_day: space.price_per_day || 0,
             capacity: space.capacity || 0,
-            phone: maskPhone(space.contact_phone || ''),
+
+            // For contacts: try Space, then Profile
+            phone: maskPhone(space.contact_phone || profile?.phone || ''),
+            whatsapp: maskPhone(space.contact_whatsapp || profile?.whatsapp || space.contact_phone || profile?.phone || ''),
+
             address: {
               street: space.address?.street || '',
               number: space.address?.number || '',
@@ -588,7 +595,7 @@ function PropertySection() {
     }
 
     loadSpace()
-  }, [user?.id])
+  }, [user?.id, profile])
 
   const handleUpdateSpace = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -599,7 +606,8 @@ function PropertySection() {
       const { error } = await apiClient.patch(`/api/spaces/${spaceId}`, {
         ...formData,
         phone: unmask(formData.phone),
-        contact_phone: unmask(formData.phone), // Map phone back to backend field
+        contact_phone: unmask(formData.phone),
+        contact_whatsapp: unmask(formData.whatsapp), // Send whatsapp to backend
         address: {
           ...formData.address,
           zipcode: unmask(formData.address.zipcode)
@@ -797,8 +805,8 @@ function PropertySection() {
             </div>
             <input
               type="tel"
-              value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: maskPhone(e.target.value) })}
+              value={formData.whatsapp}
+              onChange={(e) => setFormData({ ...formData, whatsapp: maskPhone(e.target.value) })}
               className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all outline-none"
               placeholder="(00) 00000-0000"
               required

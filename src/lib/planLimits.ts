@@ -5,42 +5,26 @@ export interface PlanLimits {
   hasPriority: boolean
 }
 
-export const PLAN_LIMITS: Record<string, PlanLimits> = {
-  free: {
-    maxImages: 5, // Permitir 5 imagens no plano gratuito
-    maxAds: 1,    // Permitir 1 anúncio no plano gratuito
-    allowsFeatured: false,
-    hasPriority: false
-  },
-  basic: {
-    maxImages: 10, // Até 10 imagens por anúncio
-    maxAds: 1,
-    allowsFeatured: false,
-    hasPriority: false
-  },
-  premium: {
-    maxImages: 20, // Até 20 imagens por anúncio
-    maxAds: 1,
-    allowsFeatured: true,
-    hasPriority: true
-  }
+// Em uma plataforma gratuita, todos os usuários têm os mesmos limites
+export const PLAN_LIMITS: PlanLimits = {
+  maxImages: 15,    // Aumentado para 15 para todos
+  maxAds: 50,       // Praticamente ilimitado para uso normal
+  allowsFeatured: true, // Todos podem ter destaque
+  hasPriority: true
 }
 
-export function getPlanLimits(planType: string = 'free'): PlanLimits {
-  return PLAN_LIMITS[planType] || PLAN_LIMITS.free
+export function getPlanLimits(_planType: string = 'free'): PlanLimits {
+  return PLAN_LIMITS
 }
 
-export function canUploadImages(planType: string = 'free'): boolean {
-  const limits = getPlanLimits(planType)
-  return limits.maxImages > 0
+export function canUploadImages(_planType: string = 'free'): boolean {
+  return PLAN_LIMITS.maxImages > 0
 }
 
-export function getMaxImagesForPlan(planType: string = 'free'): number {
-  const limits = getPlanLimits(planType)
-  return limits.maxImages
+export function getMaxImagesForPlan(_planType: string = 'free'): number {
+  return PLAN_LIMITS.maxImages
 }
 
-export function canCreateAds(planType: string = 'free'): boolean {
-  const limits = getPlanLimits(planType)
-  return limits.maxAds > 0
+export function canCreateAds(_planType: string = 'free'): boolean {
+  return PLAN_LIMITS.maxAds > 0
 }

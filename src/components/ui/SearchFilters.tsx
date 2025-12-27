@@ -61,7 +61,7 @@ export default function SearchFiltersComponent({
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder={`Buscar ${filters.type === 'advertiser' ? 'anunciantes' :
-                  filters.type === 'space' ? 'espaços' : 'anúncios'
+                filters.type === 'space' ? 'espaços' : 'anúncios'
                 }...`}
               className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
@@ -121,19 +121,18 @@ export default function SearchFiltersComponent({
       {/* Filtros Avançados */}
       {showAdvanced && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Categoria */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Categoria
             </label>
             <select
-              value={filters.category || 'all'}
-              onChange={(e) => onUpdateFilter('category', e.target.value === 'all' ? undefined : e.target.value)}
+              value={filters.category_id || 'all'}
+              onChange={(e) => onUpdateFilter('category_id', e.target.value === 'all' ? undefined : Number(e.target.value))}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
               <option value="all">Todas as categorias</option>
               {categories.map(category => (
-                <option key={category.id} value={category.name}>
+                <option key={category.id} value={category.id}>
                   {category.name}
                 </option>
               ))}
@@ -170,6 +169,20 @@ export default function SearchFiltersComponent({
               value={filters.city || ''}
               onChange={(e) => onUpdateFilter('city', e.target.value || undefined)}
               placeholder="Nome da cidade"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+          </div>
+
+          {/* Bairro */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Bairro
+            </label>
+            <input
+              type="text"
+              value={filters.neighborhood || ''}
+              onChange={(e) => onUpdateFilter('neighborhood', e.target.value || undefined)}
+              placeholder="Nome do bairro"
               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
           </div>

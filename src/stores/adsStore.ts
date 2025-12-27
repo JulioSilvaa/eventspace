@@ -38,6 +38,9 @@ interface SpaceResponse {
   contacts_count?: number
   contact_whatsapp?: string
   contact_phone?: string
+  contact_email?: string
+  contact_instagram?: string
+  contact_facebook?: string
   created_at: string
   updated_at: string
   images?: (string | SpaceImage)[]
@@ -45,6 +48,7 @@ interface SpaceResponse {
   category_id?: number
   average_rating?: number
   reviews_count?: number
+  specifications?: Record<string, unknown>
 }
 
 interface SpacesListResponse {
@@ -94,6 +98,9 @@ function mapSpaceToAd(space: SpaceResponse): Ad {
     reviews_count: space.reviews_count || 0,
     contact_whatsapp: space.contact_whatsapp,
     contact_phone: space.contact_phone,
+    contact_email: space.contact_email,
+    contact_instagram: space.contact_instagram,
+    contact_facebook: space.contact_facebook,
     created_at: space.created_at,
     updated_at: space.updated_at,
     delivery_available: false,
@@ -110,6 +117,7 @@ function mapSpaceToAd(space: SpaceResponse): Ad {
       type: 'space',
       slug: 'espaco',
     },
+    specifications: space.specifications,
   }
 }
 
@@ -232,6 +240,8 @@ export const useAdsStore = create<AdsState>((set, get) => ({
       featured: true,
       limit,
       status: 'active',
+      sort: 'average_rating',
+      order: 'desc',
     })
 
     if (error) {
@@ -260,7 +270,7 @@ export const useAdsStore = create<AdsState>((set, get) => ({
       type: 'space',
       limit,
       status: 'active',
-      sort: 'views_count',
+      sort: 'average_rating',
       order: 'desc',
     })
 
@@ -319,10 +329,14 @@ export const useAdsStore = create<AdsState>((set, get) => ({
     }
 
     if (data) {
-      set({
-        currentAd: mapSpaceToAd(data),
+      const mappedAd = mapSpaceToAd(data)
+      set((state) => ({
+        currentAd: mappedAd,
+        ads: state.ads.some(a => a.id === id)
+          ? state.ads.map(a => a.id === id ? mappedAd : a)
+          : [...state.ads, mappedAd],
         isLoading: false,
-      })
+      }))
     } else {
       set({ isLoading: false })
     }

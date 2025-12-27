@@ -4,10 +4,8 @@ import {
   Upload,
   X,
   AlertCircle,
-  Crown,
   Camera
 } from 'lucide-react'
-import { getPlanLimits } from '@/lib/planLimits'
 import { AdImage } from '@/types'
 import {
   optimizeImage,
@@ -33,7 +31,6 @@ interface ImageUploadProps {
   images: ImageFile[]
   onImagesChange: (images: ImageFile[] | ((prev: ImageFile[]) => ImageFile[])) => void
   maxImages: number
-  planType: string
   disabled?: boolean
   existingImages?: AdImage[]
   onRemovedExistingImagesChange?: (removedIds: string[]) => void
@@ -43,14 +40,12 @@ export default function ImageUpload({
   images,
   onImagesChange,
   maxImages,
-  planType,
   disabled = false,
   existingImages = [],
   onRemovedExistingImagesChange
 }: ImageUploadProps) {
   const [dragActive, setDragActive] = useState(false)
   const [removedExistingImages, setRemovedExistingImages] = useState<string[]>([])
-  const planLimits = getPlanLimits(planType)
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (disabled) return
@@ -166,21 +161,12 @@ export default function ImageUpload({
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Imagens do Anúncio
-            {planLimits.maxImages > 0 && (
-              <span className="text-red-500 ml-1">*</span>
-            )}
+            <span className="text-red-500 ml-1">*</span>
           </label>
           <p className="text-sm text-gray-500">
             Até {maxImages} imagens ({totalCurrentImages}/{maxImages} adicionadas)
           </p>
         </div>
-
-        {planType !== 'free' && (
-          <div className="flex items-center gap-1 text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded">
-            <Crown className="w-3 h-3" />
-            Plano {planType === 'basic' ? 'Básico' : 'Premium'}
-          </div>
-        )}
       </div>
 
       {/* Upload Area */}

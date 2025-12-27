@@ -16,14 +16,12 @@ import {
   Wrench,
   DollarSign,
   Star,
-  Crown,
   Loader2
 } from 'lucide-react'
 import { FormField, FormButton, FormSelect } from '@/components/forms'
 import ImageUpload from '@/components/forms/ImageUpload'
 import AmenitiesSelector from '@/components/forms/AmenitiesSelector'
 import { getBrazilianStates } from '@/lib/api/search'
-import { getMaxImagesForPlan } from '@/lib/planLimits'
 import Tooltip from '@/components/ui/Tooltip'
 
 // Mapas de tradução das comodidades
@@ -146,14 +144,13 @@ const editAdSchema = z.object({
 type EditAdData = z.infer<typeof editAdSchema>
 
 const STEPS = [
-  { id: 1, title: 'Tipo', description: 'Escolha o tipo de anúncio' },
-  { id: 2, title: 'Informações', description: 'Dados principais' },
-  { id: 3, title: 'Localização', description: 'Onde está localizado' },
-  { id: 4, title: 'Comodidades', description: 'Recursos disponíveis' },
-  { id: 5, title: 'Preço', description: 'Valor e condições' },
-  { id: 6, title: 'Imagens', description: 'Fotos do seu anúncio' },
-  { id: 7, title: 'Contato', description: 'Como te encontrar' },
-  { id: 8, title: 'Revisão', description: 'Confirmar alterações' }
+  { id: 1, title: 'Informações', description: 'Dados principais' },
+  { id: 2, title: 'Localização', description: 'Onde está localizado' },
+  { id: 3, title: 'Comodidades', description: 'Recursos disponíveis' },
+  { id: 4, title: 'Preço', description: 'Valor e condições' },
+  { id: 5, title: 'Imagens', description: 'Fotos do seu anúncio' },
+  { id: 6, title: 'Contato', description: 'Como te encontrar' },
+  { id: 7, title: 'Revisão', description: 'Confirmar alterações' }
 ]
 
 const EQUIPMENT_CATEGORIES = [
@@ -208,7 +205,7 @@ export default function EditAd() {
   const [customFeatures, setCustomFeatures] = useState<string[]>([])
   const [customServices, setCustomServices] = useState<string[]>([])
   const [removedExistingImageIds, setRemovedExistingImageIds] = useState<string[]>([])
-  const maxImages = getMaxImagesForPlan(profile?.plan_type || 'free')
+  const maxImages = 15
 
   const {
     register,
@@ -240,16 +237,8 @@ export default function EditAd() {
 
   useEffect(() => {
     if (currentAd && !isLoading) {
-      // Mapear o tipo da categoria do banco para o formato do formulário
-      let categoryType: 'equipment' | 'space' = 'equipment'
-      if (currentAd.categories?.type === 'space') {
-        categoryType = 'space'
-      } else if (currentAd.categories?.type === 'advertiser') {
-        categoryType = 'equipment'
-      }
-
       reset({
-        categoryType,
+        categoryType: 'space',
         title: currentAd.title,
         description: currentAd.description,
         category_id: currentAd.category_id,
@@ -297,18 +286,7 @@ export default function EditAd() {
     }
   }, [currentAd, isLoading, reset])
 
-  useEffect(() => {
-    if (watchedCategoryType) {
-      setValue('category_id', undefined as unknown as number)
-    }
-  }, [watchedCategoryType, setValue])
 
-  // Definir featured como true automaticamente para usuários premium
-  useEffect(() => {
-    if (profile?.plan_type === 'premium') {
-      setValue('featured', true)
-    }
-  }, [profile?.plan_type, setValue])
 
   useEffect(() => {
     return () => {
@@ -379,31 +357,25 @@ export default function EditAd() {
 
     switch (currentStep) {
       case 1:
-        fieldsToValidate = ['categoryType']
+        fieldsToValidate = ['title', 'description', 'category_id', 'capacity']
         break
       case 2:
-        fieldsToValidate = ['title', 'description', 'category_id']
-        if (watchedCategoryType === 'space') {
-          fieldsToValidate.push('capacity')
-        }
-        break
-      case 3:
         fieldsToValidate = ['state', 'city']
         break
-      case 4:
+      case 3:
         break
-      case 5:
+      case 4:
         fieldsToValidate = ['price', 'priceType']
         break
-      case 6:
+      case 5:
         break
-      case 7:
+      case 6:
         fieldsToValidate = ['contactPhone']
         break
     }
 
     const isStepValid = await trigger(fieldsToValidate)
-    if (isStepValid && currentStep < 8) {
+    if (isStepValid && currentStep < 7) {
       setCurrentStep(currentStep + 1)
     }
   }
@@ -568,88 +540,16 @@ export default function EditAd() {
           <div className="space-y-6">
             <div className="text-center mb-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Que tipo de anúncio é este?
+                Informações do Espaço
               </h2>
               <p className="text-gray-600">
-                Equipamentos ou espaços para eventos
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <label
-                className={`
-                  cursor-pointer border-2 rounded-lg p-6 transition-all hover:shadow-md
-                  ${watchedCategoryType === 'equipment'
-                    ? 'border-primary-500 bg-primary-50'
-                    : 'border-gray-200 hover:border-gray-300'
-                  }
-                `}
-              >
-                <input
-                  type="radio"
-                  value="equipment"
-                  {...register('categoryType')}
-                  className="sr-only"
-                />
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Wrench className="w-8 h-8 text-blue-600" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Equipamentos</h3>
-                  <p className="text-sm text-gray-600">
-                    Som, iluminação, decoração, mobiliário e outros equipamentos
-                  </p>
-                </div>
-              </label>
-
-              <label
-                className={`
-                  cursor-pointer border-2 rounded-lg p-6 transition-all hover:shadow-md
-                  ${watchedCategoryType === 'space'
-                    ? 'border-primary-500 bg-primary-50'
-                    : 'border-gray-200 hover:border-gray-300'
-                  }
-                `}
-              >
-                <input
-                  type="radio"
-                  value="space"
-                  {...register('categoryType')}
-                  className="sr-only"
-                />
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Building2 className="w-8 h-8 text-green-600" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Espaços</h3>
-                  <p className="text-sm text-gray-600">
-                    Salões, chácaras, casas de festa e outros espaços para eventos
-                  </p>
-                </div>
-              </label>
-            </div>
-
-            {errors.categoryType && (
-              <p className="text-red-600 text-sm text-center">{errors.categoryType.message}</p>
-            )}
-          </div>
-        )
-
-      case 2:
-        return (
-          <div className="space-y-6">
-            <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Informações do {watchedCategoryType === 'equipment' ? 'Equipamento' : 'Espaço'}
-              </h2>
-              <p className="text-gray-600">
-                Descreva seu {watchedCategoryType === 'equipment' ? 'equipamento' : 'espaço'} de forma atrativa
+                Descreva seu espaço de forma atrativa
               </p>
             </div>
 
             <FormSelect
               label="Categoria"
-              options={(watchedCategoryType === 'equipment' ? EQUIPMENT_CATEGORIES : SPACE_CATEGORIES).map(cat => ({
+              options={SPACE_CATEGORIES.map(cat => ({
                 value: cat.id.toString(),
                 label: cat.name
               }))}
@@ -665,10 +565,7 @@ export default function EditAd() {
             <FormField
               label="Título do anúncio"
               type="text"
-              placeholder={watchedCategoryType === 'equipment'
-                ? "Ex: Sistema de Som Profissional 2000W"
-                : "Ex: Salão de Festas para 200 pessoas"
-              }
+              placeholder="Ex: Salão de Festas para 200 pessoas"
               error={errors.title}
               required
               hint={`${watch('title')?.length || 0}/100 caracteres`}
@@ -681,10 +578,7 @@ export default function EditAd() {
               </label>
               <textarea
                 rows={6}
-                placeholder={watchedCategoryType === 'equipment'
-                  ? "Descreva as características técnicas, estado de conservação, acessórios inclusos..."
-                  : "Descreva a capacidade, infraestrutura, comodidades disponíveis..."
-                }
+                placeholder="Descreva a capacidade, infraestrutura, comodidades disponíveis..."
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 {...register('description')}
               />
@@ -696,32 +590,30 @@ export default function EditAd() {
               </p>
             </div>
 
-            {watchedCategoryType === 'space' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  label="Capacidade de pessoas"
-                  type="number"
-                  placeholder="Ex: 100"
-                  error={errors.capacity}
-                  required
-                  hint="Número máximo de pessoas que o espaço comporta"
-                  {...register('capacity', { valueAsNumber: true })}
-                />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                label="Capacidade de pessoas"
+                type="number"
+                placeholder="Ex: 100"
+                error={errors.capacity}
+                required
+                hint="Número máximo de pessoas que o espaço comporta"
+                {...register('capacity', { valueAsNumber: true })}
+              />
 
-                <FormField
-                  label="Área (m²)"
-                  type="number"
-                  placeholder="Ex: 200"
-                  error={errors.area_sqm}
-                  hint="Área total do espaço em metros quadrados (opcional)"
-                  {...register('area_sqm', { valueAsNumber: true })}
-                />
-              </div>
-            )}
+              <FormField
+                label="Área (m²)"
+                type="number"
+                placeholder="Ex: 200"
+                error={errors.area_sqm}
+                hint="Área total do espaço em metros quadrados (opcional)"
+                {...register('area_sqm', { valueAsNumber: true })}
+              />
+            </div>
           </div>
         )
 
-      case 3:
+      case 2:
         return (
           <div className="space-y-6">
             <div className="text-center mb-8">
@@ -729,7 +621,7 @@ export default function EditAd() {
                 Localização
               </h2>
               <p className="text-gray-600">
-                Onde está localizado seu {watchedCategoryType === 'equipment' ? 'equipamento' : 'espaço'}?
+                Onde está localizado seu espaço?
               </p>
             </div>
 
@@ -795,7 +687,7 @@ export default function EditAd() {
           </div>
         )
 
-      case 4:
+      case 3:
         return (
           <div className="space-y-6">
             <div className="text-center mb-8">
@@ -803,7 +695,7 @@ export default function EditAd() {
                 Comodidades e Recursos
               </h2>
               <p className="text-gray-600">
-                Selecione as comodidades e recursos disponíveis no seu {watchedCategoryType === 'equipment' ? 'equipamento' : 'espaço'}
+                Selecione as comodidades e recursos disponíveis no seu espaço
               </p>
             </div>
 
@@ -814,7 +706,7 @@ export default function EditAd() {
               onAmenitiesChange={setSelectedAmenities}
               onFeaturesChange={setSelectedFeatures}
               onServicesChange={setSelectedServices}
-              categoryType={watchedCategoryType === 'equipment' ? 'advertiser' : (watchedCategoryType || 'space')}
+              categoryType="space"
               customAmenities={customAmenities}
               customFeatures={customFeatures}
               customServices={customServices}
@@ -825,7 +717,7 @@ export default function EditAd() {
           </div>
         )
 
-      case 5:
+      case 4:
         return (
           <div className="space-y-6">
             <div className="text-center mb-8">
@@ -833,7 +725,7 @@ export default function EditAd() {
                 Preço e Condições
               </h2>
               <p className="text-gray-600">
-                Defina o valor do seu {watchedCategoryType === 'equipment' ? 'equipamento' : 'espaço'}
+                Defina o valor do seu espaço
               </p>
             </div>
 
@@ -878,20 +770,20 @@ export default function EditAd() {
               <h4 className="font-medium text-blue-900 mb-2">💡 Dicas de precificação</h4>
               <ul className="text-sm text-blue-700 space-y-1">
                 <li>• Pesquise preços similares na região</li>
-                <li>• Considere custos de transporte e montagem</li>
-                <li>• Ofereça desconto para períodos longos</li>
+                <li>• Considere custos de limpeza e manutenção</li>
+                <li>• Ofereça desconto para períodos festivos ou dias de semana</li>
                 <li>• Preços competitivos geram mais contatos</li>
               </ul>
             </div>
           </div>
         )
 
-      case 6:
+      case 5:
         return (
           <div className="space-y-6">
             <div className="text-center mb-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Imagens do {watchedCategoryType === 'equipment' ? 'Equipamento' : 'Espaço'}
+                Imagens do Espaço
               </h2>
               <p className="text-gray-600">
                 Adicione ou altere fotos para aumentar as chances de contato
@@ -899,18 +791,18 @@ export default function EditAd() {
             </div>
 
             <ImageUpload
+              key="image-upload"
               images={images}
               onImagesChange={setImages}
               maxImages={maxImages}
-              planType={profile?.plan_type || 'free'}
               disabled={isSubmitting}
-              existingImages={currentAd.listing_images || []}
+              existingImages={currentAd.listing_images}
               onRemovedExistingImagesChange={setRemovedExistingImageIds}
             />
           </div>
         )
 
-      case 7:
+      case 6:
         return (
           <div className="space-y-6">
             <div className="text-center mb-8">
@@ -984,148 +876,155 @@ export default function EditAd() {
           </div>
         )
 
-      case 8:
+      case 7:
         return (
-          <div className="space-y-6">
-            <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Revisar Alterações
-              </h2>
-              <p className="text-gray-600">
-                Confira todas as alterações antes de salvar
-              </p>
+          <div className="space-y-8">
+            <div className="text-center mb-10">
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">Revisão</h2>
+              <p className="text-gray-600">Confirme as alterações antes de salvar</p>
             </div>
 
-            <div className="bg-white border border-gray-200 rounded-lg p-6 space-y-4">
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-gray-900">{allValues.title}</h3>
-                  <p className="text-sm text-gray-600">{
-                    (watchedCategoryType === 'equipment' ? EQUIPMENT_CATEGORIES : SPACE_CATEGORIES)
-                      .find(cat => cat.id === allValues.category_id)?.name
-                  }</p>
+            <div className="grid grid-cols-1 gap-6">
+              {/* Informações Básicas */}
+              <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
+                    <Building2 className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900">Informações do Anúncio</h3>
                 </div>
-                <div className="text-right">
-                  <p className="text-lg font-bold text-green-600">
-                    R$ {allValues.price?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    por {allValues.priceType === 'daily' ? 'dia' : allValues.priceType === 'hourly' ? 'hora' : 'evento'}
-                  </p>
-                </div>
-              </div>
 
-              <div className="border-t pt-4">
-                <p className="text-sm text-gray-700 mb-2">
-                  <strong>Localização:</strong> {allValues.city}, {allValues.state}
-                </p>
-                <p className="text-sm text-gray-700 mb-2">
-                  <strong>Contato:</strong> {allValues.contactPhone}
-                </p>
-                <p className="text-sm text-gray-700 mb-2">
-                  <strong>Descrição:</strong> {allValues.description?.substring(0, 100)}...
-                </p>
-                {watchedCategoryType === 'space' && allValues.capacity && (
-                  <p className="text-sm text-gray-700 mb-2">
-                    <strong>Capacidade:</strong> {allValues.capacity} pessoas
-                  </p>
-                )}
-                {(selectedAmenities.length > 0 || selectedFeatures.length > 0 || selectedServices.length > 0) && (
-                  <div className="text-sm text-gray-700 mb-2">
-                    <strong>Comodidades:</strong>
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {[...selectedAmenities, ...selectedFeatures, ...selectedServices].slice(0, 6).map((item, index) => (
-                        <span key={index} className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs">
-                          {translateItem(item)}
-                        </span>
-                      ))}
-                      {(selectedAmenities.length + selectedFeatures.length + selectedServices.length) > 6 && (
-                        <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs">
-                          +{(selectedAmenities.length + selectedFeatures.length + selectedServices.length) - 6} mais
-                        </span>
-                      )}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Título</p>
+                      <p className="text-lg text-gray-900 font-medium">{watch('title')}</p>
                     </div>
                   </div>
-                )}
-                {(images.length > 0 || (currentAd.listing_images && currentAd.listing_images.length > 0)) && (
-                  <p className="text-sm text-gray-700">
-                    <strong>Imagens:</strong> {images.length || currentAd.listing_images?.length || 0} {(images.length || currentAd.listing_images?.length || 0) === 1 ? 'foto' : 'fotos'}
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Preço</p>
+                      <p className="text-lg font-bold text-primary-600">
+                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(watch('price') || 0)}
+                        <span className="text-sm font-normal text-gray-500 ml-1">
+                          /{watch('priceType') === 'daily' ? 'dia' : 'final de semana'}
+                        </span>
+                      </p>
+                    </div>
+                    <div className="flex gap-4">
+                      <div>
+                        <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Capacidade</p>
+                        <p className="text-sm text-gray-900 font-medium">{watch('capacity') || '--'} pessoas</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Área</p>
+                        <p className="text-sm text-gray-900 font-medium">{watch('area_sqm') || '--'} m²</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 pt-6 border-t border-gray-100">
+                  <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-2">Descrição</p>
+                  <p className="text-sm text-gray-700 leading-relaxed line-clamp-3">
+                    {watch('description')}
                   </p>
-                )}
+                </div>
               </div>
 
-              {images.length > 0 && (
-                <div className="border-t pt-4">
-                  <h4 className="text-sm font-medium text-gray-900 mb-3">Novas imagens:</h4>
-                  <div className="grid grid-cols-3 md:grid-cols-4 gap-2">
-                    {images.slice(0, 8).map((image, index) => (
-                      <div key={image.id} className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                        <img
-                          src={image.preview}
-                          alt={`Preview ${index + 1}`}
-                          className="w-full h-full object-cover"
-                        />
-                        {index === 0 && (
-                          <div className="absolute top-1 left-1 bg-primary-500 text-white text-xs px-1 py-0.5 rounded">
-                            Principal
-                          </div>
-                        )}
-                      </div>
+              {/* Localização */}
+              <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center">
+                    <span className="text-xl">📍</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900">Localização</h3>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <p className="text-gray-700"><span className="font-bold">Endereço:</span> {watch('address')}</p>
+                  <p className="text-gray-700"><span className="font-bold">Bairro:</span> {watch('neighborhood')}</p>
+                  <p className="text-gray-700"><span className="font-bold">Cidade/Estado:</span> {watch('city')} / {watch('state')}</p>
+                  <p className="text-gray-700"><span className="font-bold">CEP:</span> {watch('postal_code')}</p>
+                </div>
+              </div>
+
+              {/* Comodidades e Imagens */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Star className="w-6 h-6 text-yellow-500 fill-current" />
+                    <h3 className="text-lg font-bold text-gray-900">Recursos</h3>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {[...selectedAmenities, ...selectedFeatures, ...selectedServices].slice(0, 10).map((item) => (
+                      <span key={item} className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-semibold">
+                        ✓ {translateItem(item)}
+                      </span>
                     ))}
-                    {images.length > 8 && (
-                      <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center">
-                        <span className="text-xs text-gray-500">+{images.length - 8}</span>
-                      </div>
+                    {[...selectedAmenities, ...selectedFeatures, ...selectedServices].length > 10 && (
+                      <span className="text-xs text-gray-500 font-medium">
+                        +{[...selectedAmenities, ...selectedFeatures, ...selectedServices].length - 10} mais
+                      </span>
                     )}
                   </div>
                 </div>
-              )}
-            </div>
 
-            {profile?.plan_type === 'premium' && (
-              <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg p-6">
-                <div className="flex items-start gap-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 bg-yellow-500 rounded-full flex items-center justify-center">
-                      <Crown className="w-3 h-3 text-white fill-current" />
-                    </div>
-                    <div className="flex items-center gap-2 text-sm font-medium text-gray-900">
-                      <Crown className="w-4 h-4 text-yellow-600" />
-                      <span>Seu anúncio será destacado automaticamente</span>
-                    </div>
+                <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="text-xl">📸</span>
+                    <h3 className="text-lg font-bold text-gray-900">Fotos</h3>
                   </div>
-                </div>
-                <div className="mt-3">
-                  <p className="text-sm text-gray-700 mb-2">
-                    Anúncios destacados aparecem no topo das buscas e no slider da página inicial,
-                    recebendo até 5x mais visualizações!
+                  <p className="text-sm text-gray-700">
+                    {images.length > 0
+                      ? `Você adicionou ${images.length} novas fotos.`
+                      : 'Nenhuma foto nova adicionada.'
+                    }
                   </p>
-                  <div className="flex items-center gap-4 text-xs text-gray-600">
-                    <div className="flex items-center gap-1">
-                      <Star className="w-3 h-3 text-yellow-500" />
-                      Prioridade nas buscas
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Star className="w-3 h-3 text-yellow-500" />
-                      Destaque na página inicial
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Star className="w-3 h-3 text-yellow-500" />
-                      Badge especial
-                    </div>
-                  </div>
+                  {(currentAd?.listing_images?.length || 0) > 0 && (
+                    <p className="text-xs text-gray-500 mt-2 italic">
+                      As imagens existentes serão mantidas (exceto as removidas).
+                    </p>
+                  )}
                 </div>
               </div>
-            )}
 
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h4 className="font-medium text-blue-900 mb-2">ℹ️ Alterações no anúncio</h4>
-              <ul className="text-sm text-blue-700 space-y-1">
-                <li>• As alterações serão salvas imediatamente</li>
-                <li>• O anúncio continuará ativo durante a edição</li>
-                <li>• Grandes mudanças podem afetar o posicionamento nas buscas</li>
-                <li>• Novas imagens substituirão as anteriores se adicionadas</li>
-              </ul>
+              {/* Contato */}
+              <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center text-xl">
+                    📞
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900">Contato</h3>
+                </div>
+                <div className="flex flex-wrap gap-8">
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase font-bold mb-1">Telefone</p>
+                    <p className="text-sm text-gray-900">{watch('contactPhone')}</p>
+                  </div>
+                  {watch('contactEmail') && (
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase font-bold mb-1">E-mail</p>
+                      <p className="text-sm text-gray-900">{watch('contactEmail')}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Banner Final */}
+            <div className="bg-gradient-to-br from-green-600 to-green-700 rounded-2xl p-8 text-white shadow-xl transform transition-all hover:scale-[1.01]">
+              <div className="flex gap-6 items-center">
+                <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center flex-shrink-0">
+                  <CheckCircle className="w-10 h-10 text-white" />
+                </div>
+                <div>
+                  <h4 className="text-2xl font-bold mb-2">Tudo pronto!</h4>
+                  <p className="text-green-50 text-lg leading-relaxed">
+                    Suas alterações serão aplicadas instantaneamente e o anúncio continuará visível para todos os usuários.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         )
@@ -1135,84 +1034,155 @@ export default function EditAd() {
     }
   }
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 text-primary-600 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600 font-medium">Carregando dados do anúncio...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto py-6 px-4">
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <Tooltip content="Voltar aos meus anúncios">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center gap-4 mb-6">
+            <Tooltip content="Voltar para Meus Anúncios">
               <Link
                 to="/dashboard/meus-anuncios"
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="group p-2 hover:bg-primary-50 rounded-lg transition-all"
               >
-                <ArrowLeft className="w-5 h-5 text-gray-600" />
+                <ArrowLeft className="w-6 h-6 text-gray-600 group-hover:text-primary-600 transition-colors" />
               </Link>
             </Tooltip>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Editar Anúncio</h1>
-              <p className="text-gray-600">Etapa {currentStep} de {STEPS.length}</p>
+              <h1 className="text-3xl font-bold text-gray-900">Editar Anúncio</h1>
+              <p className="text-sm text-gray-600 mt-1">Atualize as informações do seu anúncio</p>
             </div>
           </div>
         </div>
 
-        <div className="mb-8">
-          <div className="flex items-start justify-between mb-4">
-            {STEPS.map((step) => (
-              <div key={step.id} className="flex flex-col items-center flex-1">
+        {/* Modern Stepper */}
+        <div className="mb-10">
+          {/* Desktop Stepper */}
+          <div className="hidden md:block">
+            <div className="relative">
+              {/* Progress Line Background */}
+              <div className="absolute top-6 left-0 right-0 h-1 bg-gray-200 rounded-full" style={{ marginLeft: '2rem', marginRight: '2rem' }}>
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${currentStep >= step.id
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-gray-200 text-gray-600'
-                    }`}
-                >
-                  {currentStep > step.id ? (
-                    <CheckCircle className="w-4 h-4" />
-                  ) : (
-                    step.id
-                  )}
-                </div>
+                  className="h-full bg-gradient-to-r from-primary-500 to-primary-600 rounded-full transition-all duration-500 ease-out"
+                  style={{ width: `${((currentStep - 1) / (STEPS.length - 1)) * 100}%` }}
+                />
+              </div>
 
-                <div className="text-center mt-2">
-                  <p className="text-xs font-medium text-gray-900">{step.title}</p>
-                  <p className="text-xs text-gray-500">{step.description}</p>
+              {/* Steps */}
+              <div className="relative flex justify-between">
+                {STEPS.map((step, index) => {
+                  const isCompleted = currentStep > step.id
+                  const isCurrent = currentStep === step.id
+                  const isPending = currentStep < step.id
+
+                  return (
+                    <div key={step.id} className="flex flex-col items-center" style={{ flex: 1 }}>
+                      {/* Circle */}
+                      <div className={`
+                        relative z-10 w-12 h-12 rounded-full flex items-center justify-center font-semibold text-sm
+                        transition-all duration-300 shadow-lg
+                        ${isCompleted
+                          ? 'bg-gradient-to-br from-primary-500 to-primary-600 text-white scale-100'
+                          : isCurrent
+                            ? 'bg-white border-4 border-primary-500 text-primary-600 scale-110 shadow-xl'
+                            : 'bg-white border-2 border-gray-300 text-gray-400 scale-90'
+                        }
+                      `}>
+                        {isCompleted ? (
+                          <CheckCircle className="w-6 h-6" />
+                        ) : (
+                          <span className="text-base font-bold">{step.id}</span>
+                        )}
+                      </div>
+
+                      {/* Step Info */}
+                      <div className="text-center mt-3 max-w-[120px]">
+                        <p className={`
+                          text-sm font-semibold mb-0.5 transition-colors
+                          ${isCurrent ? 'text-primary-600' : isCompleted ? 'text-gray-900' : 'text-gray-500'}
+                        `}>
+                          {step.title}
+                        </p>
+                        <p className={`
+                          text-xs leading-tight transition-colors
+                          ${isCurrent ? 'text-gray-700' : 'text-gray-500'}
+                        `}>
+                          {step.description}
+                        </p>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile Stepper */}
+          <div className="md:hidden">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 text-white flex items-center justify-center font-bold shadow-lg">
+                    {currentStep}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-primary-600">Etapa {currentStep} de {STEPS.length}</p>
+                    <p className="text-xs text-gray-600">{STEPS[currentStep - 1]?.title}</p>
+                  </div>
                 </div>
               </div>
-            ))}
-          </div>
 
-          <div className="relative -mt-20 mb-16">
-            <div className="absolute top-4 left-0 right-0 h-0.5 bg-gray-200">
-              <div
-                className="h-full bg-primary-600 transition-all duration-300"
-                style={{ width: `${((currentStep - 1) / (STEPS.length - 1)) * 100}%` }}
-              />
+              {/* Mobile Progress Bar */}
+              <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-primary-500 to-primary-600 transition-all duration-500 ease-out rounded-full"
+                  style={{ width: `${(currentStep / STEPS.length) * 100}%` }}
+                />
+              </div>
+
+              <p className="text-xs text-gray-500 mt-2 text-center">
+                {STEPS[currentStep - 1]?.description}
+              </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-8 mb-8">
+        {/* Step Content */}
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 md:p-10 mb-8">
           {renderStep()}
         </div>
 
-        <div className="flex justify-between">
+        {/* Navigation */}
+        <div className="flex justify-between items-center gap-4">
           <button
             type="button"
             onClick={prevStep}
             disabled={currentStep === 1}
-            className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-2 px-6 py-3 border-2 border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-5 h-5" />
             Anterior
           </button>
 
-          {currentStep < 8 ? (
+          {currentStep < 7 ? (
             <button
               type="button"
               onClick={nextStep}
-              className="flex items-center gap-2 px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+              className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl font-semibold hover:from-primary-700 hover:to-primary-800 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
             >
               Próximo
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="w-5 h-5" />
             </button>
           ) : (
             <FormButton
@@ -1220,13 +1190,14 @@ export default function EditAd() {
               onClick={handleSubmit(onSubmit)}
               loading={isSubmitting}
               size="lg"
-              className="px-8"
+              className="px-10 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
             >
               {isSubmitting ? 'Salvando...' : 'Salvar Alterações'}
             </FormButton>
           )}
         </div>
 
+        {/* Error Message */}
         {error && (
           <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-4">
             <div className="flex">

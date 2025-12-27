@@ -11,10 +11,9 @@ interface QuickAction {
 
 interface QuickActionsProps {
   userAds: Array<{ id: string; title: string }>
-  planType: string | undefined
 }
 
-export default function QuickActions({ userAds, planType }: QuickActionsProps) {
+export default function QuickActions({ userAds }: QuickActionsProps) {
   const baseActions: QuickAction[] = [
     {
       title: userAds.length > 0 ? 'Meu Anúncio' : 'Meus Anúncios',
@@ -38,19 +37,19 @@ export default function QuickActions({ userAds, planType }: QuickActionsProps) {
       color: 'bg-gray-500 hover:bg-gray-600'
     }
   ]
-  
-  // Adicionar ação de criar anúncio se o usuário não tem anúncios e tem plano pago
-  const actions: QuickAction[] = userAds.length === 0 && planType !== 'free' 
+
+  // Adicionar ação de criar anúncio se o usuário não tem anúncios
+  const actions: QuickAction[] = userAds.length === 0
     ? [
-        {
-          title: 'Criar Anúncio',
-          description: 'Crie seu primeiro anúncio',
-          icon: Plus,
-          href: '/dashboard/criar-anuncio',
-          color: 'bg-green-500 hover:bg-green-600'
-        },
-        ...baseActions
-      ]
+      {
+        title: 'Criar Anúncio',
+        description: 'Crie seu primeiro anúncio',
+        icon: Plus,
+        href: '/dashboard/criar-anuncio',
+        color: 'bg-green-500 hover:bg-green-600'
+      },
+      ...baseActions
+    ]
     : baseActions
 
   return (
@@ -63,11 +62,11 @@ export default function QuickActions({ userAds, planType }: QuickActionsProps) {
           Acesse rapidamente as principais funcionalidades
         </p>
       </div>
-      
+
       <div className={`grid ${actions.length === 4 ? 'grid-cols-2' : 'grid-cols-1'} gap-4`}>
         {actions.map((action, index) => {
           const Icon = action.icon
-          
+
           return (
             <Link
               key={index}
@@ -78,11 +77,11 @@ export default function QuickActions({ userAds, planType }: QuickActionsProps) {
                 <div className={`w-10 h-10 rounded-lg ${action.color} flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-200`}>
                   <Icon className="h-5 w-5 text-white" />
                 </div>
-                
+
                 <h3 className="text-sm font-semibold text-gray-900 mb-1">
                   {action.title}
                 </h3>
-                
+
                 <p className="text-xs text-gray-500 leading-tight">
                   {action.description}
                 </p>

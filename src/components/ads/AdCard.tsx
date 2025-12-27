@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom'
-import { 
-  MapPin, 
-  Crown, 
-  Building2, 
-  Wrench, 
+import {
+  MapPin,
+  Star,
+  Building2,
+  Wrench,
   Users,
   Calendar,
   Eye,
@@ -21,7 +21,8 @@ import {
 } from 'lucide-react'
 import StarRating from '@/components/reviews/StarRating'
 import FavoriteButton from '@/components/favorites/FavoriteButton'
-import PremiumBadge from '@/components/ui/PremiumBadge'
+import { formatPrice } from '@/lib/utils'
+
 
 interface AdCardProps {
   ad: {
@@ -102,20 +103,12 @@ const AMENITIES_NAMES = {
   setup: 'Montagem/Desmontagem',
 }
 
-export default function AdCard({ 
-  ad, 
-  size = 'medium', 
-  showViewCount = false, 
-  showDate = false 
+export default function AdCard({
+  ad,
+  size = 'medium',
+  showViewCount = false,
+  showDate = false
 }: AdCardProps) {
-  const formatPrice = (price: number, priceType: string) => {
-    const formatted = price.toLocaleString('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    })
-    const period = priceType === 'daily' ? 'dia' : priceType === 'hourly' ? 'hora' : 'evento'
-    return `${formatted}/${period}`
-  }
 
   const getTopAmenities = () => {
     const allAmenities = [
@@ -127,7 +120,7 @@ export default function AdCard({
 
   const topAmenities = getTopAmenities()
   const isSpace = ad.categories?.type === 'space'
-  const defaultImage = isSpace 
+  const defaultImage = isSpace
     ? 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&h=300&fit=crop'
     : 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=300&fit=crop'
 
@@ -158,20 +151,16 @@ export default function AdCard({
             src={ad.listing_images?.[0]?.image_url || defaultImage}
             alt={ad.title}
             className={imageClasses[size]}
+            onError={(e) => {
+              const target = e.target as HTMLImageElement
+              target.src = defaultImage
+            }}
           />
-          
+
           {/* Badges */}
           <div className="absolute top-3 left-3 flex gap-2">
-            <PremiumBadge userPlanType={ad.user_plan_type} size="sm" />
-            {ad.featured && (
-              <span className="bg-yellow-500 text-white px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
-                <Crown className="w-3 h-3" />
-                Destaque
-              </span>
-            )}
-            <span className={`px-2 py-1 rounded-full text-xs font-medium text-white ${
-              isSpace ? 'bg-green-500' : 'bg-blue-500'
-            }`}>
+            <span className={`px-2 py-1 rounded-full text-xs font-medium text-white ${isSpace ? 'bg-green-500' : 'bg-blue-500'
+              }`}>
               {isSpace ? (
                 <Building2 className="w-3 h-3 inline mr-1" />
               ) : (
@@ -188,9 +177,9 @@ export default function AdCard({
 
           {/* Favorite Button */}
           <div className="absolute bottom-3 right-3">
-            <FavoriteButton 
-              adId={ad.id} 
-              size="sm" 
+            <FavoriteButton
+              adId={ad.id}
+              size="sm"
               variant="button"
               className="bg-white bg-opacity-90 hover:bg-opacity-100 shadow-sm"
             />
@@ -200,9 +189,8 @@ export default function AdCard({
         {/* Content */}
         <div className={paddingClasses[size]}>
           {/* Title */}
-          <h3 className={`font-bold text-gray-900 mb-2 group-hover:text-primary-600 transition-colors ${
-            size === 'small' ? 'text-base' : size === 'medium' ? 'text-lg' : 'text-xl'
-          }`}>
+          <h3 className={`font-bold text-gray-900 mb-2 group-hover:text-primary-600 transition-colors ${size === 'small' ? 'text-base' : size === 'medium' ? 'text-lg' : 'text-xl'
+            }`}>
             {ad.title}
           </h3>
 
@@ -262,14 +250,14 @@ export default function AdCard({
                 </div>
               )}
             </div>
-            
+
             {/* Rating */}
             {ad.rating && ad.rating > 0 ? (
-              <StarRating 
-                rating={ad.rating} 
-                readonly 
-                size="sm" 
-                showValue 
+              <StarRating
+                rating={ad.rating}
+                readonly
+                size="sm"
+                showValue
               />
             ) : (
               <span className="text-xs text-gray-400">Sem avaliações</span>

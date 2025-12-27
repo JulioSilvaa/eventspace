@@ -12,6 +12,17 @@ export function formatCurrency(value: number): string {
   }).format(value)
 }
 
+export function formatPrice(price: number | null | undefined, priceType: string | null | undefined): string {
+  if (price === null || price === undefined || isNaN(Number(price))) {
+    return 'Consulte'
+  }
+
+  const formatted = formatCurrency(Number(price))
+  const type = priceType || 'daily'
+  const period = type === 'daily' ? 'dia' : type === 'hourly' ? 'hora' : 'evento'
+  return `${formatted}/${period}`
+}
+
 export function formatDate(date: Date): string {
   return new Intl.DateTimeFormat('pt-BR').format(date)
 }

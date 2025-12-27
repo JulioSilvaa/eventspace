@@ -1,8 +1,8 @@
 import { MapPin, Star, Phone, MessageCircle, Eye } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import PremiumBadge from '@/components/ui/PremiumBadge'
 import type { SearchResult } from '@/lib/api/search'
 import { realTimeService } from '@/services/realTimeService'
+import { formatPrice } from '@/lib/utils'
 
 interface SearchResultsProps {
   results: SearchResult[]
@@ -31,7 +31,7 @@ export default function SearchResults({
   hasNextPage = false,
   hasPrevPage = false
 }: SearchResultsProps) {
-  
+
   if (loading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -67,14 +67,6 @@ export default function SearchResults({
     )
   }
 
-  const formatPrice = (price: number, priceType: string) => {
-    const formatted = price.toLocaleString('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    })
-    
-    return `${formatted}/${priceType === 'daily' ? 'dia' : priceType === 'hourly' ? 'hora' : 'evento'}`
-  }
 
   const handleContactClick = async (type: 'whatsapp' | 'phone', contact: string, adTitle: string, listingId: string) => {
     // Track the contact event first
@@ -87,7 +79,7 @@ export default function SearchResults({
     } catch (error) {
       console.error('Error tracking contact:', error)
     }
-    
+
     // Then open the contact method
     if (type === 'whatsapp') {
       const message = encodeURIComponent(`Olá! Tenho interesse no anúncio: ${adTitle}`)
@@ -116,21 +108,32 @@ export default function SearchResults({
           <div key={result.id} className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden">
             {/* Imagem do Anúncio */}
             <div className="relative h-48 bg-gray-200">
-              {result.listing_images && result.listing_images.length > 0 ? (
+              {result.listing_images && result.listing_images.length > 0 && result.listing_images[0].image_url ? (
                 <img
                   src={result.listing_images[0].image_url}
                   alt={result.title}
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement
+                    target.src = result.category_type === 'space'
+                      ? 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&h=300&fit=crop'
+                      : 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=300&fit=crop'
+                  }}
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-gray-400 bg-gray-100">
-                  <span>Imagem do {result.category_type === 'advertiser' ? 'anúncio' : 'espaço'}</span>
+                  <img
+                    src={result.category_type === 'space'
+                      ? 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&h=300&fit=crop'
+                      : 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=300&fit=crop'}
+                    alt="Placeholder"
+                    className="w-full h-full object-cover opacity-50"
+                  />
                 </div>
               )}
-              
+
               {/* Badges */}
               <div className="absolute top-2 left-2 flex gap-2">
-                <PremiumBadge userPlanType={result.user_plan_type} size="sm" />
                 {result.featured && (
                   <span className="bg-yellow-500 text-white text-xs px-2 py-1 rounded-full font-medium flex items-center gap-1">
                     <Star className="w-3 h-3 fill-current" />
@@ -141,7 +144,7 @@ export default function SearchResults({
                   {result.category_name}
                 </span>
               </div>
-              
+
               {/* Preço */}
               <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg">
                 <span className="text-sm font-bold text-gray-900">
@@ -161,7 +164,9 @@ export default function SearchResults({
               <div className="flex items-center text-gray-600 text-sm mb-2">
                 <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
                 <span className="truncate">
-                  {result.neighborhood ? `${result.neighborhood}, ` : ''}{result.city}, {result.state}
+                  {result.neighborhood ? `${result.neighborhood}, ` : ''}
+                  {result.city || 'Cidade não informada'}
+                  {result.state ? `, ${result.state}` : ''}
                 </span>
               </div>
 
@@ -170,13 +175,6 @@ export default function SearchResults({
                 {result.description}
               </p>
 
-              {/* Estatísticas */}
-              <div className="flex items-center gap-4 text-xs text-gray-500 mb-4">
-                <div className="flex items-center gap-1">
-                  <Eye className="w-3 h-3" />
-                  {result.views_count} visualizações
-                </div>
-              </div>
 
               {/* Ações */}
               <div className="flex gap-2">
@@ -243,11 +241,10 @@ export default function SearchResults({
                 <button
                   key={pageNum}
                   onClick={() => onGoToPage?.(pageNum)}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    currentPage === pageNum
-                      ? 'bg-primary-600 text-white'
-                      : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
-                  }`}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${currentPage === pageNum
+                    ? 'bg-primary-600 text-white'
+                    : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                    }`}
                 >
                   {pageNum}
                 </button>

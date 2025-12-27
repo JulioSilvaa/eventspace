@@ -37,23 +37,11 @@ function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            <Link 
-              to="/como-funciona" 
+            <Link
+              to="/como-funciona"
               className="text-gray-700 hover:text-primary-600 transition-colors"
             >
               Como Funciona
-            </Link>
-            <Link 
-              to="/planos" 
-              className="text-gray-700 hover:text-primary-600 transition-colors"
-            >
-              Planos
-            </Link>
-            <Link 
-              to="/transparencia" 
-              className="text-gray-700 hover:text-primary-600 transition-colors"
-            >
-              Transparência
             </Link>
           </nav>
 
@@ -82,7 +70,7 @@ function Header() {
                   to="/login"
                   className="text-gray-700 hover:text-primary-600 transition-colors font-medium"
                 >
-                  Área do Assinante
+                  Entrar
                 </Link>
                 <Link
                   to="/cadastro"
@@ -113,28 +101,14 @@ function Header() {
         {isMenuOpen && (
           <div className="md:hidden py-4 border-t">
             <div className="flex flex-col space-y-4">
-              <Link 
-                to="/como-funciona" 
+              <Link
+                to="/como-funciona"
                 className="text-gray-700 hover:text-primary-600 transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Como Funciona
               </Link>
-              <Link 
-                to="/planos" 
-                className="text-gray-700 hover:text-primary-600 transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Planos
-              </Link>
-              <Link 
-                to="/transparencia" 
-                className="text-gray-700 hover:text-primary-600 transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Transparência
-              </Link>
-              
+
               <div className="border-t pt-4 mt-4">
                 {isAuthenticated ? (
                   <div className="flex flex-col space-y-4">

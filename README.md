@@ -99,6 +99,11 @@ npm run dev
 - Máscaras automáticas para campos sensíveis (Telefone, CEP).
 - Validações de formulário em tempo real com feedback visual.
 
+### Sistema de Busca Aprimorado
+- Busca robusta por nome, descrição e bairro.
+- Filtros avançados com adição de busca por **Bairro**.
+- Suporte a busca **insensível a acentos** (diacríticos) e case-insensitive, facilitando a localização de espaços.
+
 ---
 
 **EventSpace** - Conectamos, vocês negociam! 🎉

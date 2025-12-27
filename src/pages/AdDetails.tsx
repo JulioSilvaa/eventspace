@@ -1,14 +1,14 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { useParams, Link, useNavigate } from 'react-router-dom'
+import { useNavigate, useParams, Link } from 'react-router-dom'
 import { useAdsStore } from '@/stores/adsStore'
 import ReviewForm from '@/components/reviews/ReviewForm'
 import ReviewsList from '@/components/reviews/ReviewsList'
 import FavoriteButton from '@/components/favorites/FavoriteButton'
-import PremiumBadge from '@/components/ui/PremiumBadge'
 import LocationMap, { LocationFallback } from '@/components/maps/LocationMap'
 import { geocodingService } from '@/services/geocodingService'
 import { useToast } from '@/contexts/ToastContext'
 import { useEventTracking } from '@/hooks/useRealTimeMetrics'
+import { formatPrice } from '@/lib/utils'
 
 interface ImageData {
   url?: string
@@ -150,10 +150,10 @@ const SERVICES_LABELS = {
 export default function AdDetails() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { ads, fetchAds } = useAdsStore()
+  const { currentAd: ad, fetchAdById, isLoading: storeLoading } = useAdsStore()
   const toast = useToast()
   const { trackView, trackWhatsAppContact, trackPhoneContact } = useEventTracking(id)
-  // const [currentImageIndex, setCurrentImageIndex] = useState(0) // Removido - não usado na galeria
+
   const [isLoading, setIsLoading] = useState(true)
   const [reviewsRefreshTrigger, setReviewsRefreshTrigger] = useState(0)
   const viewTrackedRef = useRef(false)
@@ -162,7 +162,6 @@ export default function AdDetails() {
   const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null)
   const [isGeocodingLoading, setIsGeocodingLoading] = useState(false)
 
-  const ad = ads.find(ad => ad.id === id)
   const images = ad?.listing_images
     ?.sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
     ?.map(img => img.image_url) || []
@@ -176,12 +175,13 @@ export default function AdDetails() {
   }, [images.length])
 
   useEffect(() => {
-    if (!ad) {
-      fetchAds().finally(() => setIsLoading(false))
-    } else {
+    if (id && (!ad || ad.id !== id)) {
+      setIsLoading(true)
+      fetchAdById(id).finally(() => setIsLoading(false))
+    } else if (ad) {
       setIsLoading(false)
     }
-  }, [ad, fetchAds])
+  }, [id, ad, fetchAdById])
 
   useEffect(() => {
     if (ad && id && !viewTrackedRef.current) {
@@ -193,20 +193,27 @@ export default function AdDetails() {
 
   // Geocode the ad location
   useEffect(() => {
-    if (ad && !coordinates) {
+    if (ad && !coordinates && ad.city && ad.state) {
       const geocodeLocation = async () => {
         setIsGeocodingLoading(true)
         try {
-          const result = await geocodingService.geocodeCity(
+          // Tentar primeiro com bairro para maior precisão
+          let result = await geocodingService.geocodeCity(
             ad.city,
             ad.state,
             ad.neighborhood
           )
+
+          // Se falhar ou estiver em local genérico (bairro estranho), tenta apenas cidade/estado
+          if (!result && ad.neighborhood) {
+            result = await geocodingService.geocodeCity(ad.city, ad.state)
+          }
+
           if (result) {
             setCoordinates({ lat: result.latitude, lng: result.longitude })
           }
-        } catch {
-          // Erro silencioso para geocoding - não precisa mostrar toast pois não afeta a funcionalidade principal
+        } catch (error) {
+          console.error('Erro ao buscar coordenadas:', error)
         } finally {
           setIsGeocodingLoading(false)
         }
@@ -270,16 +277,16 @@ export default function AdDetails() {
   const features = Array.isArray(specifications.features) ? specifications.features : []
   const services = Array.isArray(specifications.services) ? specifications.services : []
 
-  const formatPrice = (price: number, priceType: string) => {
-    const formatted = price.toLocaleString('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    })
-    return `${formatted}/${priceType === 'daily' ? 'dia' : priceType === 'hourly' ? 'hora' : 'evento'}`
-  }
 
-  const formatPhone = (phone: string) => {
-    return phone.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3')
+  const formatPhone = (value: string) => {
+    const numbers = value.replace(/\D/g, '')
+    const limitedNumbers = numbers.slice(0, 11)
+
+    if (limitedNumbers.length <= 10) {
+      return limitedNumbers.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3')
+    } else {
+      return limitedNumbers.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3')
+    }
   }
 
   // Funções removidas - não utilizadas na galeria em grid
@@ -294,28 +301,29 @@ export default function AdDetails() {
   const openWhatsApp = () => {
     const phone = ad.contact_whatsapp || ad.contact_phone
     if (!phone) {
-      toast.warning('WhatsApp não disponível', 'Este anúncio não possui um número de WhatsApp cadastrado.')
+      toast.warning('WhatsApp não disponível', 'Este anunciante não cadastrou um número de WhatsApp.')
       return
     }
 
-    // Track the contact before opening WhatsApp
     trackWhatsAppContact()
-    toast.success('Redirecionando para WhatsApp...', 'Você será redirecionado para conversar com o anunciante.')
+    toast.success('Redirecionando...', 'Abrindo conversa no WhatsApp')
 
     const cleanPhone = phone.replace(/\D/g, '')
-    const message = encodeURIComponent(`Olá! Tenho interesse no seu anúncio: ${ad.title}`)
+    const message = encodeURIComponent(`Olá! Vi seu anúncio no EventSpace: ${ad.title}. Gostaria de mais informações.`)
     window.open(`https://wa.me/55${cleanPhone}?text=${message}`, '_blank')
   }
 
   const callPhone = () => {
-    if (ad.contact_phone) {
-      // Track the contact before making the call
-      trackPhoneContact()
-      toast.success('Ligando...', 'Você será redirecionado para ligar para o anunciante.')
-      window.open(`tel:${ad.contact_phone}`, '_self')
-    } else {
-      toast.warning('Telefone não disponível', 'Este anúncio não possui um número de telefone cadastrado.')
+    const phone = ad.contact_phone || ad.contact_whatsapp
+    if (!phone) {
+      toast.warning('Telefone não disponível', 'Este anunciante não cadastrou um número de telefone.')
+      return
     }
+
+    trackPhoneContact()
+    const cleanPhone = phone.replace(/\D/g, '')
+    toast.success('Ligando...', 'Iniciando chamada para o anunciante.')
+    window.open(`tel:${cleanPhone}`, '_self')
   }
 
   const shareAd = async () => {
@@ -521,7 +529,6 @@ export default function AdDetails() {
                 <div>
                   <div className="flex items-center gap-3 mb-2">
                     <h1 className="text-3xl font-bold text-gray-900">{ad.title}</h1>
-                    <PremiumBadge userPlanType={(ad as { user_plan_type?: string }).user_plan_type} size="md" />
                   </div>
                   <p className="text-lg text-green-600 font-semibold">{formatPrice(ad.price, ad.price_type)}</p>
                 </div>
@@ -540,10 +547,6 @@ export default function AdDetails() {
                 <span className="flex items-center gap-1">
                   <Calendar className="w-4 h-4" />
                   Publicado em {new Date(ad.created_at).toLocaleDateString('pt-BR')}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Eye className="w-4 h-4" />
-                  {ad.views_count} visualizações
                 </span>
               </div>
 
@@ -739,69 +742,105 @@ export default function AdDetails() {
             <div className="bg-white rounded-lg shadow p-6 sticky top-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Entre em Contato</h3>
 
-              <div className="space-y-3 mb-6">
-                <button
-                  onClick={openWhatsApp}
-                  className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
-                >
-                  <MessageCircle className="w-5 h-5" />
-                  WhatsApp
-                </button>
+              <div className="space-y-3 mb-8">
+                {(ad.contact_whatsapp || ad.contact_phone) && (
+                  <button
+                    onClick={openWhatsApp}
+                    className="w-full bg-[#25D366] text-white py-4 px-4 rounded-xl hover:bg-[#20ba5a] transition-all flex items-center justify-center gap-3 font-bold shadow-lg shadow-green-100 transform hover:scale-[1.02] active:scale-[0.98]"
+                  >
+                    <MessageCircle className="w-6 h-6" />
+                    Chamar no WhatsApp
+                  </button>
+                )}
 
-                <button
-                  onClick={callPhone}
-                  className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
-                >
-                  <Phone className="w-5 h-5" />
-                  Ligar
-                </button>
+                {(ad.contact_phone || ad.contact_whatsapp) && (
+                  <button
+                    onClick={callPhone}
+                    className="w-full bg-blue-600 text-white py-4 px-4 rounded-xl hover:bg-blue-700 transition-all flex items-center justify-center gap-3 font-bold shadow-lg shadow-blue-100 transform hover:scale-[1.02] active:scale-[0.98]"
+                  >
+                    <Phone className="w-6 h-6" />
+                    Ligar Agora
+                  </button>
+                )}
               </div>
+
+              {/* Informações de Contato Explícitas */}
+              {(ad.contact_phone || ad.contact_whatsapp || ad.contact_email) && (
+                <div className="bg-gray-50 rounded-xl p-4 mb-6 border border-gray-100">
+                  <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-3 px-1 text-center">Contatos Diretos</p>
+                  <div className="space-y-3">
+                    {ad.contact_phone && (
+                      <div className="flex items-center justify-between group">
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <Phone className="w-4 h-4 text-gray-400 group-hover:text-blue-500 transition-colors" />
+                          <span>Telefone</span>
+                        </div>
+                        <span className="text-sm font-semibold text-gray-900">{formatPhone(ad.contact_phone)}</span>
+                      </div>
+                    )}
+                    {ad.contact_whatsapp && (
+                      <div className="flex items-center justify-between group">
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <MessageCircle className="w-4 h-4 text-gray-400 group-hover:text-green-500 transition-colors" />
+                          <span>WhatsApp</span>
+                        </div>
+                        <span className="text-sm font-semibold text-gray-900">{formatPhone(ad.contact_whatsapp)}</span>
+                      </div>
+                    )}
+                    {ad.contact_email && (
+                      <div className="flex items-center justify-between group">
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <span className="text-lg">📧</span>
+                          <span className="ml-1">Email</span>
+                        </div>
+                        <span className="text-xs font-semibold text-gray-900 truncate ml-2 max-w-[150px]" title={ad.contact_email}>{ad.contact_email}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Redes Sociais */}
               {(ad.contact_instagram || ad.contact_facebook) && (
                 <div className="mb-6">
-                  <h4 className="font-medium text-gray-900 mb-3">🌐 Redes Sociais</h4>
+                  <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-3 px-1 text-center">Redes Sociais</p>
                   <div className="grid grid-cols-1 gap-2">
                     {ad.contact_instagram && (
                       <a
-                        href={ad.contact_instagram.startsWith('@')
-                          ? `https://instagram.com/${ad.contact_instagram.substring(1)}`
-                          : ad.contact_instagram.startsWith('http')
-                            ? ad.contact_instagram
-                            : `https://instagram.com/${ad.contact_instagram}`
+                        href={String(ad.contact_instagram).startsWith('http')
+                          ? ad.contact_instagram
+                          : `https://instagram.com/${String(ad.contact_instagram).replace('@', '')}`
                         }
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-3 py-3 px-4 bg-gradient-to-r from-pink-50 to-purple-50 border border-pink-200 text-pink-700 rounded-lg hover:from-pink-100 hover:to-purple-100 hover:border-pink-300 transition-all duration-200 group"
-                        onClick={() => { }}
+                        className="flex items-center gap-3 py-3 px-4 bg-gradient-to-r from-pink-50 to-purple-50 border border-pink-100 text-pink-700 rounded-xl hover:from-pink-100 hover:to-purple-100 hover:border-pink-200 transition-all duration-200 group"
                       >
-                        <div className="w-8 h-8 bg-pink-100 rounded-full flex items-center justify-center group-hover:bg-pink-200 transition-colors">
-                          <Instagram className="w-4 h-4 text-pink-600" />
+                        <div className="w-8 h-8 bg-pink-500 rounded-lg flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                          <Instagram className="w-5 h-5 text-white" />
                         </div>
                         <div>
-                          <p className="font-medium">Instagram</p>
-                          <p className="text-xs text-pink-600">@{ad.contact_instagram.replace('@', '')}</p>
+                          <p className="font-bold text-sm leading-tight text-pink-900">Instagram</p>
+                          <p className="text-[10px] text-pink-600 font-medium">@{String(ad.contact_instagram).replace('@', '')}</p>
                         </div>
                       </a>
                     )}
 
                     {ad.contact_facebook && (
                       <a
-                        href={ad.contact_facebook.startsWith('http')
+                        href={String(ad.contact_facebook).startsWith('http')
                           ? ad.contact_facebook
                           : `https://facebook.com/${ad.contact_facebook}`
                         }
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-3 py-3 px-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 text-blue-700 rounded-lg hover:from-blue-100 hover:to-indigo-100 hover:border-blue-300 transition-all duration-200 group"
-                        onClick={() => { }}
+                        className="flex items-center gap-3 py-3 px-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 text-blue-700 rounded-xl hover:from-blue-100 hover:to-indigo-100 hover:border-blue-200 transition-all duration-200 group"
                       >
-                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-                          <Facebook className="w-4 h-4 text-blue-600" />
+                        <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                          <Facebook className="w-5 h-5 text-white" />
                         </div>
                         <div>
-                          <p className="font-medium">Facebook</p>
-                          <p className="text-xs text-blue-600">{ad.contact_facebook.replace('facebook.com/', '').replace('https://', '').replace('http://', '')}</p>
+                          <p className="font-bold text-sm leading-tight text-blue-900">Facebook</p>
+                          <p className="text-[10px] text-blue-600 font-medium">{String(ad.contact_facebook).replace('facebook.com/', '').replace('https://', '').replace('http://', '').split('/')[0]}</p>
                         </div>
                       </a>
                     )}
@@ -809,22 +848,9 @@ export default function AdDetails() {
                 </div>
               )}
 
-              <div className="border-t pt-4">
-                <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-                  <Phone className="w-4 h-4" />
-                  <span>{formatPhone(ad.contact_phone || '')}</span>
-                </div>
-                {ad.contact_whatsapp && ad.contact_whatsapp !== ad.contact_phone && (
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <MessageCircle className="w-4 h-4" />
-                    <span>{formatPhone(ad.contact_whatsapp)}</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="border-t pt-4 mt-4">
-                <p className="text-xs text-gray-500 text-center">
-                  🔒 Contato direto, sem intermediação. Negocie com segurança!
+              <div className="bg-green-50 rounded-xl p-4 border border-green-100">
+                <p className="text-[10px] text-green-700 text-center font-medium leading-relaxed">
+                  🔒 Contato direto, sem intermediação.<br />Negocie com segurança!
                 </p>
               </div>
             </div>

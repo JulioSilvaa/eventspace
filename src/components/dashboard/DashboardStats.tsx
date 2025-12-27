@@ -20,13 +20,13 @@ interface DashboardStatsProps {
   lastUpdated?: Date | null
 }
 
-export default function DashboardStats({ 
+export default function DashboardStats({
   data,
   loading = false,
   isRealTime = false,
   lastUpdated
 }: DashboardStatsProps) {
-  
+
   // Mock data for demonstration
   const mockData: DashboardStatsData = {
     totalAds: 5,
@@ -39,7 +39,7 @@ export default function DashboardStats({
     thisMonthContacts: 15,
     lastMonthContacts: 8
   }
-  
+
   // Ensure all numeric values are valid and not NaN
   const safeData = data ? {
     ...data,
@@ -50,9 +50,9 @@ export default function DashboardStats({
     thisMonthContacts: isNaN(data.thisMonthContacts) ? 0 : data.thisMonthContacts,
     lastMonthContacts: isNaN(data.lastMonthContacts) ? 0 : data.lastMonthContacts
   } : mockData
-  
+
   const statsData = safeData
-  
+
   // Calculate trends with protection against division by zero
   const calculateTrend = (current: number, previous: number) => {
     if (previous === 0) {
@@ -61,27 +61,20 @@ export default function DashboardStats({
     }
     return Math.round(((current - previous) / previous) * 100)
   }
-  
+
   const viewsTrend = {
     value: calculateTrend(statsData.thisMonthViews, statsData.lastMonthViews),
     label: 'vs mês anterior',
     isPositive: statsData.thisMonthViews > statsData.lastMonthViews
   }
-  
+
   const contactsTrend = {
     value: calculateTrend(statsData.thisMonthContacts, statsData.lastMonthContacts),
-    label: 'vs mês anterior', 
+    label: 'vs mês anterior',
     isPositive: statsData.thisMonthContacts > statsData.lastMonthContacts
   }
 
   const stats = [
-    {
-      title: 'Total de Anúncios',
-      value: statsData.totalAds || 0,
-      description: `${statsData.activeAds || 0} ativos`,
-      icon: Package,
-      iconColor: 'text-blue-600'
-    },
     {
       title: 'Visualizações',
       value: (statsData.totalViews || 0).toLocaleString(),
@@ -130,7 +123,7 @@ export default function DashboardStats({
           Acompanhe o desempenho dos seus anúncios no EventSpace
         </p>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {stats.map((stat, index) => (
           <DashboardCard

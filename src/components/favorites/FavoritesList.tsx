@@ -17,7 +17,7 @@ export default function FavoritesList() {
   useEffect(() => {
     // Só executa se não for usuário logado
     if (user) return
-    
+
     const loadFavoriteAds = async () => {
       // Se não há favoritos, não carrega nada
       if (favorites.length === 0) {
@@ -129,7 +129,7 @@ export default function FavoritesList() {
               Nenhum favorito ainda
             </h3>
             <p className="text-gray-600 mb-6 max-w-md mx-auto">
-              Explore os anúncios e clique no ❤️ para adicionar aos seus favoritos. 
+              Explore os anúncios e clique no ❤️ para adicionar aos seus favoritos.
               Assim você pode revisitá-los facilmente mais tarde!
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -177,7 +177,7 @@ export default function FavoritesList() {
                   key={ad.id}
                   ad={ad}
                   size="medium"
-                  showViewCount={true}
+                  showViewCount={false}
                 />
               ))}
             </div>

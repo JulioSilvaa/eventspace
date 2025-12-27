@@ -17,19 +17,23 @@ import {
   MapPin,
   Calendar,
   TrendingUp,
-  Crown,
   ArrowLeft
 } from 'lucide-react'
 import Tooltip from '@/components/ui/Tooltip'
+import { useUserRealTimeMetrics } from '@/hooks/useRealTimeMetrics'
+import { formatPrice } from '@/lib/utils'
 
 export default function MyAds() {
   const { user, profile } = useAuth()
-  const { userAds, fetchUserAds, isLoading, updateAd, deleteAd } = useAdsStore()
+  const { userAds, fetchUserAds, isLoading: adsLoading, updateAd, deleteAd } = useAdsStore()
+  const { metrics, isLoading: metricsLoading } = useUserRealTimeMetrics(user?.id)
+
+  const isLoading = adsLoading || metricsLoading
 
   // Modal states
   const [alertModal, setAlertModal] = useState<{
     isOpen: boolean
-    type: 'success' | 'error' | 'warning' | 'info' | 'premium'
+    type: 'success' | 'error' | 'warning' | 'info'
     title: string
     message: string
   }>({
@@ -80,13 +84,6 @@ export default function MyAds() {
     }
   }
 
-  const formatPrice = (price: number, priceType: string) => {
-    const formatted = price.toLocaleString('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    })
-    return `${formatted}/${priceType === 'daily' ? 'dia' : priceType === 'hourly' ? 'hora' : 'evento'}`
-  }
 
   const handleToggleStatus = async (adId: string, currentStatus: string) => {
     const newStatus = currentStatus === 'active' ? 'inactive' : 'active'
@@ -111,7 +108,7 @@ export default function MyAds() {
     )
   }
 
-  const showAlert = (type: 'success' | 'error' | 'warning' | 'info' | 'premium', title: string, message: string) => {
+  const showAlert = (type: 'success' | 'error' | 'warning' | 'info', title: string, message: string) => {
     setAlertModal({
       isOpen: true,
       type,
@@ -188,48 +185,26 @@ export default function MyAds() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-lg p-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div className="bg-white rounded-lg p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total de Anúncios</p>
-                <p className="text-2xl font-bold text-gray-900">{userAds.length}</p>
+                <p className="text-[11px] font-black uppercase tracking-wider text-gray-400 mb-1">Visualizações Reais</p>
+                <p className="text-2xl font-bold text-purple-600">{metrics.totalViews}</p>
               </div>
-              <div className="bg-blue-100 p-2 rounded-lg">
-                <Star className="w-5 h-5 text-blue-600" />
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Anúncios Ativos</p>
-                <p className="text-2xl font-bold text-green-600">{userAds.filter(ad => ad.status === 'active').length}</p>
-              </div>
-              <div className="bg-green-100 p-2 rounded-lg">
-                <Play className="w-5 h-5 text-green-600" />
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Total Visualizações</p>
-                <p className="text-2xl font-bold text-purple-600">{userAds.reduce((sum, ad) => sum + (ad.views_count || 0), 0)}</p>
-              </div>
-              <div className="bg-purple-100 p-2 rounded-lg">
+              <div className="bg-purple-50 p-2.5 rounded-xl border border-purple-100">
                 <Eye className="w-5 h-5 text-purple-600" />
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-lg p-4">
+          <div className="bg-white rounded-lg p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total Contatos</p>
-                <p className="text-2xl font-bold text-orange-600">{userAds.reduce((sum, ad) => sum + Math.floor((ad.views_count || 0) * 0.08), 0)}</p>
+                <p className="text-[11px] font-black uppercase tracking-wider text-gray-400 mb-1">Contatos Convertidos</p>
+                <p className="text-2xl font-bold text-orange-600">{metrics.totalContacts}</p>
               </div>
-              <div className="bg-orange-100 p-2 rounded-lg">
-                <MessageCircle className="w-5 h-5 text-orange-600" />
+              <div className="bg-orange-50 p-2.5 rounded-xl border border-orange-100">
+                <MessageCircle className="w-5 h-5 text-orange-600 fill-current" />
               </div>
             </div>
           </div>
@@ -302,12 +277,6 @@ export default function MyAds() {
                           </div>
                         </div>
 
-                        {profile?.plan_type !== 'free' && (
-                          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg border border-blue-100 shrink-0">
-                            <Crown className="w-3.5 h-3.5 fill-current" />
-                            <span className="text-[10px] font-bold uppercase tracking-wider">Premium</span>
-                          </div>
-                        )}
                       </div>
 
                       {/* Stats Grid */}
@@ -328,7 +297,7 @@ export default function MyAds() {
                           </div>
                           <div className="flex flex-col leading-tight">
                             <span className="text-[10px] text-gray-400 uppercase font-black tracking-tighter">Contatos</span>
-                            <span className="text-base font-bold text-gray-900">{Math.floor((ad.views_count || 0) * 0.08)}</span>
+                            <span className="text-base font-bold text-gray-900">{ad.contacts_count || 0}</span>
                           </div>
                         </div>
 
@@ -376,6 +345,16 @@ export default function MyAds() {
                               <Play className="w-5 h-5 fill-current" />
                             )}
                           </button>
+                        </Tooltip>
+
+                        <Tooltip content="Ver anúncio público">
+                          <Link
+                            to={`/anuncio/${ad.id}`}
+                            target="_blank"
+                            className="flex items-center justify-center p-2.5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-xl transition-all duration-200"
+                          >
+                            <Eye className="w-5 h-5" />
+                          </Link>
                         </Tooltip>
 
                         <Tooltip content="Excluir anúncio">

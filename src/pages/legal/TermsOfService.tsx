@@ -35,12 +35,12 @@ export default function TermsOfService() {
       <section className="mb-8">
         <h2>2. Aceitação dos Termos</h2>
         <p>
-          Ao criar uma conta, acessar ou utilizar qualquer funcionalidade da plataforma EventSpace, 
-          você declara ter lido, compreendido e concordado integralmente com estes Termos de Uso 
+          Ao criar uma conta, acessar ou utilizar qualquer funcionalidade da plataforma EventSpace,
+          você declara ter lido, compreendido e concordado integralmente com estes Termos de Uso
           e com nossa Política de Privacidade.
         </p>
         <p>
-          Se você não concorda com algum termo aqui estabelecido, deve interromper imediatamente 
+          Se você não concorda com algum termo aqui estabelecido, deve interromper imediatamente
           o uso da plataforma.
         </p>
       </section>
@@ -49,16 +49,16 @@ export default function TermsOfService() {
         <h2>3. Descrição dos Serviços</h2>
         <h3>3.1 Natureza da Plataforma</h3>
         <p>
-          O EventSpace é uma plataforma de intermediação digital que facilita a conexão direta 
+          O EventSpace é uma plataforma de intermediação digital que facilita a conexão direta
           entre Fornecedores e Clientes interessados em locação de espaços e equipamentos para eventos.
         </p>
-        
+
         <h3>3.2 Modelo de Negócio</h3>
         <p>
-          Nossa plataforma opera com um modelo de assinatura mensal para Fornecedores, sem cobrança 
-          de comissões sobre transações. Clientes utilizam a plataforma gratuitamente.
+          O EventSpace é uma plataforma 100% gratuita para todos os seus usuários.
+          Não cobramos assinaturas, taxas de intermediação ou comissões sobre transações.
         </p>
-        
+
         <h3>3.3 Limitações</h3>
         <p>
           O EventSpace não:
@@ -81,12 +81,12 @@ export default function TermsOfService() {
           <li>Ser maior de 18 anos ou ter autorização legal para contratar;</li>
           <li>Fornecer informações verdadeiras, precisas e atualizadas;</li>
           <li>Manter a confidencialidade de suas credenciais de acesso;</li>
-          <li>Ter uma assinatura ativa para publicar anúncios.</li>
+          <li>Ter uma conta ativa e verificada para publicar anúncios;</li>
         </ul>
-        
+
         <h3>4.2 Responsabilidades</h3>
         <p>
-          Você é responsável por todas as atividades realizadas em sua conta e deve 
+          Você é responsável por todas as atividades realizadas em sua conta e deve
           notificar imediatamente o EventSpace sobre qualquer uso não autorizado.
         </p>
       </section>
@@ -104,7 +104,7 @@ export default function TermsOfService() {
           <li>Manter as informações sempre atualizadas;</li>
           <li>Respeitar os direitos autorais e de imagem.</li>
         </ul>
-        
+
         <h3>5.2 Conduta</h3>
         <p>
           É vedado ao Fornecedor:
@@ -116,11 +116,12 @@ export default function TermsOfService() {
           <li>Solicitar pagamentos através da plataforma;</li>
           <li>Divulgar dados de contato de forma inadequada.</li>
         </ul>
-        
-        <h3>5.3 Assinatura e Pagamento</h3>
+
+        <h3>5.3 Publicação de Anúncios</h3>
         <p>
-          O acesso às funcionalidades de Fornecedor requer assinatura mensal paga. 
-          O não pagamento resulta na suspensão automática dos anúncios até a regularização.
+          A publicação de anúncios é gratuita. O EventSpace reserva-se o direito de
+          estabelecer limites para o número de anúncios ativos por usuário, conforme
+          sua política de uso.
         </p>
       </section>
 
@@ -128,10 +129,10 @@ export default function TermsOfService() {
         <h2>6. Regras para Clientes</h2>
         <h3>6.1 Uso Adequado</h3>
         <p>
-          Clientes devem utilizar a plataforma de forma respeitosa e honesta, 
+          Clientes devem utilizar a plataforma de forma respeitosa e honesta,
           contatando Fornecedores apenas quando há interesse genuíno em locação.
         </p>
-        
+
         <h3>6.2 Condutas Proibidas</h3>
         <p>
           É vedado ao Cliente:
@@ -139,20 +140,20 @@ export default function TermsOfService() {
         <ul>
           <li>Utilizar informações para fins diferentes da locação;</li>
           <li>Fazer contato abusivo ou inadequado com Fornecedores;</li>
-          <li>Tentar contornar o sistema de pagamento das assinaturas;</li>
-          <li>Copiar ou reproduzir conteúdo da plataforma sem autorização.</li>
+          <li>Copiar ou reproduzir conteúdo da plataforma sem autorização;</li>
+          <li>Utilizar robôs ou scripts para extração massiva de dados.</li>
         </ul>
       </section>
 
       <section className="mb-8">
         <h2>7. Propriedade Intelectual</h2>
         <p>
-          Todos os direitos sobre a plataforma EventSpace, incluindo design, código, 
+          Todos os direitos sobre a plataforma EventSpace, incluindo design, código,
           marca e funcionalidades, pertencem exclusivamente ao EventSpace.
         </p>
         <p>
-          O conteúdo publicado pelos usuários (textos, fotos, descrições) permanece 
-          de propriedade dos respectivos autores, que concedem ao EventSpace licença 
+          O conteúdo publicado pelos usuários (textos, fotos, descrições) permanece
+          de propriedade dos respectivos autores, que concedem ao EventSpace licença
           para exibição na plataforma.
         </p>
       </section>
@@ -160,11 +161,11 @@ export default function TermsOfService() {
       <section className="mb-8">
         <h2>8. Privacidade e Proteção de Dados</h2>
         <p>
-          O tratamento de dados pessoais segue nossa Política de Privacidade, 
+          O tratamento de dados pessoais segue nossa Política de Privacidade,
           elaborada em conformidade com a Lei Geral de Proteção de Dados (LGPD).
         </p>
         <p>
-          Recomendamos a leitura integral da Política de Privacidade para 
+          Recomendamos a leitura integral da Política de Privacidade para
           compreender como coletamos, utilizamos e protegemos suas informações.
         </p>
       </section>
@@ -182,7 +183,7 @@ export default function TermsOfService() {
           <li>Falhas temporárias no sistema ou indisponibilidade dos serviços;</li>
           <li>Ações de terceiros ou força maior.</li>
         </ul>
-        
+
         <h3>9.2 Recomendações</h3>
         <p>
           Recomendamos que os usuários:
@@ -207,26 +208,20 @@ export default function TermsOfService() {
           <li>Causem danos à plataforma ou outros usuários;</li>
           <li>Permaneçam inativas por período prolongado.</li>
         </ul>
-        
+
         <h3>10.2 Encerramento Voluntário</h3>
         <p>
-          Usuários podem encerrar suas contas a qualquer momento através das 
+          Usuários podem encerrar suas contas a qualquer momento através das
           configurações da conta ou entrando em contato conosco.
         </p>
       </section>
 
       <section className="mb-8">
-        <h2>11. Política de Cancelamento e Reembolso</h2>
-        <h3>11.1 Assinaturas</h3>
+        <h2>11. Gratuidade e Taxas</h2>
         <p>
-          Assinaturas podem ser canceladas a qualquer momento, com efeito no próximo 
-          ciclo de cobrança. Não há multas ou taxas de cancelamento.
-        </p>
-        
-        <h3>11.2 Reembolsos</h3>
-        <p>
-          Valores já cobrados não são reembolsáveis, exceto em casos específicos 
-          determinados pelo EventSpace ou por determinação legal.
+          O uso das funcionalidades atuais da plataforma é gratuito.
+          O EventSpace poderá, no futuro, introduzir funcionalidades premium pagas,
+          mediante prévia alteração destes Termos e notificação aos usuários.
         </p>
       </section>
 
@@ -234,13 +229,13 @@ export default function TermsOfService() {
         <h2>12. Resolução de Conflitos</h2>
         <h3>12.1 Mediação</h3>
         <p>
-          Conflitos entre usuários devem ser resolvidos diretamente entre as partes. 
+          Conflitos entre usuários devem ser resolvidos diretamente entre as partes.
           O EventSpace pode, a seu critério, oferecer mediação informal.
         </p>
-        
+
         <h3>12.2 Jurisdição</h3>
         <p>
-          Disputas que não puderem ser resolvidas amigavelmente serão submetidas 
+          Disputas que não puderem ser resolvidas amigavelmente serão submetidas
           ao foro da comarca de São Paulo, SP, com exclusão de qualquer outro.
         </p>
       </section>
@@ -248,12 +243,12 @@ export default function TermsOfService() {
       <section className="mb-8">
         <h2>13. Modificações dos Termos</h2>
         <p>
-          O EventSpace reserva-se o direito de modificar estes Termos de Uso a qualquer 
-          momento. Usuários serão notificados sobre alterações significativas através 
+          O EventSpace reserva-se o direito de modificar estes Termos de Uso a qualquer
+          momento. Usuários serão notificados sobre alterações significativas através
           da plataforma ou por email.
         </p>
         <p>
-          O uso continuado da plataforma após modificações constitui aceitação dos 
+          O uso continuado da plataforma após modificações constitui aceitação dos
           novos termos.
         </p>
       </section>
@@ -262,19 +257,19 @@ export default function TermsOfService() {
         <h2>14. Disposições Gerais</h2>
         <h3>14.1 Integralidade</h3>
         <p>
-          Estes Termos, juntamente com a Política de Privacidade, constituem o acordo 
+          Estes Termos, juntamente com a Política de Privacidade, constituem o acordo
           integral entre você e o EventSpace.
         </p>
-        
+
         <h3>14.2 Nulidade Parcial</h3>
         <p>
-          Se qualquer disposição destes Termos for considerada inválida, as demais 
+          Se qualquer disposição destes Termos for considerada inválida, as demais
           permanecerão em pleno vigor.
         </p>
-        
+
         <h3>14.3 Lei Aplicável</h3>
         <p>
-          Estes Termos são regidos pelas leis brasileiras, especialmente pelo 
+          Estes Termos são regidos pelas leis brasileiras, especialmente pelo
           Marco Civil da Internet e Código de Defesa do Consumidor.
         </p>
       </section>
@@ -295,8 +290,8 @@ export default function TermsOfService() {
 
       <div className="mt-12 p-6 bg-blue-50 border border-blue-200 rounded-lg not-prose">
         <p className="text-blue-800 text-sm">
-          <strong>Importante:</strong> Este documento estabelece um acordo legal entre você 
-          e o EventSpace. Recomendamos que leia atentamente e consulte um advogado se 
+          <strong>Importante:</strong> Este documento estabelece um acordo legal entre você
+          e o EventSpace. Recomendamos que leia atentamente e consulte um advogado se
           tiver dúvidas sobre qualquer disposição.
         </p>
       </div>

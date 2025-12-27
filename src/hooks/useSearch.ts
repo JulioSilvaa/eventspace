@@ -10,7 +10,7 @@ export function useSearch(initialFilters: SearchFilters = {}) {
     const urlFilters: SearchFilters = { ...initialFilters }
 
     if (searchParams.get('query')) urlFilters.query = searchParams.get('query')!
-    if (searchParams.get('category')) urlFilters.category = searchParams.get('category')!
+    if (searchParams.get('category_id')) urlFilters.category_id = Number(searchParams.get('category_id'))
     if (searchParams.get('state')) urlFilters.state = searchParams.get('state')!
     if (searchParams.get('city')) urlFilters.city = searchParams.get('city')!
     if (searchParams.get('minPrice')) urlFilters.minPrice = Number(searchParams.get('minPrice'))
@@ -59,7 +59,7 @@ export function useSearch(initialFilters: SearchFilters = {}) {
   // Buscar automaticamente quando os filtros mudarem
   useEffect(() => {
     search()
-  }, [filters.query, filters.category, filters.state, filters.city, filters.minPrice, filters.maxPrice, filters.sortBy, filters.sortOrder, filters.page, search])
+  }, [filters.query, filters.category_id, filters.state, filters.city, filters.minPrice, filters.maxPrice, filters.sortBy, filters.sortOrder, filters.page, search])
 
   // Atualizar URL quando filtros mudarem (mas não na inicialização)
   const [isInitialized, setIsInitialized] = useState(false)

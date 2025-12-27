@@ -82,8 +82,8 @@ export default function PrivacyPolicy() {
 
         <h3>3.3 Dados de Pagamento</h3>
         <p>
-          Dados de pagamento são processados exclusivamente pela Stripe (processador PCI-DSS compliant).
-          O EventSpace não armazena informações completas de cartão de crédito.
+          A plataforma é atualmente gratuita. Caso venhamos a processar pagamentos no futuro,
+          estes serão realizados por processadores seguros e certificados (como Stripe).
         </p>
       </section>
 
@@ -94,7 +94,6 @@ export default function PrivacyPolicy() {
           <li><strong>Prestação de serviços:</strong> Operação da plataforma de conexão</li>
           <li><strong>Gerenciamento de conta:</strong> Criação, autenticação e manutenção de contas</li>
           <li><strong>Facilitação de contatos:</strong> Permitir comunicação entre fornecedores e clientes</li>
-          <li><strong>Processamento de pagamentos:</strong> Gestão de assinaturas de fornecedores</li>
         </ul>
 
         <h3>4.2 Finalidades Secundárias</h3>

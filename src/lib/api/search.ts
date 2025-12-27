@@ -2,9 +2,10 @@ import { apiClient } from '@/lib/api-client'
 
 export interface SearchFilters {
   query?: string
-  category?: string
+  category_id?: number
   state?: string
   city?: string
+  neighborhood?: string
   minPrice?: number
   maxPrice?: number
   type?: 'space' | 'advertiser'
@@ -54,18 +55,24 @@ interface SpaceResponse {
   id: string
   title: string
   description: string
-  price: number
+  price_per_day?: number
+  price_per_weekend?: number
   price_type?: string
-  state: string
-  city: string
-  neighborhood?: string
+  address?: {
+    street: string
+    number: string
+    neighborhood: string
+    city: string
+    state: string
+    zipcode: string
+  }
   contact_whatsapp?: string
   contact_phone?: string
   status: string
   featured: boolean
   views_count?: number
   created_at: string
-  images?: SpaceImage[]
+  images?: (string | SpaceImage)[]
   category_id?: number
   category_name?: string
   category_type?: string
@@ -85,9 +92,10 @@ export async function searchAds(filters: SearchFilters): Promise<SearchResponse>
   try {
     const {
       query,
-      category,
+      category_id,
       state,
       city,
+      neighborhood,
       minPrice,
       maxPrice,
       type,
@@ -100,19 +108,18 @@ export async function searchAds(filters: SearchFilters): Promise<SearchResponse>
     const params: Record<string, string | number | boolean | undefined> = {
       page,
       limit,
-      status: 'active',
+      search: query,
+      category_id,
+      state,
+      city,
+      neighborhood,
+      price_min: minPrice,
+      price_max: maxPrice,
+      type,
+      sort: sortBy,
+      order: sortOrder,
+      status: 'active'
     }
-
-    // Apply filters
-    if (query) params.search = query
-    if (category && category !== 'all') params.category = category
-    if (state) params.state = state
-    if (city) params.city = city
-    if (minPrice !== undefined) params.price_min = minPrice
-    if (maxPrice !== undefined) params.price_max = maxPrice
-    if (type) params.type = type
-    if (sortBy) params.sort = sortBy
-    if (sortOrder) params.order = sortOrder
 
     const { data, error } = await apiClient.get<SpacesListResponse>('/api/spaces', params)
 
@@ -122,28 +129,42 @@ export async function searchAds(filters: SearchFilters): Promise<SearchResponse>
     }
 
     // Transform API response to SearchResult format
-    const results: SearchResult[] = (data?.spaces || []).map(space => ({
-      id: space.id,
-      title: space.title,
-      description: space.description,
-      price: space.price,
-      price_type: space.price_type || 'daily',
-      state: space.state,
-      city: space.city,
-      neighborhood: space.neighborhood,
-      contact_whatsapp: space.contact_whatsapp,
-      contact_phone: space.contact_phone,
-      category_name: space.category_name || '',
-      category_type: (space.category_type as 'space' | 'advertiser') || 'space',
-      featured: space.featured,
-      views_count: space.views_count || 0,
-      created_at: space.created_at,
-      user_plan_type: undefined,
-      listing_images: space.images?.map((img, index) => ({
-        image_url: img.medium || img.large || img.thumbnail,
-        display_order: index
-      })) || []
-    }))
+    const results: SearchResult[] = (data?.spaces || []).map(space => {
+      // Handle images which might be JSON strings or direct objects
+      const processedImages = space.images?.map(img => {
+        if (typeof img === 'string') {
+          try {
+            return JSON.parse(img) as SpaceImage
+          } catch {
+            return { thumbnail: img, medium: img, large: img } as SpaceImage
+          }
+        }
+        return img
+      }) || []
+
+      return {
+        id: space.id,
+        title: space.title,
+        description: space.description,
+        price: space.price_per_day || space.price_per_weekend || 0,
+        price_type: space.price_type || 'daily',
+        state: space.address?.state || '',
+        city: space.address?.city || '',
+        neighborhood: space.address?.neighborhood,
+        contact_whatsapp: space.contact_whatsapp,
+        contact_phone: space.contact_phone,
+        category_name: space.category_name || '',
+        category_type: (space.category_type as 'space' | 'advertiser') || 'space',
+        featured: space.featured,
+        views_count: space.views_count || 0,
+        created_at: space.created_at,
+        user_plan_type: undefined,
+        listing_images: processedImages.map((img, index) => ({
+          image_url: img.medium || img.large || img.thumbnail,
+          display_order: index
+        }))
+      }
+    })
 
     const totalPages = data?.pagination?.totalPages || Math.ceil((data?.pagination?.total || 0) / limit)
 

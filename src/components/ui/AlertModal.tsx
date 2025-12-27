@@ -1,4 +1,4 @@
-import { AlertTriangle, CheckCircle, XCircle, Info, Crown } from 'lucide-react'
+import { AlertTriangle, CheckCircle, XCircle, Info, Star } from 'lucide-react'
 import Modal from './Modal'
 
 interface AlertModalProps {
@@ -39,8 +39,10 @@ export default function AlertModal({
         return <XCircle className="w-12 h-12 text-red-500" />
       case 'warning':
         return <AlertTriangle className="w-12 h-12 text-yellow-500" />
-      case 'premium':
-        return <Crown className="w-12 h-12 text-amber-500" />
+      case 'info':
+        return <Info className="w-12 h-12 text-blue-500" />
+      case 'premium' as any: // Fallback for any legacy usage
+        return <Star className="w-12 h-12 text-amber-500 fill-current" />
       default:
         return <Info className="w-12 h-12 text-blue-500" />
     }

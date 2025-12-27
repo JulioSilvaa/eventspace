@@ -16,7 +16,6 @@ import {
   Users,
   DollarSign,
   Star,
-  Crown,
   AlertCircle
 } from 'lucide-react'
 import { FormField, FormButton, FormSelect } from '@/components/forms'
@@ -24,7 +23,6 @@ import ImageUpload from '@/components/forms/ImageUpload'
 import AmenitiesSelector from '@/components/forms/AmenitiesSelector'
 import { AMENITY_LABELS } from '@/constants/amenities'
 import { getBrazilianStates } from '@/lib/api/search'
-import { getMaxImagesForPlan } from '@/lib/planLimits'
 import Tooltip from '@/components/ui/Tooltip'
 import { maskPhone as utilMaskPhone, maskCEP as utilMaskCEP, unmask } from '@/utils/masks'
 
@@ -158,7 +156,7 @@ const createListingSchema = z.object({
     .max(100, 'Facebook muito longo')
     .optional(),
 
-  // Featured (apenas para planos premium/pro)
+  // Featured (Ativo para todos os usuários)
   featured: z.boolean().optional(),
 
   // Images (será tratado separadamente no estado)
@@ -197,7 +195,7 @@ export default function CreateAd() {
   const [customAmenities, setCustomAmenities] = useState<string[]>([])
   const [customFeatures, setCustomFeatures] = useState<string[]>([])
   const [customServices, setCustomServices] = useState<string[]>([])
-  const maxImages = getMaxImagesForPlan(profile?.plan_type || 'free')
+  const maxImages = 15
   const modalShownRef = useRef(false)
 
   useEffect(() => {
@@ -291,12 +289,6 @@ export default function CreateAd() {
     }
   }, [watchedCategoryType, setValue])
 
-  // Definir featured como true automaticamente para usuários premium
-  useEffect(() => {
-    if (profile?.plan_type === 'premium') {
-      setValue('featured', true)
-    }
-  }, [profile?.plan_type, setValue])
 
   // Cleanup image URLs ONLY on unmount to avoid ERR_FILE_NOT_FOUND during transitions
   useEffect(() => {
@@ -476,6 +468,8 @@ export default function CreateAd() {
         contact_phone: formattedPhone,
         contact_whatsapp: formattedWhatsapp,
         contact_email: data.contactEmail,
+        contact_instagram: data.contactInstagram,
+        contact_facebook: data.contactFacebook,
         status: 'active' as const,
       }
 
@@ -790,7 +784,6 @@ export default function CreateAd() {
               images={images}
               onImagesChange={setImages}
               maxImages={maxImages}
-              planType={profile?.plan_type || 'free'}
               disabled={isSubmitting}
             />
           </div>
@@ -837,6 +830,26 @@ export default function CreateAd() {
               error={errors.contactEmail}
               {...register('contactEmail')}
             />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                key="contactInstagram"
+                label="Instagram"
+                type="text"
+                placeholder="@seu.espaco (opcional)"
+                error={errors.contactInstagram}
+                {...register('contactInstagram')}
+              />
+
+              <FormField
+                key="contactFacebook"
+                label="Facebook"
+                type="text"
+                placeholder="fb.com/seu.espaco (opcional)"
+                error={errors.contactFacebook}
+                {...register('contactFacebook')}
+              />
+            </div>
           </div>
         )
 
@@ -1019,8 +1032,8 @@ export default function CreateAd() {
             {/* Aviso */}
             <div className="bg-green-50 border border-green-100 rounded-xl p-6">
               <div className="flex gap-4">
-                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Crown className="w-6 h-6 text-green-600" />
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                  <Star className="w-6 h-6 text-green-600 fill-current" />
                 </div>
                 <div>
                   <h4 className="font-bold text-green-900 mb-1">Tudo pronto para publicar!</h4>

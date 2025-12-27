@@ -16,7 +16,7 @@ export default function Footer() {
               </span>
             </div>
             <p className="text-gray-300 mb-4">
-              Conectamos você diretamente com fornecedores de espaços e equipamentos 
+              Conectamos você diretamente com fornecedores de espaços e equipamentos
               para eventos. Sem taxas extras, sem intermediação.
             </p>
             <p className="text-sm text-gray-400">
@@ -43,11 +43,6 @@ export default function Footer() {
                   Como Funciona
                 </Link>
               </li>
-              <li>
-                <Link to="/planos" className="text-gray-300 hover:text-white transition-colors">
-                  Planos
-                </Link>
-              </li>
             </ul>
           </div>
 
@@ -55,11 +50,6 @@ export default function Footer() {
           <div>
             <h3 className="font-semibold mb-4">Suporte</h3>
             <ul className="space-y-2 text-sm">
-              <li>
-                <Link to="/transparencia" className="text-gray-300 hover:text-white transition-colors">
-                  Transparência
-                </Link>
-              </li>
               <li>
                 <Link to="/termos" className="text-gray-300 hover:text-white transition-colors">
                   Termos de Uso

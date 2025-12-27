@@ -6,7 +6,6 @@ import Home from './pages/Home'
 import Equipment from './pages/public/Equipment'
 import Anunciantes from './pages/public/Anunciantes'
 import Spaces from './pages/public/Spaces'
-import Pricing from './pages/Pricing'
 import AdDetails from './pages/AdDetails'
 
 // Auth pages
@@ -21,17 +20,7 @@ import CreateAd from './pages/dashboard/CreateAd'
 import EditAd from './pages/dashboard/EditAd'
 import ReviewsManagement from './pages/dashboard/ReviewsManagement'
 import Settings from './pages/dashboard/Settings'
-
-// Checkout pages
-import Checkout from './pages/checkout/Checkout'
-import CheckoutSuccess from './pages/checkout/CheckoutSuccess'
-import CheckoutError from './pages/checkout/CheckoutError'
-import CancelSubscription from './pages/checkout/CancelSubscription'
-import CancelSuccess from './pages/checkout/CancelSuccess'
-import UpgradeSubscription from './pages/checkout/UpgradeSubscription'
-import UpgradeSuccess from './pages/checkout/UpgradeSuccess'
-import DowngradeSubscription from './pages/checkout/DowngradeSubscription'
-import DowngradeSuccess from './pages/checkout/DowngradeSuccess'
+import Analytics from './pages/dashboard/Analytics'
 
 // Admin pages
 import AdminDashboard from './pages/admin/AdminDashboard'
@@ -100,8 +89,6 @@ function App() {
           <Route path="/equipamentos" element={<Equipment />} />
           <Route path="/anunciantes" element={<Anunciantes />} />
           <Route path="/espacos" element={<Spaces />} />
-          <Route path="/pricing" element={<Pricing />} />
-          <Route path="/planos" element={<Pricing />} />
           <Route path="/anuncio/:id" element={<AdDetails />} />
           <Route path="/equipamentos/:id" element={<AdDetails />} />
           <Route path="/anunciantes/:id" element={<AdDetails />} />
@@ -129,53 +116,6 @@ function App() {
             </PublicOnlyRoute>
           } />
           <Route path="/signup-success" element={<SignupSuccess />} />
-
-          {/* Checkout routes - auth only (no paid plan required) */}
-          <Route path="/checkout" element={
-            <SimpleProtectedRoute>
-              <Checkout />
-            </SimpleProtectedRoute>
-          } />
-          <Route path="/checkout/success" element={
-            <SimpleProtectedRoute>
-              <CheckoutSuccess />
-            </SimpleProtectedRoute>
-          } />
-          <Route path="/checkout/error" element={
-            <SimpleProtectedRoute>
-              <CheckoutError />
-            </SimpleProtectedRoute>
-          } />
-          <Route path="/checkout/cancel" element={
-            <SimpleProtectedRoute>
-              <CancelSubscription />
-            </SimpleProtectedRoute>
-          } />
-          <Route path="/checkout/cancel-success" element={
-            <SimpleProtectedRoute>
-              <CancelSuccess />
-            </SimpleProtectedRoute>
-          } />
-          <Route path="/checkout/upgrade" element={
-            <SimpleProtectedRoute>
-              <UpgradeSubscription />
-            </SimpleProtectedRoute>
-          } />
-          <Route path="/checkout/upgrade-success" element={
-            <SimpleProtectedRoute>
-              <UpgradeSuccess />
-            </SimpleProtectedRoute>
-          } />
-          <Route path="/checkout/downgrade" element={
-            <SimpleProtectedRoute>
-              <DowngradeSubscription />
-            </SimpleProtectedRoute>
-          } />
-          <Route path="/checkout/downgrade-success" element={
-            <SimpleProtectedRoute>
-              <DowngradeSuccess />
-            </SimpleProtectedRoute>
-          } />
 
           {/* Protected Dashboard routes - require authentication only */}
           <Route path="/dashboard" element={
@@ -205,7 +145,7 @@ function App() {
           } />
           <Route path="/dashboard/analytics" element={
             <ProtectedRoute requiresPaidPlan={false}>
-              <div>Analytics Dashboard</div>
+              <Analytics />
             </ProtectedRoute>
           } />
           <Route path="/dashboard/configuracoes" element={

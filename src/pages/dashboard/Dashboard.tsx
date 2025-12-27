@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
-import { Plus, TrendingUp, Crown, LogOut, Home } from 'lucide-react'
+import { Plus, TrendingUp, LogOut, Home } from 'lucide-react'
 import DashboardStats from '@/components/dashboard/DashboardStats'
 import QuickActions from '@/components/dashboard/QuickActions'
 import RecentActivity from '@/components/dashboard/RecentActivity'
-import UpgradeModal from '@/components/modals/UpgradeModal'
 import { useAuth } from '@/hooks/useAuth'
 import { useAdsStore } from '@/stores/adsStore'
 import { useUserRealTimeMetrics } from '@/hooks/useRealTimeMetrics'
@@ -49,7 +48,6 @@ export default function Dashboard() {
   const isNewAd = searchParams.get('newAd') === 'true'
   const [data, setData] = useState<DashboardData | null>(null)
   const [loadingData, setLoadingData] = useState(true)
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
 
   // Hook para métricas em tempo real
   const {
@@ -181,21 +179,6 @@ export default function Dashboard() {
             </div>
 
             <div className="flex items-center gap-3">
-              {/* Plano Atual */}
-              <div className={`flex items-center gap-2 px-3 py-2 border rounded-lg ${profile?.plan_type === 'free'
-                ? 'bg-gray-50 border-gray-200'
-                : 'bg-blue-50 border-blue-200'
-                }`}>
-                <Crown className={`w-4 h-4 ${profile?.plan_type === 'free' ? 'text-gray-600' : 'text-blue-600'
-                  }`} />
-                <span className={`text-sm font-medium ${profile?.plan_type === 'free' ? 'text-gray-900' : 'text-blue-900'
-                  }`}>
-                  {profile?.plan_type === 'free' ? 'Conta Gratuita' :
-                    profile?.plan_type === 'basic' ? 'Plano Básico' :
-                      profile?.plan_type === 'premium' ? 'Plano Premium' : 'Conta Gratuita'}
-                </span>
-              </div>
-
               {/* Botão Voltar para Home */}
               <Link
                 to="/"
@@ -204,7 +187,7 @@ export default function Dashboard() {
                 <Home className="w-4 h-4" />
                 Voltar para Home
               </Link>
-              {userAds.length === 0 && profile?.plan_type !== 'free' && (
+              {userAds.length === 0 && (
                 <Link
                   to="/dashboard/criar-anuncio"
                   className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors"
@@ -263,68 +246,6 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Mensagem de boas-vindas */}
-        {isWelcome && (
-          <div className="mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6">
-            <div className="flex items-center gap-4">
-              <div className="bg-blue-100 p-2 rounded-lg">
-                <Crown className="h-6 w-6 text-blue-600" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-blue-900 mb-1">
-                  Conta criada com sucesso!
-                </h3>
-                <p className="text-blue-700 mb-4">
-                  Para criar seu anúncio, escolha um de nossos planos pagos.
-                  Navegue gratuitamente pelos espaços disponíveis!
-                </p>
-                <div className="flex gap-3">
-                  <Link
-                    to="/pricing"
-                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-                  >
-                    Ver Planos
-                  </Link>
-                  <Link
-                    to="/espacos"
-                    className="border border-blue-600 text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 transition-colors text-sm font-medium"
-                  >
-                    Navegar Espaços
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Conta Gratuita - Upgrade Required */}
-        {profile?.plan_type === 'free' && !isWelcome && (
-          <div className="mb-8 bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-200 rounded-lg p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="bg-indigo-100 p-3 rounded-lg">
-                  <Crown className="h-6 w-6 text-indigo-600" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-indigo-900 mb-1">
-                    Pronto para criar seu anúncio?
-                  </h3>
-                  <p className="text-indigo-700">
-                    Escolha um plano pago para criar seu anúncio e alcançar mais clientes
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <Link
-                  to="/pricing"
-                  className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium"
-                >
-                  Ver Planos
-                </Link>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Stats Cards */}
         <DashboardStats
@@ -339,14 +260,13 @@ export default function Dashboard() {
           {/* Recent Activity - Takes 2 columns */}
           <div className="lg:col-span-2">
             <RecentActivity
-              userPlan={profile?.plan_type}
               userAds={userAds}
             />
           </div>
 
           {/* Quick Actions - Takes 1 column */}
           <div>
-            <QuickActions userAds={userAds} planType={profile?.plan_type} />
+            <QuickActions userAds={userAds} />
           </div>
         </div>
 
@@ -387,15 +307,6 @@ export default function Dashboard() {
 
       </main>
 
-      {/* Upgrade Modal */}
-      {showUpgradeModal && (
-        <UpgradeModal
-          isOpen={showUpgradeModal}
-          onClose={() => setShowUpgradeModal(false)}
-          context="feature_ad"
-          description="Para destacar anúncios, você precisa de um plano pago. Anúncios em destaque recebem até 3x mais visualizações!"
-        />
-      )}
     </div>
   )
 }

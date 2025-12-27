@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Eye, MessageCircle, Star, Package, TrendingUp, MapPin,
-  Clock, Users, Crown, Lock, BarChart3, Zap, Target
+  Clock, Users, BarChart3, Target
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useUserRealTimeMetrics } from '@/hooks/useRealTimeMetrics'
@@ -13,7 +13,7 @@ import { Ad } from '@/types'
 
 interface ActivityDisplayProps {
   id: string
-  type: 'view' | 'contact' | 'rating' | 'ad_created' | 'ad_featured' |
+  type: 'view' | 'contact' | 'rating' | 'ad_created' |
   'milestone' | 'update' | 'status_change' | 'peak_time' |
   'geographic_insight' | 'demographic_insight' | 'competitor_analysis' |
   'priority_lead' | 'auto_boost' | 'market_alert' | 'listing_created' |
@@ -23,14 +23,11 @@ interface ActivityDisplayProps {
   title: string
   description: string
   timestamp: Date
-  isPremium: boolean
   actionable?: boolean
-  locked?: boolean // Para teasers de recursos Premium
   metadata?: {
     adTitle?: string
     rating?: number
     contactType?: 'whatsapp' | 'phone'
-    // Novos metadados
     growth?: number
     location?: string
     timeRange?: string
@@ -54,12 +51,10 @@ interface ActivityDisplayProps {
 }
 
 interface RecentActivityProps {
-  userPlan?: 'free' | 'basic' | 'premium'
   userAds?: Ad[]
 }
 
 export default function RecentActivity({
-  userPlan = 'basic',
   userAds = []
 }: RecentActivityProps) {
   const { user } = useAuth()
@@ -202,7 +197,6 @@ export default function RecentActivity({
         title,
         description,
         timestamp: new Date(event.created_at || Date.now()),
-        isPremium: false,
         metadata: {
           adTitle,
           listingId: event.listing_id,
@@ -230,7 +224,6 @@ export default function RecentActivity({
         title: '🎉 Anúncio Publicado',
         description: `"${ad.title}" foi publicado em ${ad.city}`,
         timestamp: new Date(ad.created_at || Date.now()),
-        isPremium: false,
         metadata: {
           adTitle: ad.title,
           listingId: ad.id
@@ -245,7 +238,6 @@ export default function RecentActivity({
           title: '🎯 Marco Atingido',
           description: `"${ad.title}" atingiu ${views} visualizações!`,
           timestamp: new Date(Date.now() - 1000 * 60 * 60 * (2 + index)),
-          isPremium: false,
           metadata: {
             adTitle: ad.title,
             listingId: ad.id,
@@ -301,7 +293,6 @@ export default function RecentActivity({
           title: 'Bem-vindo ao EventSpace!',
           description: 'Sua conta foi criada com sucesso. Crie seu primeiro anúncio para começar a receber contatos.',
           timestamp: new Date(Date.now() - 1000 * 60 * 30),
-          isPremium: false,
           metadata: { adTitle: 'Sistema' }
         },
         {
@@ -310,7 +301,6 @@ export default function RecentActivity({
           title: '🚀 Como Começar',
           description: 'Anúncios com fotos de qualidade e descrição completa recebem mais contatos.',
           timestamp: new Date(Date.now() - 1000 * 60 * 60),
-          isPremium: false,
           metadata: { adTitle: 'Sistema' }
         }
       ])
@@ -320,66 +310,56 @@ export default function RecentActivity({
   const loading = metricsLoading
   const error = metricsError
 
-  const getActivityIcon = (type: ActivityDisplayProps['type'], isPremium: boolean) => {
-    const iconClass = isPremium ? "h-4 w-4 text-amber-600" : "h-4 w-4"
+  const getActivityIcon = (type: ActivityDisplayProps['type']) => {
+    const iconClass = "h-4 w-4"
 
     switch (type) {
       case 'view':
-        return <Eye className={`${iconClass} ${!isPremium && 'text-blue-500'}`} />
+        return <Eye className={`${iconClass} text-blue-500`} />
       case 'contact':
-        return <MessageCircle className={`${iconClass} ${!isPremium && 'text-green-500'}`} />
+        return <MessageCircle className={`${iconClass} text-green-500`} />
       case 'rating':
-        return <Star className={`${iconClass} ${!isPremium && 'text-yellow-500'}`} />
+        return <Star className={`${iconClass} text-yellow-500`} />
       case 'milestone':
-        return <Target className={`${iconClass} ${!isPremium && 'text-purple-500'}`} />
+        return <Target className={`${iconClass} text-purple-500`} />
       case 'update':
-        return <Package className={`${iconClass} ${!isPremium && 'text-blue-500'}`} />
+        return <Package className={`${iconClass} text-blue-500`} />
       case 'status_change':
-        return <Package className={`${iconClass} ${!isPremium && 'text-gray-500'}`} />
+        return <Package className={`${iconClass} text-gray-500`} />
       case 'geographic_insight':
-        return <MapPin className={`${iconClass} ${!isPremium && 'text-indigo-500'}`} />
+        return <MapPin className={`${iconClass} text-indigo-500`} />
       case 'peak_time':
-        return <Clock className={`${iconClass} ${!isPremium && 'text-orange-500'}`} />
+        return <Clock className={`${iconClass} text-orange-500`} />
       case 'demographic_insight':
-        return <Users className={`${iconClass} ${!isPremium && 'text-pink-500'}`} />
+        return <Users className={`${iconClass} text-pink-500`} />
       case 'competitor_analysis':
-        return <BarChart3 className={`${iconClass} ${!isPremium && 'text-cyan-500'}`} />
+        return <BarChart3 className={`${iconClass} text-cyan-500`} />
       case 'priority_lead':
-        return <Zap className={`${iconClass} ${!isPremium && 'text-red-500'}`} />
+        return <Package className={`${iconClass} text-red-500`} />
       case 'auto_boost':
-        return <TrendingUp className={`${iconClass} ${!isPremium && 'text-emerald-500'}`} />
+        return <TrendingUp className={`${iconClass} text-emerald-500`} />
       case 'market_alert':
-        return <Crown className={`${iconClass} ${!isPremium && 'text-violet-500'}`} />
-      case 'ad_created':
-      case 'ad_featured':
+        return <Package className={`${iconClass} text-violet-500`} />
       case 'listing_created':
-        return <Package className={`${iconClass} ${!isPremium && 'text-purple-500'}`} />
+        return <Package className={`${iconClass} text-purple-500`} />
       case 'listing_updated':
-        return <Package className={`${iconClass} ${!isPremium && 'text-blue-600'}`} />
+        return <Package className={`${iconClass} text-blue-600`} />
       case 'price_updated':
-        return <Package className={`${iconClass} ${!isPremium && 'text-green-600'}`} />
+        return <Package className={`${iconClass} text-green-600`} />
       case 'photos_updated':
-        return <Package className={`${iconClass} ${!isPremium && 'text-pink-600'}`} />
+        return <Package className={`${iconClass} text-pink-600`} />
       case 'description_updated':
-        return <Package className={`${iconClass} ${!isPremium && 'text-indigo-600'}`} />
+        return <Package className={`${iconClass} text-indigo-600`} />
       case 'contact_updated':
-        return <Package className={`${iconClass} ${!isPremium && 'text-teal-600'}`} />
+        return <Package className={`${iconClass} text-teal-600`} />
       case 'performance_insight':
-        return <BarChart3 className={`${iconClass} ${!isPremium && 'text-cyan-500'}`} />
+        return <BarChart3 className={`${iconClass} text-cyan-500`} />
       default:
-        return <Eye className={`${iconClass} ${!isPremium && 'text-gray-500'}`} />
+        return <Eye className={`${iconClass} text-gray-500`} />
     }
   }
 
-  const getActivityColor = (type: ActivityDisplayProps['type'], isPremium: boolean, locked?: boolean) => {
-    if (locked) {
-      return 'bg-gradient-to-r from-gray-50 to-gray-100 border-gray-200 opacity-75'
-    }
-
-    if (isPremium) {
-      return 'bg-gradient-to-r from-amber-50 to-yellow-50 border-amber-200'
-    }
-
+  const getActivityColor = (type: ActivityDisplayProps['type']) => {
     switch (type) {
       case 'view':
         return 'bg-blue-50 border-blue-100'
@@ -393,8 +373,6 @@ export default function RecentActivity({
         return 'bg-blue-50 border-blue-100'
       case 'status_change':
         return 'bg-gray-50 border-gray-100'
-      case 'ad_created':
-      case 'ad_featured':
       case 'listing_created':
         return 'bg-purple-50 border-purple-100'
       case 'listing_updated':
@@ -480,26 +458,20 @@ export default function RecentActivity({
           {activities.map((activity) => (
             <div
               key={activity.id}
-              className={`flex items-start gap-3 p-3 rounded-lg border ${getActivityColor(activity.type, activity.isPremium, activity.locked)}`}
+              className={`flex items-start gap-3 p-3 rounded-lg border ${getActivityColor(activity.type)}`}
             >
               <div className="flex-shrink-0 p-1">
-                {getActivityIcon(activity.type, activity.isPremium)}
+                {getActivityIcon(activity.type)}
               </div>
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <p className={`text-sm font-medium ${activity.locked ? 'text-gray-500' : 'text-gray-900'}`}>
+                  <p className="text-sm font-medium text-gray-900">
                     {activity.title}
                   </p>
-                  {activity.isPremium && !activity.locked && (
-                    <Crown className="h-3 w-3 text-amber-500 fill-current" />
-                  )}
-                  {activity.locked && (
-                    <Lock className="h-3 w-3 text-gray-400" />
-                  )}
                 </div>
 
-                <p className={`text-xs mt-1 ${activity.locked ? 'text-gray-500' : 'text-gray-600'}`}>
+                <p className="text-xs mt-1 text-gray-600">
                   {activity.description}
                 </p>
 
@@ -512,7 +484,7 @@ export default function RecentActivity({
                   </div>
                 )}
 
-                {activity.metadata?.adTitle && !activity.locked && (
+                {activity.metadata?.adTitle && (
                   <div className="flex items-center justify-between mt-1">
                     <p className="text-xs text-gray-500">
                       Anúncio: {activity.metadata.adTitle}
@@ -553,19 +525,10 @@ export default function RecentActivity({
                     ))}
                   </div>
                 )}
-
-
-                {activity.locked && (
-                  <div className="mt-2">
-                    <button className="text-xs text-amber-600 hover:text-amber-700 font-medium">
-                      🔓 Desbloquear com Premium →
-                    </button>
-                  </div>
-                )}
               </div>
 
               <div className="flex-shrink-0">
-                <p className={`text-xs ${activity.locked ? 'text-gray-400' : 'text-gray-500'}`}>
+                <p className="text-xs text-gray-500">
                   {safeFormatDistanceToNow(activity.timestamp)}
                 </p>
               </div>

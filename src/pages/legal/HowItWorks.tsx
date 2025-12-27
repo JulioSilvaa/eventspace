@@ -1,12 +1,12 @@
 import LegalLayout from '@/components/layout/LegalLayout'
 import { Link } from 'react-router-dom'
-import { 
-  Search, 
-  MessageCircle, 
-  HandHeart, 
-  DollarSign, 
-  Shield, 
-  Users, 
+import {
+  Search,
+  MessageCircle,
+  HandHeart,
+  DollarSign,
+  Shield,
+  Users,
   Star,
   CheckCircle,
   ArrowRight
@@ -43,21 +43,21 @@ export default function HowItWorks() {
       <section className="mb-12">
         <h2>O que é o EventSpace?</h2>
         <p>
-          O EventSpace é uma plataforma inovadora que conecta pessoas que precisam de espaços e 
-          equipamentos para eventos com fornecedores especializados. Nossa missão é simples: 
+          O EventSpace é uma plataforma inovadora que conecta pessoas que precisam de espaços e
+          equipamentos para eventos com fornecedores especializados. Nossa missão é simples:
           <strong> facilitar conexões diretas sem cobrar taxas ou comissões</strong>.
         </p>
         <p>
-          Diferente de outras plataformas, não intermediamos pagamentos nem cobramos percentuais 
-          sobre as transações. Nosso modelo de negócio é baseado em assinaturas mensais acessíveis 
-          para fornecedores, garantindo que 100% do valor negociado fique com quem oferece o serviço.
+          Diferente de outras plataformas, não intermediamos pagamentos nem cobramos percentuais
+          sobre as transações. Nosso modelo de negócio é focado em escala e visibilidade para
+          fornecedores, garantindo que 100% do valor negociado fique com quem oferece o serviço.
         </p>
       </section>
 
       {/* Como funciona para clientes */}
       <section className="mb-12">
         <h2>Para quem procura espaços e equipamentos</h2>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 not-prose">
           <div className="text-center">
             <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -68,7 +68,7 @@ export default function HowItWorks() {
               Use nossos filtros para encontrar exatamente o que precisa
             </p>
           </div>
-          
+
           <div className="text-center">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <MessageCircle className="w-8 h-8 text-green-600" />
@@ -78,7 +78,7 @@ export default function HowItWorks() {
               Converse diretamente com o fornecedor via WhatsApp
             </p>
           </div>
-          
+
           <div className="text-center">
             <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <HandHeart className="w-8 h-8 text-purple-600" />
@@ -88,7 +88,7 @@ export default function HowItWorks() {
               Acerte todos os detalhes diretamente com o fornecedor
             </p>
           </div>
-          
+
           <div className="text-center">
             <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <DollarSign className="w-8 h-8 text-orange-600" />
@@ -108,7 +108,7 @@ export default function HowItWorks() {
                 Totalmente gratuito para clientes
               </h4>
               <p className="text-green-800 text-sm">
-                Você não paga nada para usar nossa plataforma. Busque, compare e 
+                Você não paga nada para usar nossa plataforma. Busque, compare e
                 negocie sem custos adicionais.
               </p>
             </div>
@@ -119,18 +119,18 @@ export default function HowItWorks() {
       {/* Como funciona para fornecedores */}
       <section className="mb-12">
         <h2>Para fornecedores de espaços e equipamentos</h2>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 not-prose">
           <div className="text-center">
             <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Users className="w-8 h-8 text-blue-600" />
             </div>
-            <h3 className="text-lg font-semibold mb-2">1. Cadastre-se</h3>
-            <p className="text-gray-600 text-sm">
-              Crie sua conta e escolha um plano mensal
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Crie sua Conta</h3>
+            <p className="text-gray-600">
+              Crie sua conta de forma gratuita e rápida
             </p>
           </div>
-          
+
           <div className="text-center">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Star className="w-8 h-8 text-green-600" />
@@ -140,7 +140,7 @@ export default function HowItWorks() {
               Publique seus espaços ou equipamentos com fotos e detalhes
             </p>
           </div>
-          
+
           <div className="text-center">
             <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <MessageCircle className="w-8 h-8 text-purple-600" />
@@ -150,7 +150,7 @@ export default function HowItWorks() {
               Clientes interessados entrarão em contato diretamente
             </p>
           </div>
-          
+
           <div className="text-center">
             <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <DollarSign className="w-8 h-8 text-orange-600" />
@@ -163,24 +163,28 @@ export default function HowItWorks() {
         </div>
 
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 not-prose">
-          <div className="flex items-start">
-            <Shield className="w-6 h-6 text-blue-600 mr-3 mt-0.5" />
-            <div>
-              <h4 className="font-semibold text-blue-900 mb-2">
-                Planos mensais transparentes
-              </h4>
-              <p className="text-blue-800 text-sm mb-3">
-                Pague apenas uma assinatura mensal fixa, sem surpresas ou taxas 
-                por transação. Cancele quando quiser.
-              </p>
-              <Link 
-                to="/planos" 
-                className="inline-flex items-center text-blue-600 font-medium text-sm hover:text-blue-700"
-              >
-                Ver planos disponíveis
-                <ArrowRight className="w-4 h-4 ml-1" />
-              </Link>
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center shrink-0">
+              <CheckCircle className="w-6 h-6 text-blue-600" />
             </div>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 mb-1">
+                Sem Taxas Ocultas
+              </h3>
+              <p className="text-gray-600 text-sm">
+                Plataforma 100% gratuita para anunciantes
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-12 text-center">
+            <Link
+              to="/cadastro"
+              className="inline-flex items-center gap-2 bg-blue-600 text-white px-8 py-4 rounded-xl hover:bg-blue-700 transition-all font-bold text-lg shadow-lg"
+            >
+              Começar a Anunciar Agora
+              <ArrowRight className="w-5 h-5" />
+            </Link>
           </div>
         </div>
       </section>
@@ -188,7 +192,7 @@ export default function HowItWorks() {
       {/* Diferenciais */}
       <section className="mb-12">
         <h2>Por que escolher o EventSpace?</h2>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 not-prose">
           <div className="border border-gray-200 rounded-lg p-6">
             <div className="flex items-center mb-4">
@@ -196,33 +200,33 @@ export default function HowItWorks() {
               <h3 className="text-xl font-semibold">Zero Comissão</h3>
             </div>
             <p className="text-gray-600">
-              Não cobramos percentual sobre suas vendas. O que você negocia, 
+              Não cobramos percentual sobre suas vendas. O que você negocia,
               você recebe integralmente.
             </p>
           </div>
-          
+
           <div className="border border-gray-200 rounded-lg p-6">
             <div className="flex items-center mb-4">
               <MessageCircle className="w-8 h-8 text-blue-600 mr-3" />
               <h3 className="text-xl font-semibold">Contato Direto</h3>
             </div>
             <p className="text-gray-600">
-              Facilita a comunicação direta entre clientes e fornecedores, 
+              Facilita a comunicação direta entre clientes e fornecedores,
               sem intermediários.
             </p>
           </div>
-          
+
           <div className="border border-gray-200 rounded-lg p-6">
             <div className="flex items-center mb-4">
               <Shield className="w-8 h-8 text-purple-600 mr-3" />
               <h3 className="text-xl font-semibold">Transparência Total</h3>
             </div>
             <p className="text-gray-600">
-              Preços claros, sem taxas ocultas. Você sabe exatamente quanto 
+              Preços claros, sem taxas ocultas. Você sabe exatamente quanto
               vai pagar ou receber.
             </p>
           </div>
-          
+
           <div className="border border-gray-200 rounded-lg p-6">
             <div className="flex items-center mb-4">
               <Users className="w-8 h-8 text-orange-600 mr-3" />
@@ -238,48 +242,47 @@ export default function HowItWorks() {
       {/* FAQ */}
       <section className="mb-12">
         <h2>Perguntas Frequentes</h2>
-        
+
         <div className="space-y-6">
           <div className="border border-gray-200 rounded-lg p-6">
             <h3 className="text-lg font-semibold mb-2">
               Como o EventSpace ganha dinheiro se não cobra comissão?
             </h3>
             <p className="text-gray-600">
-              Nosso modelo é baseado em assinaturas mensais pagas pelos fornecedores. 
-              Isso nos permite manter a plataforma funcionando sem cobrar taxas sobre 
-              as transações.
+              Nosso foco é oferecer uma plataforma aberta e gratuita para conectar
+              organizadores e fornecedores de forma direta e eficiente.
             </p>
           </div>
-          
+
           <div className="border border-gray-200 rounded-lg p-6">
             <h3 className="text-lg font-semibold mb-2">
               O EventSpace garante a qualidade dos serviços?
             </h3>
             <p className="text-gray-600">
-              Somos uma plataforma de conexão, não garantimos a qualidade dos serviços. 
-              Recomendamos sempre verificar referências, avaliar o fornecedor e fazer 
+              Somos uma plataforma de conexão, não garantimos a qualidade dos serviços.
+              Recomendamos sempre verificar referências, avaliar o fornecedor e fazer
               contratos diretos quando necessário.
             </p>
           </div>
-          
+
           <div className="border border-gray-200 rounded-lg p-6">
             <h3 className="text-lg font-semibold mb-2">
               Como é feito o pagamento?
             </h3>
             <p className="text-gray-600">
-              Os pagamentos são feitos diretamente entre cliente e fornecedor. O EventSpace 
-              não processa pagamentos, garantindo que você tenha total controle sobre 
+              Os pagamentos são feitos diretamente entre cliente e fornecedor. O EventSpace
+              não processa pagamentos, garantindo que você tenha total controle sobre
               suas transações financeiras.
             </p>
           </div>
-          
+
           <div className="border border-gray-200 rounded-lg p-6">
             <h3 className="text-lg font-semibold mb-2">
-              Posso cancelar minha assinatura a qualquer momento?
+              Preciso pagar algo para usar a plataforma?
             </h3>
             <p className="text-gray-600">
-              Sim! Nossas assinaturas são mensais e podem ser canceladas a qualquer 
-              momento sem multas ou taxas de cancelamento.
+              Não! O EventSpace é 100% gratuito tanto para quem busca quanto para quem
+              anuncia seus serviços.
             </p>
           </div>
         </div>
@@ -292,23 +295,23 @@ export default function HowItWorks() {
             Pronto para começar?
           </h2>
           <p className="text-blue-100 mb-6 max-w-2xl mx-auto">
-            Junte-se à nossa comunidade e descubra como é fácil conectar-se 
+            Junte-se à nossa comunidade e descubra como é fácil conectar-se
             diretamente com fornecedores de confiança.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link 
+            <Link
               to="/espacos"
               className="inline-flex items-center px-6 py-3 bg-white text-blue-600 font-medium rounded-lg hover:bg-gray-100 transition-colors"
             >
               Buscar Espaços
             </Link>
-            <Link 
+            <Link
               to="/equipamentos"
               className="inline-flex items-center px-6 py-3 bg-white text-blue-600 font-medium rounded-lg hover:bg-gray-100 transition-colors"
             >
               Buscar Equipamentos
             </Link>
-            <Link 
+            <Link
               to="/cadastro"
               className="inline-flex items-center px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors"
             >
