@@ -4,6 +4,7 @@ import StarRating from './StarRating'
 import ReviewReply from './ReviewReply'
 import { reviewReplyService, type ReviewReply as ReviewReplyType } from '@/services/reviewReplyService'
 import { useToast } from '@/contexts/ToastContext'
+import { useAuth } from '@/hooks/useAuth'
 
 interface Review {
   id: string
@@ -26,6 +27,7 @@ export default function ReviewsList({ listingId, refreshTrigger }: ReviewsListPr
   const [averageRating, setAverageRating] = useState(0)
   const [isOwner, setIsOwner] = useState(false)
   const { error: toastError, success: toastSuccess, warning: toastWarning } = useToast()
+  const { user } = useAuth()
 
   const fetchReviews = useCallback(async () => {
     try {
@@ -61,9 +63,15 @@ export default function ReviewsList({ listingId, refreshTrigger }: ReviewsListPr
   }, [listingId, toastError])
 
   const checkOwnership = useCallback(async () => {
+    // Only check ownership if user is authenticated
+    if (!user) {
+      setIsOwner(false)
+      return
+    }
+
     const isListingOwner = await reviewReplyService.checkIfUserOwnsListing(listingId)
     setIsOwner(isListingOwner)
-  }, [listingId])
+  }, [listingId, user])
 
   useEffect(() => {
     fetchReviews()

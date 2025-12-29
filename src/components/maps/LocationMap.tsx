@@ -23,10 +23,10 @@ const customIcon = new Icon({
 })
 
 // Fallback component when coordinates are not available
-export function LocationFallback({ city, state, neighborhood }: { 
+export function LocationFallback({ city, state, neighborhood }: {
   city: string
   state: string
-  neighborhood?: string 
+  neighborhood?: string
 }) {
   const openGoogleMaps = () => {
     const query = `${neighborhood ? neighborhood + ', ' : ''}${city}, ${state}, Brasil`
@@ -61,12 +61,12 @@ export function LocationFallback({ city, state, neighborhood }: {
   )
 }
 
-export default function LocationMap({ 
-  latitude, 
-  longitude, 
-  title, 
-  address, 
-  height = "300px" 
+export default function LocationMap({
+  latitude,
+  longitude,
+  title,
+  address,
+  height = "300px"
 }: LocationMapProps) {
   const mapRef = useRef<any>(null)
 
@@ -94,13 +94,14 @@ export default function LocationMap({
   return (
     <div className="space-y-4">
       {/* Map Container */}
-      <div 
+      <div
         className="rounded-lg overflow-hidden border border-gray-200 shadow-sm relative"
         style={{ height }}
       >
         <MapContainer
           center={[latitude, longitude]}
           zoom={15}
+          scrollWheelZoom={false}
           style={{ height: '100%', width: '100%' }}
           ref={mapRef}
         >
@@ -131,7 +132,7 @@ export default function LocationMap({
             </Popup>
           </Marker>
         </MapContainer>
-        
+
         {/* External link button overlay */}
         <div className="absolute top-3 right-3 z-[1000]">
           <button
