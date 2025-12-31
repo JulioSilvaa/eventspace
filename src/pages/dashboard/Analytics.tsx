@@ -238,51 +238,6 @@ export default function Analytics() {
             </div>
           </div>
 
-          {/* Device/Platform Mix - Mocked for now */}
-          <div className="bg-white rounded-xl shadow-sm border p-6 flex flex-col">
-            <h3 className="text-lg font-bold text-gray-900 mb-6">Origem do Tráfego</h3>
-
-            <div className="space-y-6 flex-1 flex flex-col justify-center">
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-700">Celular (Mobile)</span>
-                  <span className="text-sm font-bold text-gray-900">72%</span>
-                </div>
-                <div className="w-full bg-gray-100 rounded-full h-2">
-                  <div className="bg-blue-600 h-2 rounded-full" style={{ width: '72%' }}></div>
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-700">Desktop</span>
-                  <span className="text-sm font-bold text-gray-900">24%</span>
-                </div>
-                <div className="w-full bg-gray-100 rounded-full h-2">
-                  <div className="bg-purple-600 h-2 rounded-full" style={{ width: '24%' }}></div>
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-700">WhatsApp Direto</span>
-                  <span className="text-sm font-bold text-gray-900">88%</span>
-                </div>
-                <div className="w-full bg-gray-100 rounded-full h-2">
-                  <div className="bg-green-600 h-2 rounded-full" style={{ width: '88%' }}></div>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-8 p-4 bg-blue-50 rounded-lg">
-              <div className="flex gap-3">
-                <TrendingUp className="w-5 h-5 text-blue-600 shrink-0" />
-                <p className="text-xs text-blue-800 leading-relaxed">
-                  <strong>Dica de Performance:</strong> Seu tráfego é predominantemente mobile. Garanta que suas fotos carreguem rápido e a descrição seja fácil de ler em telas pequenas.
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Recent Events Table */}
@@ -300,7 +255,6 @@ export default function Analytics() {
                   <th className="px-6 py-3">Evento</th>
                   <th className="px-6 py-3">Data/Hora</th>
                   <th className="px-6 py-3">Detalhes</th>
-                  <th className="px-6 py-3">Localização</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 italic">
@@ -327,9 +281,6 @@ export default function Analytics() {
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500">
                       ID Anúncio: {event.listing_id.slice(0, 8)}...
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
-                      São Paulo, SP
                     </td>
                   </tr>
                 ))}

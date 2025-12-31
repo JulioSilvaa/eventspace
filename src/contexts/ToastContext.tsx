@@ -54,9 +54,27 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const updateToast = useCallback((id: string, updates: Partial<Toast>) => {
-    setToasts(prev => prev.map(toast =>
-      toast.id === id ? { ...toast, ...updates } : toast
-    ))
+    setToasts(prev => prev.map(toast => {
+      if (toast.id !== id) return toast
+      return { ...toast, ...updates }
+    }))
+
+    // Determine new duration
+    let duration = updates.duration
+
+    // If duration not explicitly provided, check if type changed and implies a default
+    if (duration === undefined && updates.type) {
+      if (updates.type === 'loading') duration = 0
+      else if (updates.type === 'error') duration = 7000
+      else duration = 5000
+    }
+
+    // If we have a finite duration, set a timeout to remove the toast
+    if (duration !== undefined && duration > 0) {
+      setTimeout(() => {
+        setToasts(prev => prev.filter(toast => toast.id !== id))
+      }, duration)
+    }
   }, [])
 
   // Helper functions for different toast types

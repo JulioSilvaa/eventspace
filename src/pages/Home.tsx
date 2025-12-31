@@ -3,7 +3,7 @@ import Footer from '@/components/layout/Footer'
 import DevNotice from '@/components/ui/DevNotice'
 import { Link } from 'react-router-dom'
 import { useState, useEffect, useCallback } from 'react'
-import { ChevronRight, MapPin, Star, Check, ChevronLeft, Building2, Wrench } from 'lucide-react'
+import { ChevronRight, MapPin, Star, Check, ChevronLeft, Building2, Search, PartyPopper } from 'lucide-react'
 import { useAdsStore } from '@/stores/adsStore'
 import { AdCard } from '@/components/ads'
 
@@ -17,14 +17,20 @@ export default function Home() {
     isLoading
   } = useAdsStore()
 
+  // Icons mapping for features
+  const FeatureIcons = {
+    Search: <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>,
+    Dollar: <svg className="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" /></svg>
+  }
+
   // Carregar dados reais do banco
   useEffect(() => {
     fetchFeaturedAds(4)
     fetchPopularSpaces(6)
   }, [fetchFeaturedAds, fetchPopularSpaces])
 
-  // Usar apenas dados reais - sem fallback mockado
-  const displayedFeaturedAds = featuredAds
+  // Filtrar apenas anúncios de espaços
+  const displayedFeaturedAds = featuredAds.filter(ad => ad.categories?.type === 'space' || !ad.categories?.type)
 
   const nextSlide = useCallback(() => {
     setCurrentSlide(prev => (prev === displayedFeaturedAds.length - 1 ? 0 : prev + 1))
@@ -41,21 +47,24 @@ export default function Home() {
   const howItWorks = [
     {
       step: "01",
+      icon: Search,
       title: "Busque o Espaço Ideal",
       description: "Use nossos filtros para encontrar o local perfeito para seu evento, seja um aniversário, casamento ou confraternização.",
-      image: "https://images.unsplash.com/photo-1464207687429-7505649dae38?w=400&h=300&fit=crop"
+      image: "https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?w=800&q=80"
     },
     {
       step: "02",
-      title: "Explore Serviços Complementares",
-      description: "Descubra fornecedores de equipamentos, som, decoração e muito mais. Tudo em um só lugar, sem intermediação.",
-      image: "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=400&h=300&fit=crop"
+      icon: Building2,
+      title: "Diversidade de Opções",
+      description: "Descubra diversos tipos de espaços, desde salões de festa e sítios até rooftops e estúdios fotográficos.",
+      image: "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=800&q=80"
     },
     {
       step: "03",
+      icon: PartyPopper,
       title: "Negocie e Celebre",
       description: "Entre em contato direto com os fornecedores, negocie preços e condições, e aproveite seu evento dos sonhos.",
-      image: "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=400&h=300&fit=crop"
+      image: "https://imgs.search.brave.com/LThPtZNCI-f-wKfJAN5ssWCnaXxSwZ7yleA8UwEuXis/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly93d3cu/Y2VudHJhbGNoYWNh/cmFzLmNvbS5ici9p/bWcvY2FjaGUvOTAw/eDU3NC8xMDAvYXV0/by84ZTA5NzdjMmY1/YjlmOWFhN2UxNmM5/MWIwMzM0Nzk4Ni5q/cGc"
     }
   ]
 
@@ -76,9 +85,9 @@ export default function Home() {
     },
     {
       name: "Ana Costa",
-      role: "Fornecedora de Equipamentos",
+      role: "Cerimonialista",
       rating: 5,
-      comment: "Como fornecedora de equipamentos de som, consegui muito mais clientes. É a melhor plataforma para conectar fornecedores e clientes no setor de eventos.",
+      comment: "A variedade de espaços cadastrados é impressionante. Consigo encontrar locais únicos para cada perfil de cliente que atendo.",
       avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=60&h=60&fit=crop&crop=face"
     }
   ]
@@ -88,8 +97,8 @@ export default function Home() {
     { question: "Vocês cobram comissão dos aluguéis?", answer: "Não! Você negocia direto com o fornecedor e o valor acertado fica 100% com ele. Não cobramos nenhuma taxa sobre as locações." },
     { question: "Como funciona o pagamento dos aluguéis?", answer: "O pagamento é feito diretamente entre cliente e fornecedor. O EventSpace não processa pagamentos e não se envolve na transação financeira." },
     { question: "O EventSpace garante os pagamentos?", answer: "Somos um facilitador de conexões. A negociação, o pagamento e a prestação do serviço são de responsabilidade direta entre as partes." },
-    { question: "É gratuito para usar a plataforma?", answer: "Sim! Atualmente, a plataforma é 100% gratuita tanto para quem busca quanto para quem deseja anunciar seus espaços ou equipamentos." },
-    { question: "Como posso anunciar meu espaço ou equipamento?", answer: "Basta clicar em 'Anunciar Agora', criar sua conta gratuitamente e cadastrar as fotos e informações do seu anúncio." },
+    { question: "É gratuito para usar a plataforma?", answer: "Sim! Atualmente, a plataforma é 100% gratuita tanto para quem busca quanto para quem deseja anunciar seus espaços." },
+    { question: "Como posso anunciar meu espaço?", answer: "Basta clicar em 'Anunciar Agora', criar sua conta gratuitamente e cadastrar as fotos e informações do seu anúncio." },
     { question: "O EventSpace atua em todo o Brasil?", answer: "Sim! Nossa plataforma conecta fornecedores e clientes em todo o território nacional, facilitando encontrar serviços em qualquer região." }
   ]
 
@@ -101,7 +110,8 @@ export default function Home() {
       <DevNotice />
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-blue-50 to-indigo-50 py-20 lg:py-32">
+      <section className="relative bg-white pt-20 pb-32 overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px] opacity-30"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
@@ -112,7 +122,7 @@ export default function Home() {
               </div>
 
               <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-                Espaços e equipamentos para sua{' '}
+                Espaços incríveis para sua{' '}
                 <span className="text-blue-600">festa dos sonhos</span>
               </h1>
 
@@ -126,7 +136,7 @@ export default function Home() {
                   <input
                     type="text"
                     id="search-term"
-                    placeholder="Equipamento ou espaço"
+                    placeholder="Qual tipo de espaço?"
                     className="flex-1 px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   <input
@@ -141,15 +151,11 @@ export default function Home() {
                     const searchTerm = (document.getElementById('search-term') as HTMLInputElement)?.value || '';
                     const searchLocation = (document.getElementById('search-location') as HTMLInputElement)?.value || '';
 
-                    // Determinar se é serviço/advertiser ou espaço baseado no termo
-                    const isAdvertiser = /som|audio|microfone|iluminação|decoração|mesa|cadeira|tenda|equipamento|buffet|fotografia|dj|serviço|anunciante/i.test(searchTerm);
-                    const type = isAdvertiser ? 'advertiser' : 'space';
-
                     const params = new URLSearchParams();
                     if (searchTerm) params.set('query', searchTerm);
                     if (searchLocation) params.set('city', searchLocation);
 
-                    window.location.href = `/${type === 'advertiser' ? 'anunciantes' : 'espacos'}?${params.toString()}`;
+                    window.location.href = `/espacos?${params.toString()}`;
                   }}
                   className="w-full md:w-auto bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
                 >
@@ -163,8 +169,8 @@ export default function Home() {
                   <div className="text-sm text-gray-600">Espaços</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-green-600">300+</div>
-                  <div className="text-sm text-gray-600">Equipamentos</div>
+                  <div className="text-2xl font-bold text-green-600">1.2k+</div>
+                  <div className="text-sm text-gray-600">Eventos</div>
                 </div>
                 <div>
                   <div className="text-2xl font-bold text-orange-600">0%</div>
@@ -173,11 +179,12 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="relative">
-              <div className="bg-white rounded-2xl p-6 shadow-2xl">
+            <div className="relative lg:mt-0 mt-12">
+              <div className="absolute -inset-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl opacity-20 blur-2xl animate-pulse"></div>
+              <div className="relative bg-white rounded-3xl p-4 shadow-2xl ring-1 ring-gray-100">
                 <img
-                  src="https://images.unsplash.com/photo-1566073771259-6a8506099945?w=500&h=300&fit=crop"
-                  alt="Espaço para eventos"
+                  src="https://imgs.search.brave.com/xfD4OZFt1qNm-HFxzJP5kH68KAbPbkXq4xgxldAYQG4/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly93d3cu/Y2VudHJhbGNoYWNh/cmFzLmNvbS5ici9p/bWcvY2FjaGUvOTAw/eDU3NC8xMDAvYXV0/by8yODkxMDBkNzBj/MDA2ZDQzNjk3ZjI0/N2E0NjRiYzA5MS5q/cGc"
+                  alt="Espaço com piscina e área verde"
                   className="w-full h-64 object-cover rounded-xl mb-4"
                 />
                 <div className="flex items-center justify-between">
@@ -208,54 +215,50 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="text-center p-6">
-              <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
+            <div className="group p-8 bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100">
+              <div className="bg-blue-50 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                {FeatureIcons.Search}
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Busca Inteligente</h3>
-              <p className="text-gray-600">Encontre equipamentos e espaços por localização</p>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Busca Inteligente</h3>
+              <p className="text-gray-600 leading-relaxed">Encontre o espaço ideal filtrando por localização e capacidade</p>
             </div>
 
-            <div className="text-center p-6">
-              <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="group p-8 bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100">
+              <div className="bg-green-50 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                 <MapPin className="w-8 h-8 text-green-600" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Localização Precisa</h3>
-              <p className="text-gray-600">Veja distâncias e negocie entrega diretamente</p>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Localização Precisa</h3>
+              <p className="text-gray-600 leading-relaxed">Veja distâncias e negocie entrega diretamente</p>
             </div>
 
-            <div className="text-center p-6">
-              <div className="bg-yellow-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="group p-8 bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100">
+              <div className="bg-yellow-50 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                 <Star className="w-8 h-8 text-yellow-600" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Avaliações Reais</h3>
-              <p className="text-gray-600">Confira avaliações de outros organizadores</p>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Avaliações Reais</h3>
+              <p className="text-gray-600 leading-relaxed">Confira avaliações de outros organizadores</p>
             </div>
 
-            <div className="text-center p-6">
-              <div className="bg-orange-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                </svg>
+            <div className="group p-8 bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100">
+              <div className="bg-orange-50 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                {FeatureIcons.Dollar}
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Sem Taxas Extras</h3>
-              <p className="text-gray-600">Negocie direto com o fornecedor, sem intermediação</p>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Sem Taxas Extras</h3>
+              <p className="text-gray-600 leading-relaxed">Negocie direto com o fornecedor, sem intermediação</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Featured Ads Slider */}
-      <section className="py-20 bg-gradient-to-br from-yellow-50 to-orange-50">
+      <section className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <div className="flex items-center justify-center gap-2 mb-4">
               <Star className="w-8 h-8 text-yellow-600 fill-current" />
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900">Anúncios em Destaque</h2>
             </div>
-            <p className="text-xl text-gray-600">Os melhores espaços e equipamentos escolhidos especialmente para você</p>
+            <p className="text-xl text-gray-600">Os melhores espaços escolhidos especialmente para você</p>
           </div>
 
           <div className="relative">
@@ -273,7 +276,7 @@ export default function Home() {
                           <div className="md:flex">
                             <div className="md:w-1/2">
                               <img
-                                src={ad.listing_images?.[0]?.image_url || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&h=300&fit=crop'}
+                                src={ad.listing_images?.[0]?.image_url || 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=800&q=80'}
                                 alt={ad.title}
                                 className="w-full h-64 md:h-full object-cover"
                               />
@@ -281,8 +284,8 @@ export default function Home() {
                             <div className="md:w-1/2 p-8">
                               <div className="flex items-center gap-2 mb-4">
                                 <div className="flex items-center gap-1 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-                                  {ad.categories?.type === 'space' ? <Building2 className="w-4 h-4" /> : <Wrench className="w-4 h-4" />}
-                                  {ad.categories?.type === 'space' ? 'Espaço' : 'Equipamento'}
+                                  <Building2 className="w-4 h-4" />
+                                  Espaço
                                 </div>
                               </div>
 
@@ -451,25 +454,45 @@ export default function Home() {
             <p className="text-xl text-gray-600">Em três passos simples, você encontra e negocia diretamente com fornecedores.</p>
           </div>
 
-          <div className="space-y-20">
-            {howItWorks.map((step, index) => (
-              <div key={step.step} className={`flex flex-col lg:flex-row items-center gap-12 ${index % 2 === 1 ? 'lg:flex-row-reverse' : ''}`}>
-                <div className="flex-1">
-                  <div className="bg-blue-600 text-white w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold mb-6">
+          <div className="relative">
+            {/* Connecting Line (Desktop) */}
+            <div className="hidden lg:block absolute left-1/2 top-0 bottom-0 w-0.5 border-l-2 border-dashed border-blue-200 -translate-x-1/2" />
+
+            <div className="space-y-24">
+              {howItWorks.map((step, index) => (
+                <div key={step.step} className={`relative flex flex-col lg:flex-row items-center gap-12 ${index % 2 === 1 ? 'lg:flex-row-reverse' : ''}`}>
+
+                  {/* Text Content */}
+                  <div className={`flex-1 text-center ${index % 2 === 1 ? 'lg:text-right' : 'lg:text-left'}`}>
+                    <div className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-purple-600 text-white shadow-lg mb-6 transform transition-transform hover:scale-110 ${index % 2 === 1 ? 'lg:ml-auto' : ''}`}>
+                      <step.icon className="w-8 h-8" />
+                    </div>
+
+                    <h3 className="text-3xl font-bold text-gray-900 mb-4">{step.title}</h3>
+                    <p className="text-xl text-gray-600 leading-relaxed max-w-lg mx-auto lg:mx-0">
+                      {step.description}
+                    </p>
+                  </div>
+
+                  {/* Center Step Number (Desktop) */}
+                  <div className="hidden lg:flex absolute left-1/2 -translate-x-1/2 items-center justify-center w-12 h-12 rounded-full bg-white border-4 border-blue-100 text-blue-600 font-bold text-lg shadow-sm z-20">
                     {step.step}
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-4">{step.title}</h3>
-                  <p className="text-lg text-gray-600 mb-6">{step.description}</p>
+
+                  {/* Image */}
+                  <div className="flex-1 w-full">
+                    <div className="relative group">
+                      <div className={`absolute inset-0 bg-blue-600 rounded-3xl transform opacity-10 transition-transform duration-300 ${index % 2 === 0 ? 'rotate-3 group-hover:rotate-6' : '-rotate-3 group-hover:-rotate-6'}`}></div>
+                      <img
+                        src={step.image}
+                        alt={step.title}
+                        className="relative w-full h-[400px] object-cover rounded-3xl shadow-2xl transform transition-transform duration-300 group-hover:-translate-y-2"
+                      />
+                    </div>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <img
-                    src={step.image}
-                    alt={step.title}
-                    className="w-full h-80 object-cover rounded-2xl shadow-lg"
-                  />
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
 
           <div className="text-center mt-16">
@@ -483,74 +506,43 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+
+
+      {/* Testimonials Section - Dark Mode */}
+      <section className="py-24 bg-slate-900 text-white relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-600 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-2000"></div>
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Números que Impressionam</h2>
-            <p className="text-xl text-gray-600">Veja como estamos transformando a forma de organizar eventos no Brasil.</p>
-          </div>
-
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="text-center p-6 bg-blue-50 rounded-2xl">
-              <div className="text-4xl font-bold text-blue-600 mb-2">500+</div>
-              <div className="text-gray-900 font-medium mb-1">Espaços</div>
-              <div className="text-sm text-gray-600">Disponíveis em todo o Brasil</div>
-            </div>
-
-            <div className="text-center p-6 bg-green-50 rounded-2xl">
-              <div className="text-4xl font-bold text-green-600 mb-2">300+</div>
-              <div className="text-gray-900 font-medium mb-1">Equipamentos</div>
-              <div className="text-sm text-gray-600">Som, decoração, mobiliário e mais</div>
-            </div>
-
-            <div className="text-center p-6 bg-yellow-50 rounded-2xl">
-              <div className="text-4xl font-bold text-yellow-600 mb-2">1.2k+</div>
-              <div className="text-gray-900 font-medium mb-1">Eventos</div>
-              <div className="text-sm text-gray-600">Celebrações realizadas com sucesso</div>
-            </div>
-
-            <div className="text-center p-6 bg-orange-50 rounded-2xl border-2 border-orange-200">
-              <div className="text-4xl font-bold text-orange-600 mb-2">0%</div>
-              <div className="text-gray-900 font-medium mb-1">Comissão nos Aluguéis</div>
-              <div className="text-sm text-gray-600">Você fica com 100% do valor negociado</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-
-      {/* Testimonials Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">O que nossos usuários dizem</h2>
-            <p className="text-xl text-gray-600">Milhares de pessoas já descobriram as vantagens da negociação direta.</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">O que nossos usuários dizem</h2>
+            <p className="text-xl text-slate-300">Milhares de pessoas já descobriram as vantagens da negociação direta.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {testimonials.map((testimonial, index) => (
-              <div key={index} className="bg-gray-50 rounded-2xl p-6">
-                <div className="flex items-center mb-4">
+              <div key={index} className="bg-slate-800/50 backdrop-blur-lg border border-slate-700 rounded-2xl p-8 hover:transform hover:-translate-y-1 transition-all duration-300">
+                <div className="flex items-center mb-6">
                   {Array.from({ length: 5 }).map((_, i) => (
                     <Star
                       key={i}
-                      className={`w-5 h-5 ${i < testimonial.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+                      className={`w-5 h-5 ${i < testimonial.rating ? 'text-yellow-400 fill-current' : 'text-slate-600'}`}
                     />
                   ))}
                 </div>
 
-                <p className="text-gray-700 mb-6 italic">"{testimonial.comment}"</p>
+                <p className="text-slate-300 mb-6 italic text-lg opacity-90">"{testimonial.comment}"</p>
 
-                <div className="flex items-center">
+                <div className="flex items-center pt-4 border-t border-slate-700">
                   <img
                     src={testimonial.avatar}
                     alt={testimonial.name}
-                    className="w-12 h-12 rounded-full mr-4"
+                    className="w-12 h-12 rounded-full mr-4 ring-2 ring-blue-500"
                   />
                   <div>
-                    <div className="font-semibold text-gray-900">{testimonial.name}</div>
-                    <div className="text-sm text-gray-600">{testimonial.role}</div>
+                    <div className="font-bold text-white">{testimonial.name}</div>
+                    <div className="text-sm text-blue-400">{testimonial.role}</div>
                   </div>
                 </div>
               </div>

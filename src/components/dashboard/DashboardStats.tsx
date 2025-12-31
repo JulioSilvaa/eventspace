@@ -27,19 +27,6 @@ export default function DashboardStats({
   lastUpdated
 }: DashboardStatsProps) {
 
-  // Mock data for demonstration
-  const mockData: DashboardStatsData = {
-    totalAds: 5,
-    activeAds: 4,
-    totalViews: 287,
-    totalContacts: 23,
-    averageRating: 4.8,
-    thisMonthViews: 156,
-    lastMonthViews: 131,
-    thisMonthContacts: 15,
-    lastMonthContacts: 8
-  }
-
   // Ensure all numeric values are valid and not NaN
   const safeData = data ? {
     ...data,
@@ -49,7 +36,17 @@ export default function DashboardStats({
     lastMonthViews: isNaN(data.lastMonthViews) ? 0 : data.lastMonthViews,
     thisMonthContacts: isNaN(data.thisMonthContacts) ? 0 : data.thisMonthContacts,
     lastMonthContacts: isNaN(data.lastMonthContacts) ? 0 : data.lastMonthContacts
-  } : mockData
+  } : {
+    totalAds: 0,
+    activeAds: 0,
+    totalViews: 0,
+    totalContacts: 0,
+    averageRating: 0,
+    thisMonthViews: 0,
+    lastMonthViews: 0,
+    thisMonthContacts: 0,
+    lastMonthContacts: 0
+  }
 
   const statsData = safeData
 

@@ -1,4 +1,5 @@
-import LegalLayout from '@/components/layout/LegalLayout'
+import Header from '@/components/layout/Header'
+import Footer from '@/components/layout/Footer'
 import { Link } from 'react-router-dom'
 import {
   Search,
@@ -7,320 +8,234 @@ import {
   DollarSign,
   Shield,
   Users,
-  Star,
+  Building2,
+  CalendarCheck,
+  PartyPopper,
+  ChevronRight,
+  ArrowRight,
   CheckCircle,
-  ArrowRight
+  Store as StoreIcon
 } from 'lucide-react'
 
 export default function HowItWorks() {
-  const breadcrumbs = [
-    { label: 'Como Funciona' }
+  const clientSteps = [
+    {
+      icon: Search,
+      title: "Busque",
+      description: "Use filtros inteligentes para encontrar o espaço perfeito.",
+      color: "bg-blue-100 text-blue-600"
+    },
+    {
+      icon: MessageCircle,
+      title: "Converse",
+      description: "Fale direto com o proprietário via WhatsApp.",
+      color: "bg-green-100 text-green-600"
+    },
+    {
+      icon: HandHeart,
+      title: "Negocie",
+      description: "Combine valores e detalhes sem taxas extras.",
+      color: "bg-purple-100 text-purple-600"
+    },
+    {
+      icon: PartyPopper,
+      title: "Celebre",
+      description: "Tudo pronto! Aproveite seu evento.",
+      color: "bg-orange-100 text-orange-600"
+    }
+  ]
+
+  const supplierSteps = [
+    {
+      icon: Users,
+      title: "Crie Conta",
+      description: "Cadastro gratuito em menos de 2 minutos.",
+      color: "bg-indigo-100 text-indigo-600"
+    },
+    {
+      icon: Building2,
+      title: "Anuncie",
+      description: "Publique fotos e detalhes do seu espaço.",
+      color: "bg-pink-100 text-pink-600"
+    },
+    {
+      icon: CalendarCheck,
+      title: "Receba",
+      description: "Clientes interessados chamam você direto.",
+      color: "bg-teal-100 text-teal-600"
+    },
+    {
+      icon: DollarSign,
+      title: "Fature 100%",
+      description: "O valor é todo seu. Sem comissões.",
+      color: "bg-emerald-100 text-emerald-600"
+    }
   ]
 
   return (
-    <LegalLayout
-      title="Como Funciona o EventSpace"
-      subtitle="Uma plataforma que conecta você diretamente com fornecedores de espaços e equipamentos para eventos, sem intermediação e sem taxas extras."
-      breadcrumbs={breadcrumbs}
-    >
-      {/* Hero Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 not-prose">
-        <div className="bg-blue-50 p-6 rounded-lg text-center">
-          <div className="text-3xl font-bold text-blue-600 mb-2">0%</div>
-          <div className="text-gray-700">Taxa de Comissão</div>
-        </div>
-        <div className="bg-green-50 p-6 rounded-lg text-center">
-          <div className="text-3xl font-bold text-green-600 mb-2">100%</div>
-          <div className="text-gray-700">Do valor fica com você</div>
-        </div>
-        <div className="bg-purple-50 p-6 rounded-lg text-center">
-          <div className="text-3xl font-bold text-purple-600 mb-2">Direto</div>
-          <div className="text-gray-700">Negociação sem intermediários</div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-white font-sans">
+      <Header />
 
-      {/* O que é o EventSpace */}
-      <section className="mb-12">
-        <h2>O que é o EventSpace?</h2>
-        <p>
-          O EventSpace é uma plataforma inovadora que conecta pessoas que precisam de espaços e
-          equipamentos para eventos com fornecedores especializados. Nossa missão é simples:
-          <strong> facilitar conexões diretas sem cobrar taxas ou comissões</strong>.
-        </p>
-        <p>
-          Diferente de outras plataformas, não intermediamos pagamentos nem cobramos percentuais
-          sobre as transações. Nosso modelo de negócio é focado em escala e visibilidade para
-          fornecedores, garantindo que 100% do valor negociado fique com quem oferece o serviço.
-        </p>
-      </section>
-
-      {/* Como funciona para clientes */}
-      <section className="mb-12">
-        <h2>Para quem procura espaços e equipamentos</h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 not-prose">
-          <div className="text-center">
-            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Search className="w-8 h-8 text-blue-600" />
-            </div>
-            <h3 className="text-lg font-semibold mb-2">1. Busque</h3>
-            <p className="text-gray-600 text-sm">
-              Use nossos filtros para encontrar exatamente o que precisa
-            </p>
+      {/* Hero Section */}
+      <section className="pt-32 pb-20 bg-gradient-to-b from-gray-50 to-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="flex items-center justify-center gap-2 text-sm text-gray-500 mb-8 font-medium tracking-wide uppercase">
+            <Link to="/" className="hover:text-blue-600 transition-colors">Início</Link>
+            <ChevronRight className="w-4 h-4" />
+            <span className="text-blue-600">Como funciona</span>
           </div>
 
-          <div className="text-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <MessageCircle className="w-8 h-8 text-green-600" />
-            </div>
-            <h3 className="text-lg font-semibold mb-2">2. Converse</h3>
-            <p className="text-gray-600 text-sm">
-              Converse diretamente com o fornecedor via WhatsApp
-            </p>
-          </div>
+          <h1 className="text-4xl md:text-6xl font-extrabold text-gray-900 mb-6 tracking-tight">
+            Simples. Direto. <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+              Sem taxas escondidas.
+            </span>
+          </h1>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed mb-12">
+            O EventSpace conecta quem precisa com quem oferece, eliminando intermediários
+            para garantir o melhor negócio para todos.
+          </p>
 
-          <div className="text-center">
-            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <HandHeart className="w-8 h-8 text-purple-600" />
+          {/* Main Stats in Hero - Clean Look */}
+          <div className="inline-flex flex-wrap justify-center gap-4 bg-white p-3 rounded-2xl shadow-xl shadow-gray-100 border border-gray-100">
+            <div className="px-8 py-4 text-center border-r border-gray-100 last:border-0">
+              <div className="text-3xl font-black text-gray-900">0%</div>
+              <div className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Comissão</div>
             </div>
-            <h3 className="text-lg font-semibold mb-2">3. Negocie</h3>
-            <p className="text-gray-600 text-sm">
-              Acerte todos os detalhes diretamente com o fornecedor
-            </p>
-          </div>
-
-          <div className="text-center">
-            <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <DollarSign className="w-8 h-8 text-orange-600" />
+            <div className="px-8 py-4 text-center border-r border-gray-100 last:border-0">
+              <div className="text-3xl font-black text-gray-900">100%</div>
+              <div className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Garantido</div>
             </div>
-            <h3 className="text-lg font-semibold mb-2">4. Pague</h3>
-            <p className="text-gray-600 text-sm">
-              Faça o pagamento diretamente ao fornecedor
-            </p>
-          </div>
-        </div>
-
-        <div className="bg-green-50 border border-green-200 rounded-lg p-6 not-prose">
-          <div className="flex items-start">
-            <CheckCircle className="w-6 h-6 text-green-600 mr-3 mt-0.5" />
-            <div>
-              <h4 className="font-semibold text-green-900 mb-2">
-                Totalmente gratuito para clientes
-              </h4>
-              <p className="text-green-800 text-sm">
-                Você não paga nada para usar nossa plataforma. Busque, compare e
-                negocie sem custos adicionais.
-              </p>
+            <div className="px-8 py-4 text-center">
+              <div className="text-3xl font-black text-gray-900">24h</div>
+              <div className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Online</div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Como funciona para fornecedores */}
-      <section className="mb-12">
-        <h2>Para fornecedores de espaços e equipamentos</h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 not-prose">
-          <div className="text-center">
-            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Users className="w-8 h-8 text-blue-600" />
-            </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Crie sua Conta</h3>
-            <p className="text-gray-600">
-              Crie sua conta de forma gratuita e rápida
-            </p>
+      {/* Steps Section - Clients */}
+      <section className="py-24 bg-white relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <span className="bg-blue-100 text-blue-700 px-4 py-1.5 rounded-full text-sm font-bold uppercase tracking-wider mb-4 inline-block">
+              Para Clientes
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900">Encontre o lugar ideal</h2>
           </div>
 
-          <div className="text-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Star className="w-8 h-8 text-green-600" />
-            </div>
-            <h3 className="text-lg font-semibold mb-2">2. Anuncie</h3>
-            <p className="text-gray-600 text-sm">
-              Publique seus espaços ou equipamentos com fotos e detalhes
-            </p>
-          </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 relative">
+            {/* Connection Line Background (Desktop) */}
+            <div className="hidden md:block absolute top-12 left-0 w-full h-0.5 bg-gray-100 -z-10"></div>
 
-          <div className="text-center">
-            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <MessageCircle className="w-8 h-8 text-purple-600" />
-            </div>
-            <h3 className="text-lg font-semibold mb-2">3. Receba contatos</h3>
-            <p className="text-gray-600 text-sm">
-              Clientes interessados entrarão em contato diretamente
-            </p>
-          </div>
+            {clientSteps.map((step, index) => (
+              <div key={index} className="relative group">
+                {/* Step Marker */}
+                <div className="w-24 h-24 mx-auto bg-white rounded-full flex items-center justify-center border-4 border-gray-50 mb-6 relative z-10 group-hover:border-blue-50 transition-colors">
+                  <div className={`w-14 h-14 ${step.color} rounded-2xl flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300`}>
+                    <step.icon className="w-7 h-7" />
+                  </div>
+                </div>
 
-          <div className="text-center">
-            <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <DollarSign className="w-8 h-8 text-orange-600" />
-            </div>
-            <h3 className="text-lg font-semibold mb-2">4. Fature 100%</h3>
-            <p className="text-gray-600 text-sm">
-              Receba o valor integral sem desconto de comissões
-            </p>
+                <div className="text-center px-4">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">{step.title}</h3>
+                  <p className="text-gray-500 leading-relaxed">{step.description}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
+      </section>
 
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 not-prose">
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center shrink-0">
-              <CheckCircle className="w-6 h-6 text-blue-600" />
-            </div>
-            <div>
-              <h3 className="text-lg font-bold text-gray-900 mb-1">
-                Sem Taxas Ocultas
-              </h3>
-              <p className="text-gray-600 text-sm">
-                Plataforma 100% gratuita para anunciantes
-              </p>
-            </div>
+      {/* Steps Section - Suppliers */}
+      <section className="py-24 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <span className="bg-indigo-100 text-indigo-700 px-4 py-1.5 rounded-full text-sm font-bold uppercase tracking-wider mb-4 inline-block">
+              Para Fornecedores
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900">Receba mais pedidos</h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {supplierSteps.map((step, index) => (
+              <div key={index} className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow border border-gray-100">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className={`w-12 h-12 ${step.color} rounded-xl flex items-center justify-center shrink-0`}>
+                    <step.icon className="w-6 h-6" />
+                  </div>
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">{step.title}</h3>
+                <p className="text-sm text-gray-600">{step.description}</p>
+              </div>
+            ))}
           </div>
 
           <div className="mt-12 text-center">
             <Link
               to="/cadastro"
-              className="inline-flex items-center gap-2 bg-blue-600 text-white px-8 py-4 rounded-xl hover:bg-blue-700 transition-all font-bold text-lg shadow-lg"
+              className="inline-flex items-center gap-2 bg-indigo-600 text-white px-8 py-3 rounded-lg font-bold hover:bg-indigo-700 transition-all shadow-lg hover:shadow-indigo-500/30"
             >
-              Começar a Anunciar Agora
+              Começar a Anunciar Grátis
               <ArrowRight className="w-5 h-5" />
             </Link>
           </div>
         </div>
       </section>
 
-      {/* Diferenciais */}
-      <section className="mb-12">
-        <h2>Por que escolher o EventSpace?</h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 not-prose">
-          <div className="border border-gray-200 rounded-lg p-6">
-            <div className="flex items-center mb-4">
-              <DollarSign className="w-8 h-8 text-green-600 mr-3" />
-              <h3 className="text-xl font-semibold">Zero Comissão</h3>
+      {/* FAQ Grid */}
+      <section className="py-24 bg-white">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">Dúvidas Comuns</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="bg-gray-50 p-8 rounded-2xl border border-gray-100">
+              <h3 className="font-bold text-gray-900 mb-2 flex items-center">
+                <DollarSign className="w-5 h-5 text-green-600 mr-2" />
+                É realmente gratuito?
+              </h3>
+              <p className="text-gray-600 text-sm">Sim! Tanto para clientes quanto para anunciantes. Mantemos a plataforma gratuita para fomentar o mercado.</p>
             </div>
-            <p className="text-gray-600">
-              Não cobramos percentual sobre suas vendas. O que você negocia,
-              você recebe integralmente.
-            </p>
-          </div>
-
-          <div className="border border-gray-200 rounded-lg p-6">
-            <div className="flex items-center mb-4">
-              <MessageCircle className="w-8 h-8 text-blue-600 mr-3" />
-              <h3 className="text-xl font-semibold">Contato Direto</h3>
+            <div className="bg-gray-50 p-8 rounded-2xl border border-gray-100">
+              <h3 className="font-bold text-gray-900 mb-2 flex items-center">
+                <Shield className="w-5 h-5 text-blue-600 mr-2" />
+                É seguro negociar?
+              </h3>
+              <p className="text-gray-600 text-sm">Sim, mas recomendamos sempre visitar o local e fazer contratos formais. Nós apenas conectamos as partes.</p>
             </div>
-            <p className="text-gray-600">
-              Facilita a comunicação direta entre clientes e fornecedores,
-              sem intermediários.
-            </p>
-          </div>
-
-          <div className="border border-gray-200 rounded-lg p-6">
-            <div className="flex items-center mb-4">
-              <Shield className="w-8 h-8 text-purple-600 mr-3" />
-              <h3 className="text-xl font-semibold">Transparência Total</h3>
+            <div className="bg-gray-50 p-8 rounded-2xl border border-gray-100">
+              <h3 className="font-bold text-gray-900 mb-2 flex items-center">
+                <Users className="w-5 h-5 text-purple-600 mr-2" />
+                Quem pode anunciar?
+              </h3>
+              <p className="text-gray-600 text-sm">Qualquer pessoa que tenha um espaço para eventos, equipamentos ou ofereça serviços relacionados.</p>
             </div>
-            <p className="text-gray-600">
-              Preços claros, sem taxas ocultas. Você sabe exatamente quanto
-              vai pagar ou receber.
-            </p>
-          </div>
-
-          <div className="border border-gray-200 rounded-lg p-6">
-            <div className="flex items-center mb-4">
-              <Users className="w-8 h-8 text-orange-600 mr-3" />
-              <h3 className="text-xl font-semibold">Comunidade Local</h3>
+            <div className="bg-gray-50 p-8 rounded-2xl border border-gray-100">
+              <h3 className="font-bold text-gray-900 mb-2 flex items-center">
+                <MessageCircle className="w-5 h-5 text-orange-600 mr-2" />
+                Como entro em contato?
+              </h3>
+              <p className="text-gray-600 text-sm">Em cada anúncio existe um botão de WhatsApp que abre uma conversa direta com o fornecedor.</p>
             </div>
-            <p className="text-gray-600">
-              Fortalece a economia local conectando empreendedores da sua região.
-            </p>
           </div>
         </div>
       </section>
 
-      {/* FAQ */}
-      <section className="mb-12">
-        <h2>Perguntas Frequentes</h2>
-
-        <div className="space-y-6">
-          <div className="border border-gray-200 rounded-lg p-6">
-            <h3 className="text-lg font-semibold mb-2">
-              Como o EventSpace ganha dinheiro se não cobra comissão?
-            </h3>
-            <p className="text-gray-600">
-              Nosso foco é oferecer uma plataforma aberta e gratuita para conectar
-              organizadores e fornecedores de forma direta e eficiente.
-            </p>
-          </div>
-
-          <div className="border border-gray-200 rounded-lg p-6">
-            <h3 className="text-lg font-semibold mb-2">
-              O EventSpace garante a qualidade dos serviços?
-            </h3>
-            <p className="text-gray-600">
-              Somos uma plataforma de conexão, não garantimos a qualidade dos serviços.
-              Recomendamos sempre verificar referências, avaliar o fornecedor e fazer
-              contratos diretos quando necessário.
-            </p>
-          </div>
-
-          <div className="border border-gray-200 rounded-lg p-6">
-            <h3 className="text-lg font-semibold mb-2">
-              Como é feito o pagamento?
-            </h3>
-            <p className="text-gray-600">
-              Os pagamentos são feitos diretamente entre cliente e fornecedor. O EventSpace
-              não processa pagamentos, garantindo que você tenha total controle sobre
-              suas transações financeiras.
-            </p>
-          </div>
-
-          <div className="border border-gray-200 rounded-lg p-6">
-            <h3 className="text-lg font-semibold mb-2">
-              Preciso pagar algo para usar a plataforma?
-            </h3>
-            <p className="text-gray-600">
-              Não! O EventSpace é 100% gratuito tanto para quem busca quanto para quem
-              anuncia seus serviços.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="text-center not-prose">
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-8 text-white">
-          <h2 className="text-2xl font-bold mb-4">
-            Pronto para começar?
-          </h2>
-          <p className="text-blue-100 mb-6 max-w-2xl mx-auto">
-            Junte-se à nossa comunidade e descubra como é fácil conectar-se
-            diretamente com fornecedores de confiança.
-          </p>
+      {/* Modern footer CTA */}
+      <section className="bg-gray-900 text-white py-20">
+        <div className="max-w-4xl mx-auto px-4 text-center">
+          <h2 className="text-3xl md:text-4xl font-bold mb-6">Pronto para transformar seu evento?</h2>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              to="/espacos"
-              className="inline-flex items-center px-6 py-3 bg-white text-blue-600 font-medium rounded-lg hover:bg-gray-100 transition-colors"
-            >
-              Buscar Espaços
+            <Link to="/cadastro" className="bg-blue-600 text-white px-8 py-3 rounded-lg font-bold hover:bg-blue-700 transition-colors">
+              Criar Conta Agora
             </Link>
-            <Link
-              to="/equipamentos"
-              className="inline-flex items-center px-6 py-3 bg-white text-blue-600 font-medium rounded-lg hover:bg-gray-100 transition-colors"
-            >
-              Buscar Equipamentos
-            </Link>
-            <Link
-              to="/cadastro"
-              className="inline-flex items-center px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors"
-            >
-              Anunciar meus Serviços
-              <ArrowRight className="w-4 h-4 ml-2" />
+            <Link to="/espacos" className="bg-transparent border border-gray-700 text-white px-8 py-3 rounded-lg font-bold hover:bg-gray-800 transition-colors">
+              Ver Espaços Disponíveis
             </Link>
           </div>
         </div>
       </section>
-    </LegalLayout>
+
+      <Footer />
+    </div>
   )
 }
