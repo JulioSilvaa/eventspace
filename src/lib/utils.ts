@@ -19,7 +19,7 @@ export function formatPrice(price: number | null | undefined, priceType: string 
 
   const formatted = formatCurrency(Number(price))
   const type = priceType || 'daily'
-  const period = type === 'daily' ? 'dia' : type === 'hourly' ? 'hora' : 'evento'
+  const period = type === 'daily' ? 'dia' : type === 'hourly' ? 'hora' : type === 'weekend' ? 'final de semana' : 'evento'
   return `${formatted}/${period}`
 }
 

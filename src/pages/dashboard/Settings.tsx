@@ -534,6 +534,7 @@ function PropertySection() {
     title: '',
     description: '',
     price_per_day: 0,
+    price_per_weekend: 0,
     capacity: 0,
     phone: '',
     whatsapp: '',
@@ -570,6 +571,7 @@ function PropertySection() {
             title: space.title || '',
             description: space.description || '',
             price_per_day: space.price_per_day || 0,
+            price_per_weekend: space.price_per_weekend || 0,
             capacity: space.capacity || 0,
 
             // For contacts: try Space, then Profile
@@ -688,15 +690,67 @@ function PropertySection() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Preço por Dia (R$)</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Tipo de Cobrança</label>
+              <div className="flex gap-4 mb-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="priceType"
+                    checked={!formData.price_per_weekend}
+                    onChange={() => setFormData({ ...formData, price_per_weekend: 0 })}
+                    className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300"
+                  />
+                  <span className="text-gray-700">Por Dia</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="priceType"
+                    checked={!!formData.price_per_weekend}
+                    onChange={() => setFormData({ ...formData, price_per_weekend: formData.price_per_day || 0, price_per_day: 0 })}
+                    className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300"
+                  />
+                  <span className="text-gray-700">Por Final de Semana</span>
+                </label>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Valor {formData.price_per_weekend > 0 ? '(Por Final de Semana)' : '(Por Dia)'} (R$)
+              </label>
               <input
                 type="number"
-                value={formData.price_per_day}
-                onChange={(e) => setFormData({ ...formData, price_per_day: parseFloat(e.target.value) })}
+                value={formData.price_per_weekend > 0 ? formData.price_per_weekend : formData.price_per_day}
+                onChange={(e) => {
+                  const val = parseFloat(e.target.value);
+                  if (formData.price_per_weekend > 0 || (formData.price_per_weekend === 0 && formData.price_per_day === 0 && e.target.name === 'weekend')) {
+                    // logic handled by radio state mostly, but here we just update the active one
+                    if (formData.price_per_weekend > 0) {
+                      setFormData({ ...formData, price_per_weekend: val });
+                    } else {
+                      setFormData({ ...formData, price_per_day: val });
+                    }
+                  } else {
+                    // default to updating daily if in daily mode
+                    setFormData({ ...formData, price_per_day: val });
+                  }
+                }}
+                // Simplified handler for clarity
+                onInput={(e) => {
+                  const val = parseFloat((e.target as HTMLInputElement).value);
+                  if (formData.price_per_weekend > 0) {
+                    setFormData({ ...formData, price_per_weekend: val });
+                  } else {
+                    setFormData({ ...formData, price_per_day: val });
+                  }
+                }}
                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all outline-none"
+                placeholder="0.00"
                 required
               />
             </div>
+
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Capacidade (Pessoas)</label>
               <input

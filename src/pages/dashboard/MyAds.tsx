@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { useAdsStore } from '@/stores/adsStore'
+import subscriptionService from '@/services/subscriptionService'
 import AlertModal from '@/components/ui/AlertModal'
 import ConfirmModal from '@/components/ui/ConfirmModal'
+import PaymentModal from '@/components/modals/PaymentModal'
 import {
   Plus,
   Eye,
@@ -57,6 +59,16 @@ export default function MyAds() {
     type: 'default'
   })
 
+  const [paymentModal, setPaymentModal] = useState<{
+    isOpen: boolean
+    spaceId: string | null
+    isLoading: boolean
+  }>({
+    isOpen: false,
+    spaceId: null,
+    isLoading: false
+  })
+
   useEffect(() => {
     if (user) {
       fetchUserAds(user.id)
@@ -86,8 +98,33 @@ export default function MyAds() {
 
 
   const handleToggleStatus = async (adId: string, currentStatus: string) => {
-    const newStatus = currentStatus === 'active' ? 'inactive' : 'active'
-    await updateAd(adId, { status: newStatus })
+    if (currentStatus === 'active') {
+      // Logic to pause (inactive)
+      await updateAd(adId, { status: 'inactive' })
+    } else {
+      // Logic to activate -> Show Payment Modal
+      setPaymentModal({ isOpen: true, spaceId: adId, isLoading: false })
+    }
+  }
+
+  const handlePaymentSelect = async (interval: 'month' | 'year') => {
+    if (!paymentModal.spaceId) return
+
+    setPaymentModal(prev => ({ ...prev, isLoading: true }))
+
+    try {
+      const url = await subscriptionService.createCheckoutSession(paymentModal.spaceId, interval)
+      if (url) {
+        window.location.href = url
+      } else {
+        showAlert('error', 'Erro', 'Não foi possível iniciar o pagamento. Tente novamente.')
+        setPaymentModal(prev => ({ ...prev, isLoading: false }))
+      }
+    } catch (error) {
+      console.error(error)
+      showAlert('error', 'Erro', 'Ocorreu um erro ao processar sua solicitação.')
+      setPaymentModal(prev => ({ ...prev, isLoading: false }))
+    }
   }
 
   const handleDeleteAd = (adId: string) => {
@@ -397,6 +434,13 @@ export default function MyAds() {
         type={confirmModal.type}
         confirmText="Excluir"
         cancelText="Cancelar"
+      />
+
+      <PaymentModal
+        isOpen={paymentModal.isOpen}
+        onClose={() => setPaymentModal(prev => ({ ...prev, isOpen: false }))}
+        onSelectPlan={handlePaymentSelect}
+        isLoading={paymentModal.isLoading}
       />
     </div>
   )

@@ -41,11 +41,17 @@ export interface Ad {
   title: string
   description: string
   price: number
+  price_per_day?: number
+  price_per_weekend?: number
   price_type: 'daily' | 'hourly' | 'event'
+  capacity?: number
   state: string
   city: string
   neighborhood?: string
   postal_code?: string
+  street?: string
+  number?: string
+  complement?: string
   rental_period?: string
   specifications?: Record<string, unknown>
   availability_notes?: string
@@ -71,6 +77,14 @@ export interface Ad {
   listing_images?: ListingImage[]
   categories?: Category
   user?: User
+  owner?: {
+    name: string
+    phone?: string
+    whatsapp?: string
+    email?: string
+    facebook_url?: string
+    instagram_url?: string
+  }
 }
 
 export interface ListingImage {

@@ -217,6 +217,21 @@ class SubscriptionService {
       return []
     }
   }
+  async createCheckoutSession(spaceId: string, interval: 'month' | 'year'): Promise<string | null> {
+    try {
+      const { data, error } = await apiClient.post<{ url: string }>(
+        '/api/subscription/checkout', { spaceId, interval }
+      );
+      if (error) {
+        console.error('Error creating checkout session:', error);
+        return null;
+      }
+      return data?.url || null;
+    } catch (error) {
+      console.error('Exception in createCheckoutSession:', error);
+      return null;
+    }
+  }
 }
 
 export const subscriptionService = new SubscriptionService()

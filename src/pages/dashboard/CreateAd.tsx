@@ -215,6 +215,7 @@ export default function CreateAd() {
     setCategories(staticCategories)
   }, [])
 
+
   // TODO: Re-enable when subscription system is implemented
   // Check if user can create ads on component mount - only run once when component mounts
   // useEffect(() => {
@@ -269,6 +270,34 @@ export default function CreateAd() {
       images: []
     }
   })
+
+  // Pre-fill contact info from profile
+  const prefilledRef = useRef(false);
+  useEffect(() => {
+    if (profile && !prefilledRef.current) {
+      // Only pre-fill if fields are empty
+      const currentPhone = watch('contactPhone');
+      const currentWhatsapp = watch('contactWhatsapp');
+      const currentEmail = watch('contactEmail');
+
+      if (!currentPhone && profile.phone) {
+        setValue('contactPhone', profile.phone);
+      }
+
+      if (!currentWhatsapp && profile.whatsapp) {
+        setValue('contactWhatsapp', profile.whatsapp);
+      } else if (!currentWhatsapp && profile.phone) {
+        // Fallback to phone if whatsapp is empty
+        setValue('contactWhatsapp', profile.phone);
+      }
+
+      if (!currentEmail && profile.email) {
+        setValue('contactEmail', profile.email);
+      }
+
+      prefilledRef.current = true;
+    }
+  }, [profile, setValue, watch]);
 
   // Log validation errors for debugging
   useEffect(() => {
@@ -565,7 +594,9 @@ export default function CreateAd() {
                 placeholder="Ex: 100"
                 error={errors.capacity}
                 required
-                {...register('capacity', { valueAsNumber: true })}
+                {...register('capacity', {
+                  setValueAs: (v) => v === "" ? undefined : parseFloat(v)
+                })}
               />
 
               <FormField
@@ -574,7 +605,9 @@ export default function CreateAd() {
                 type="number"
                 placeholder="Ex: 500"
                 error={errors.area_sqm}
-                {...register('area_sqm', { valueAsNumber: true })}
+                {...register('area_sqm', {
+                  setValueAs: (v) => v === "" ? undefined : parseFloat(v)
+                })}
               />
             </div>
           </div>
@@ -799,6 +832,19 @@ export default function CreateAd() {
               <p className="text-gray-600">
                 Como os interessados podem entrar em contato com você?
               </p>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <div className="flex gap-3">
+                <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                <div className="text-sm text-blue-800">
+                  <p className="font-semibold mb-1">Informações de Contato Público</p>
+                  <p>
+                    Estes são os dados que os interessados usarão para entrar em contato com você.
+                    Eles serão exibidos publicamente no seu anúncio e <strong>não precisam ser iguais</strong> aos dados da sua conta pessoal.
+                  </p>
+                </div>
+              </div>
             </div>
 
             <FormField

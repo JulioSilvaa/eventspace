@@ -16,7 +16,8 @@ import {
   Wrench,
   DollarSign,
   Star,
-  Loader2
+  Loader2,
+  AlertCircle
 } from 'lucide-react'
 import { FormField, FormButton, FormSelect } from '@/components/forms'
 import ImageUpload from '@/components/forms/ImageUpload'
@@ -104,7 +105,9 @@ const editAdSchema = z.object({
   state: z.string().min(1, 'Estado é obrigatório'),
   city: z.string().min(1, 'Cidade é obrigatória'),
   neighborhood: z.string().optional(),
-  address: z.string().optional(),
+  address: z.string().min(1, 'Endereço é obrigatório'),
+  number: z.string().min(1, 'Número é obrigatório'),
+  complement: z.string().optional(),
   postal_code: z.string()
     .regex(/^\d{5}-?\d{3}$/, 'CEP inválido (formato: 12345-678)')
     .optional(),
@@ -117,6 +120,7 @@ const editAdSchema = z.object({
   price: z.number()
     .min(1, 'Preço deve ser maior que zero')
     .max(100000, 'Preço deve ser menor que R$ 100.000'),
+  price_per_weekend: z.number().optional(),
   priceType: z.enum(['daily', 'hourly', 'event'], {
     required_error: 'Selecione o tipo de preço'
   }),
@@ -247,7 +251,9 @@ export default function EditAd() {
         state: currentAd.state,
         city: currentAd.city,
         neighborhood: currentAd.neighborhood || '',
-        address: (currentAd.specifications?.address as string) || '',
+        address: currentAd.street || '',
+        number: currentAd.number || '',
+        complement: currentAd.complement || '',
         postal_code: currentAd.postal_code || '',
         reference_point: (currentAd.specifications?.reference_point as string) || '',
         price: currentAd.price,
@@ -360,7 +366,7 @@ export default function EditAd() {
         fieldsToValidate = ['title', 'description', 'category_id', 'capacity']
         break
       case 2:
-        fieldsToValidate = ['state', 'city']
+        fieldsToValidate = ['state', 'city', 'address', 'number']
         break
       case 3:
         break
@@ -416,10 +422,16 @@ export default function EditAd() {
         title: data.title,
         description: data.description,
         price: data.price,
+        // Send separate fields for clarity, though price_type helps backend decide
+        price_per_day: data.priceType === 'daily' ? data.price : undefined,
+        price_per_weekend: data.price_per_weekend && data.price_per_weekend > 0 ? data.price_per_weekend : undefined,
         price_type: data.priceType,
         state: data.state,
         city: data.city,
         neighborhood: data.neighborhood || undefined,
+        street: data.address, // Mapping address form field to street
+        number: data.number,
+        complement: data.complement || undefined,
         postal_code: data.postal_code || undefined,
         contact_phone: data.contactPhone,
         contact_whatsapp: data.contactWhatsapp || undefined,
@@ -598,7 +610,9 @@ export default function EditAd() {
                 error={errors.capacity}
                 required
                 hint="Número máximo de pessoas que o espaço comporta"
-                {...register('capacity', { valueAsNumber: true })}
+                {...register('capacity', {
+                  setValueAs: (v) => v === "" ? undefined : parseFloat(v)
+                })}
               />
 
               <FormField
@@ -607,7 +621,9 @@ export default function EditAd() {
                 placeholder="Ex: 200"
                 error={errors.area_sqm}
                 hint="Área total do espaço em metros quadrados (opcional)"
-                {...register('area_sqm', { valueAsNumber: true })}
+                {...register('area_sqm', {
+                  setValueAs: (v) => v === "" ? undefined : parseFloat(v)
+                })}
               />
             </div>
           </div>
@@ -676,13 +692,35 @@ export default function EditAd() {
               />
             </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="md:col-span-2">
+                <FormField
+                  label="Endereço (Rua/Avenida)"
+                  type="text"
+                  placeholder="Ex: Rua das Flores"
+                  error={errors.address}
+                  required
+                  {...register('address')}
+                />
+              </div>
+
+              <FormField
+                label="Número"
+                type="text"
+                placeholder="Ex: 123"
+                error={errors.number}
+                required
+                {...register('number')}
+              />
+            </div>
+
             <FormField
-              label="Endereço completo"
+              label="Complemento"
               type="text"
-              placeholder="Rua, número, complemento (opcional)"
-              error={errors.address}
-              hint="Será exibido apenas após o interessado entrar em contato"
-              {...register('address')}
+              placeholder="Ex: Apto 101, Bloco B"
+              error={errors.complement}
+              hint="Opcional"
+              {...register('complement')}
             />
           </div>
         )
@@ -729,41 +767,83 @@ export default function EditAd() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Preço (R$) <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <DollarSign className="h-4 w-4 text-gray-400" />
-                  </div>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="1"
-                    placeholder="0,00"
-                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    {...register('price', { valueAsNumber: true })}
-                  />
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Tipo de Cobrança Predominante</label>
+                < div className="flex gap-4 mb-4">
+                  <label className="flex items-center gap-2 cursor-pointer bg-white px-4 py-2 rounded-lg border border-gray-200 hover:border-primary-500 transition-colors">
+                    <input
+                      type="radio"
+                      className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300"
+                      checked={watch('priceType') === 'daily'}
+                      onChange={() => {
+                        setValue('priceType', 'daily')
+                        // Clear weekend price if switching to daily ONLY? No, keep it potential.
+                      }}
+                    />
+                    <span className="text-gray-700">Por Dia</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer bg-white px-4 py-2 rounded-lg border border-gray-200 hover:border-primary-500 transition-colors">
+                    <input
+                      type="radio"
+                      className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300"
+                      checked={watch('price_per_weekend') !== undefined && watch('price_per_weekend')! > 0}
+                      onChange={() => {
+                        // logic to enable weekend pricing
+                        setValue('priceType', 'daily') // It's still daily basis, just with a weekend option usually?
+                        // actually backend distinguishes 'weekend' price type?
+                        // Let's stick to the Settings.tsx logic: if weekend price > 0, it prioritizes weekend.
+                        if (!watch('price_per_weekend')) setValue('price_per_weekend', watch('price'))
+                      }}
+                    />
+                    <span className="text-gray-700">Com Preço de Final de Semana</span>
+                  </label>
                 </div>
-                {errors.price && (
-                  <p className="mt-1 text-sm text-red-600">{errors.price.message}</p>
-                )}
               </div>
 
-              <FormSelect
-                label="Período"
-                options={[
-                  { value: 'daily', label: 'Por dia' },
-                  { value: 'hourly', label: 'Por hora' },
-                  { value: 'event', label: 'Por evento' }
-                ]}
-                error={errors.priceType}
-                required
-                placeholder="Selecione o período"
-                {...register('priceType')}
-              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Preço por Dia (R$) <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <DollarSign className="h-4 w-4 text-gray-400" />
+                    </div>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="0,00"
+                      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      {...register('price', { valueAsNumber: true })}
+                    />
+                  </div>
+                  {errors.price && (
+                    <p className="mt-1 text-sm text-red-600">{errors.price.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Preço por Final de Semana (R$)
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <DollarSign className="h-4 w-4 text-gray-400" />
+                    </div>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="0,00"
+                      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      {...register('price_per_weekend', { valueAsNumber: true })}
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Opcional. Se preenchido, será exibido prioritariamente.</p>
+                </div>
+              </div>
             </div>
 
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -812,6 +892,19 @@ export default function EditAd() {
               <p className="text-gray-600">
                 Como os interessados podem entrar em contato com você?
               </p>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <div className="flex gap-3">
+                <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                <div className="text-sm text-blue-800">
+                  <p className="font-semibold mb-1">Informações de Contato Público</p>
+                  <p>
+                    Estes são os dados que os interessados usarão para entrar em contato com você.
+                    Eles serão exibidos publicamente no seu anúncio e <strong>não precisam ser iguais</strong> aos dados da sua conta pessoal.
+                  </p>
+                </div>
+              </div>
             </div>
 
             <FormField
@@ -1087,16 +1180,21 @@ export default function EditAd() {
                   const isPending = currentStep < step.id
 
                   return (
-                    <div key={step.id} className="flex flex-col items-center" style={{ flex: 1 }}>
+                    <div
+                      key={step.id}
+                      className="flex flex-col items-center cursor-pointer group"
+                      style={{ flex: 1 }}
+                      onClick={() => setCurrentStep(step.id)}
+                    >
                       {/* Circle */}
                       <div className={`
                         relative z-10 w-12 h-12 rounded-full flex items-center justify-center font-semibold text-sm
-                        transition-all duration-300 shadow-lg
+                        transition-all duration-300 shadow-lg group-hover:scale-110
                         ${isCompleted
                           ? 'bg-gradient-to-br from-primary-500 to-primary-600 text-white scale-100'
                           : isCurrent
                             ? 'bg-white border-4 border-primary-500 text-primary-600 scale-110 shadow-xl'
-                            : 'bg-white border-2 border-gray-300 text-gray-400 scale-90'
+                            : 'bg-white border-2 border-gray-300 text-gray-400 scale-90 group-hover:border-primary-300'
                         }
                       `}>
                         {isCompleted ? (
@@ -1187,7 +1285,10 @@ export default function EditAd() {
           ) : (
             <FormButton
               type="button"
-              onClick={handleSubmit(onSubmit)}
+              onClick={handleSubmit(onSubmit, (errors) => {
+                console.error('Validation errors:', errors)
+                toast.error('Erro de validação', 'Verifique se todos os campos obrigatórios foram preenchidos corretamente.')
+              })}
               loading={isSubmitting}
               size="lg"
               className="px-10 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
