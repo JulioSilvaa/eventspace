@@ -299,7 +299,7 @@ export default function AdDetails() {
   // }
 
   const openWhatsApp = () => {
-    const phone = ad.contact_whatsapp || ad.contact_phone
+    const phone = ad.contact_whatsapp || ad.contact_phone || ad.owner?.whatsapp || ad.owner?.phone
     if (!phone) {
       toast.warning('WhatsApp não disponível', 'Este anunciante não cadastrou um número de WhatsApp.')
       return
@@ -314,7 +314,7 @@ export default function AdDetails() {
   }
 
   const callPhone = () => {
-    const phone = ad.contact_phone || ad.contact_whatsapp
+    const phone = ad.contact_phone || ad.contact_whatsapp || ad.owner?.phone || ad.owner?.whatsapp
     if (!phone) {
       toast.warning('Telefone não disponível', 'Este anunciante não cadastrou um número de telefone.')
       return
@@ -356,6 +356,16 @@ export default function AdDetails() {
   const closeModal = () => {
     setIsModalOpen(false)
   }
+
+  // Helper getters for contact info with fallback
+  const displayPhone = ad.contact_phone || ad.owner?.phone;
+  const displayWhatsapp = ad.contact_whatsapp || ad.owner?.whatsapp;
+  const displayEmail = ad.contact_email || ad.owner?.email;
+  const displayInstagram = ad.contact_instagram || ad.owner?.instagram_url;
+  const displayFacebook = ad.contact_facebook || ad.owner?.facebook_url;
+
+  const hasAnyContact = displayPhone || displayWhatsapp || displayEmail || displayInstagram || displayFacebook;
+  const hasActionableContact = displayPhone || displayWhatsapp;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -742,52 +752,72 @@ export default function AdDetails() {
             <div className="bg-white rounded-lg shadow p-6 sticky top-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Entre em Contato</h3>
 
+              <div className="mb-6 pb-6 border-b border-gray-100">
+                <span className="block text-sm text-gray-500 mb-1">Valor do investimento</span>
+                <p className="text-3xl font-bold text-green-600">
+                  {formatPrice(ad.price, ad.price_type).split('/')[0]}
+                  <span className="text-sm font-normal text-gray-500 ml-1">
+                    /{formatPrice(ad.price, ad.price_type).split('/')[1]}
+                  </span>
+                </p>
+              </div>
+
               <div className="space-y-3 mb-8">
-                {(ad.contact_whatsapp || ad.contact_phone) && (
-                  <button
-                    onClick={openWhatsApp}
-                    className="w-full bg-[#25D366] text-white py-4 px-4 rounded-xl hover:bg-[#20ba5a] transition-all flex items-center justify-center gap-3 font-bold shadow-lg shadow-green-100 transform hover:scale-[1.02] active:scale-[0.98]"
-                  >
-                    <MessageCircle className="w-6 h-6" />
-                    Chamar no WhatsApp
-                  </button>
+                {hasActionableContact && (
+                  <>
+                    {displayWhatsapp && (
+                      <button
+                        onClick={openWhatsApp}
+                        className="w-full bg-[#25D366] text-white py-4 px-4 rounded-xl hover:bg-[#20ba5a] transition-all flex items-center justify-center gap-3 font-bold shadow-lg shadow-green-100 transform hover:scale-[1.02] active:scale-[0.98]"
+                      >
+                        <MessageCircle className="w-6 h-6" />
+                        Chamar no WhatsApp
+                      </button>
+                    )}
+
+                    {displayPhone && (
+                      <button
+                        onClick={callPhone}
+                        className="w-full bg-blue-600 text-white py-4 px-4 rounded-xl hover:bg-blue-700 transition-all flex items-center justify-center gap-3 font-bold shadow-lg shadow-blue-100 transform hover:scale-[1.02] active:scale-[0.98]"
+                      >
+                        <Phone className="w-6 h-6" />
+                        Ligar Agora
+                      </button>
+                    )}
+                  </>
                 )}
 
-                {(ad.contact_phone || ad.contact_whatsapp) && (
-                  <button
-                    onClick={callPhone}
-                    className="w-full bg-blue-600 text-white py-4 px-4 rounded-xl hover:bg-blue-700 transition-all flex items-center justify-center gap-3 font-bold shadow-lg shadow-blue-100 transform hover:scale-[1.02] active:scale-[0.98]"
-                  >
-                    <Phone className="w-6 h-6" />
-                    Ligar Agora
-                  </button>
+                {!hasActionableContact && (
+                  <div className="text-center p-4 bg-gray-50 rounded-lg text-gray-500 text-sm">
+                    Nenhum contato direto disponível
+                  </div>
                 )}
               </div>
 
               {/* Informações de Contato Explícitas */}
-              {(ad.contact_phone || ad.contact_whatsapp || ad.contact_email) && (
+              {hasAnyContact && (
                 <div className="bg-gray-50 rounded-xl p-4 mb-6 border border-gray-100">
                   <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-3 px-1 text-center">Contatos Diretos</p>
                   <div className="space-y-3">
-                    {ad.contact_phone && (
+                    {displayPhone && (
                       <div className="flex items-center justify-between group">
                         <div className="flex items-center gap-2 text-sm text-gray-600">
                           <Phone className="w-4 h-4 text-gray-400 group-hover:text-blue-500 transition-colors" />
                           <span>Telefone</span>
                         </div>
-                        <span className="text-sm font-semibold text-gray-900">{formatPhone(ad.contact_phone)}</span>
+                        <span className="text-sm font-semibold text-gray-900">{formatPhone(displayPhone)}</span>
                       </div>
                     )}
-                    {ad.contact_whatsapp && (
+                    {displayWhatsapp && (
                       <div className="flex items-center justify-between group">
                         <div className="flex items-center gap-2 text-sm text-gray-600">
                           <MessageCircle className="w-4 h-4 text-gray-400 group-hover:text-green-500 transition-colors" />
                           <span>WhatsApp</span>
                         </div>
-                        <span className="text-sm font-semibold text-gray-900">{formatPhone(ad.contact_whatsapp)}</span>
+                        <span className="text-sm font-semibold text-gray-900">{formatPhone(displayWhatsapp)}</span>
                       </div>
                     )}
-                    {ad.contact_email && (
+                    {displayEmail && (
                       <div className="flex items-center justify-between group">
                         <div className="flex items-center gap-2 text-sm text-gray-600">
                           <span className="text-lg">📧</span>
@@ -801,15 +831,15 @@ export default function AdDetails() {
               )}
 
               {/* Redes Sociais */}
-              {(ad.contact_instagram || ad.contact_facebook) && (
+              {(displayInstagram || displayFacebook) && (
                 <div className="mb-6">
                   <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-3 px-1 text-center">Redes Sociais</p>
                   <div className="grid grid-cols-1 gap-2">
-                    {ad.contact_instagram && (
+                    {displayInstagram && (
                       <a
-                        href={String(ad.contact_instagram).startsWith('http')
-                          ? ad.contact_instagram
-                          : `https://instagram.com/${String(ad.contact_instagram).replace('@', '')}`
+                        href={String(displayInstagram).startsWith('http')
+                          ? displayInstagram
+                          : `https://instagram.com/${String(displayInstagram).replace('@', '')}`
                         }
                         target="_blank"
                         rel="noopener noreferrer"
@@ -820,16 +850,16 @@ export default function AdDetails() {
                         </div>
                         <div>
                           <p className="font-bold text-sm leading-tight text-pink-900">Instagram</p>
-                          <p className="text-[10px] text-pink-600 font-medium">@{String(ad.contact_instagram).replace('@', '')}</p>
+                          <p className="text-[10px] text-pink-600 font-medium">@{String(displayInstagram).replace('@', '')}</p>
                         </div>
                       </a>
                     )}
 
-                    {ad.contact_facebook && (
+                    {displayFacebook && (
                       <a
-                        href={String(ad.contact_facebook).startsWith('http')
-                          ? ad.contact_facebook
-                          : `https://facebook.com/${ad.contact_facebook}`
+                        href={String(displayFacebook).startsWith('http')
+                          ? displayFacebook
+                          : `https://facebook.com/${displayFacebook}`
                         }
                         target="_blank"
                         rel="noopener noreferrer"
@@ -840,7 +870,7 @@ export default function AdDetails() {
                         </div>
                         <div>
                           <p className="font-bold text-sm leading-tight text-blue-900">Facebook</p>
-                          <p className="text-[10px] text-blue-600 font-medium">{String(ad.contact_facebook).replace('facebook.com/', '').replace('https://', '').replace('http://', '').split('/')[0]}</p>
+                          <p className="text-[10px] text-blue-600 font-medium">{String(displayFacebook).replace('facebook.com/', '').replace('https://', '').replace('http://', '').split('/')[0]}</p>
                         </div>
                       </a>
                     )}

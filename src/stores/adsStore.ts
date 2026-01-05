@@ -48,7 +48,15 @@ interface SpaceResponse {
   category_id?: number
   average_rating?: number
   reviews_count?: number
-  specifications?: Record<string, unknown>
+  capacity?: number
+  owner?: {
+    name: string
+    phone?: string
+    whatsapp?: string
+    email?: string
+    facebook_url?: string
+    instagram_url?: string
+  }
 }
 
 interface SpacesListResponse {
@@ -85,10 +93,16 @@ function mapSpaceToAd(space: SpaceResponse): Ad {
     title: space.title,
     description: space.description,
     price,
+    price_per_day: space.price_per_day,
+    price_per_weekend: space.price_per_weekend,
     price_type: (space.price_type as 'daily' | 'hourly' | 'event') || 'daily',
+    capacity: space.capacity,
     state: space.address?.state || '',
     city: space.address?.city || '',
     neighborhood: space.address?.neighborhood,
+    street: space.address?.street,
+    number: space.address?.number,
+    complement: space.address?.complement,
     postal_code: space.address?.zipcode,
     status: space.status as 'active' | 'inactive' | 'pending' | 'rejected',
     featured: space.featured || false,
@@ -117,7 +131,11 @@ function mapSpaceToAd(space: SpaceResponse): Ad {
       type: 'space',
       slug: 'espaco',
     },
-    specifications: space.specifications,
+    specifications: {
+      ...space.specifications,
+      capacity: space.capacity // Ensure capacity is also in specifications if needed by legacy code
+    },
+    owner: space.owner,
   }
 }
 
