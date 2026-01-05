@@ -317,14 +317,7 @@ export default function Home() {
                               </div>
 
                               <div className="flex items-center justify-between">
-                                <div>
-                                  <p className="text-3xl font-bold text-green-600">
-                                    R$ {ad.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                                  </p>
-                                  <p className="text-gray-500 text-sm">
-                                    por {ad.price_type === 'daily' ? 'dia' : ad.price_type === 'hourly' ? 'hora' : 'evento'}
-                                  </p>
-                                </div>
+
                                 <Link
                                   to={`/anuncio/${ad.id}`}
                                   className="bg-primary-600 text-white px-6 py-3 rounded-lg hover:bg-primary-700 transition-colors font-medium"
