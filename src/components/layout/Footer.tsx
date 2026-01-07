@@ -39,6 +39,11 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link to="/planos" className="text-gray-300 hover:text-white transition-colors">
+                  Planos
+                </Link>
+              </li>
+              <li>
                 <Link to="/como-funciona" className="text-gray-300 hover:text-white transition-colors">
                   Como Funciona
                 </Link>

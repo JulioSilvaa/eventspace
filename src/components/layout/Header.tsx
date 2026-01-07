@@ -44,6 +44,12 @@ function Header() {
               Anúncios
             </Link>
             <Link
+              to="/planos"
+              className="text-gray-700 hover:text-primary-600 transition-colors"
+            >
+              Planos
+            </Link>
+            <Link
               to="/como-funciona"
               className="text-gray-700 hover:text-primary-600 transition-colors"
             >
@@ -113,6 +119,13 @@ function Header() {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Anúncios
+              </Link>
+              <Link
+                to="/planos"
+                className="text-gray-700 hover:text-primary-600 transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Planos
               </Link>
               <Link
                 to="/como-funciona"

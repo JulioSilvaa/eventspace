@@ -6,6 +6,7 @@ import Home from './pages/Home'
 import Equipment from './pages/public/Equipment'
 import Anunciantes from './pages/public/Anunciantes'
 import Spaces from './pages/public/Spaces'
+import Plans from './pages/public/Plans'
 import AdDetails from './pages/AdDetails'
 
 // Auth pages
@@ -89,6 +90,7 @@ function App() {
           <Route path="/equipamentos" element={<Equipment />} />
           <Route path="/anunciantes" element={<Anunciantes />} />
           <Route path="/espacos" element={<Spaces />} />
+          <Route path="/planos" element={<Plans />} />
           <Route path="/anuncio/:id" element={<AdDetails />} />
           <Route path="/equipamentos/:id" element={<AdDetails />} />
           <Route path="/anunciantes/:id" element={<AdDetails />} />

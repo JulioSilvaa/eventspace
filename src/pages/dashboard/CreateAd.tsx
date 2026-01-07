@@ -514,38 +514,10 @@ export default function CreateAd() {
         return
       }
 
-      // Anúncio criado com sucesso é INATIVO por padrão.
-      // Redirecionar para o fluxo de pagamento.
-
-      const spaceId = (result as any).id || (result as any).data?.id; // Adjust based on actual return structure
-
-      if (!spaceId) {
-        // Fallback if ID not found (should not happen if success)
-        toast.success('Anúncio criado com sucesso!', 'Seu anúncio foi criado. Ative-o no painel para publicar.');
-        navigate('/dashboard?newListing=true');
-        return;
-      }
-
       if (loadingToastId) toast.removeToast(String(loadingToastId));
-      loadingToastId = toast.loading('Redirecionando para pagamento...', 'Seu anúncio foi criado. Aguarde...');
 
-      try {
-        // Call subscription/checkout endpoint for activation using the service
-        // Passing 'activation' explicitly, though undefined would also work per backend logic
-        const checkoutUrl = await subscriptionService.createCheckoutSession(spaceId, 'activation');
-
-        if (checkoutUrl) {
-          window.location.href = checkoutUrl;
-          return;
-        } else {
-          throw new Error("URL de pagamento não retornada");
-        }
-
-      } catch (paymentError) {
-        console.error("Erro ao iniciar pagamento:", paymentError);
-        toast.error('Anúncio criado, mas erro no pagamento', 'Seu anúncio está salvo como inativo. Tente pagar pelo painel.');
-        navigate('/dashboard?newListing=true&paymentError=true');
-      }
+      toast.success('Anúncio criado com sucesso!', 'Seu anúncio já está ativo e visível na plataforma!');
+      navigate('/dashboard?newListing=true');
     } catch (error) {
       if (loadingToastId) toast.removeToast(String(loadingToastId))
       const errorMessage = error instanceof Error ? error.message : 'Erro inesperado ao criar anúncio'
