@@ -73,6 +73,34 @@ export default function MyAds() {
     if (user) {
       fetchUserAds(user.id)
     }
+
+    // Check for payment success/cancel params
+    const searchParams = new URLSearchParams(window.location.search)
+    const success = searchParams.get('payment_success')
+    const canceled = searchParams.get('payment_canceled')
+    const spaceId = searchParams.get('space_id')
+
+    if (success === 'true') {
+      showAlert(
+        'success',
+        'Pagamento Processado!',
+        'Seu pagamento foi recebido com sucesso. Ostatus do anúncio será atualizado em breve. (Nota: Em ambiente local, você pode precisar atualizar a página ou verificar o webhook).'
+      )
+      // Clear URL params to avoid showing message again on refresh
+      window.history.replaceState({}, '', window.location.pathname)
+
+      // Optimistically update local state if spaceId is present
+      if (spaceId) {
+        // Force fetch/update logic could go here, but Alert is enough for now
+      }
+    } else if (canceled === 'true') {
+      showAlert(
+        'info',
+        'Pagamento Cancelado',
+        'O processo de pagamento foi cancelado. Você pode tentar novamente a qualquer momento.'
+      )
+      window.history.replaceState({}, '', window.location.pathname)
+    }
   }, [user, fetchUserAds])
 
 
@@ -103,25 +131,34 @@ export default function MyAds() {
       await updateAd(adId, { status: 'inactive' })
     } else {
       // Logic to activate -> Show Payment Modal
+      console.log('🔘 Opening payment modal for space:', adId);
       setPaymentModal({ isOpen: true, spaceId: adId, isLoading: false })
     }
   }
 
-  const handlePaymentSelect = async (interval: 'month' | 'year') => {
-    if (!paymentModal.spaceId) return
+  const handlePaymentSelect = async (interval: 'month' | 'year' | 'activation') => {
+    console.log('💳 Payment selected:', interval, 'Space ID:', paymentModal.spaceId);
+    if (!paymentModal.spaceId) {
+      console.error('❌ No space ID found in payment modal state');
+      return
+    }
 
     setPaymentModal(prev => ({ ...prev, isLoading: true }))
 
     try {
+      console.log('🔄 Calling subscriptionService.createCheckoutSession...');
       const url = await subscriptionService.createCheckoutSession(paymentModal.spaceId, interval)
+      console.log('✅ Checkout URL received:', url);
+
       if (url) {
         window.location.href = url
       } else {
+        console.error('❌ URL returned was null/empty');
         showAlert('error', 'Erro', 'Não foi possível iniciar o pagamento. Tente novamente.')
         setPaymentModal(prev => ({ ...prev, isLoading: false }))
       }
     } catch (error) {
-      console.error(error)
+      console.error('❌ Error handling payment selection:', error)
       showAlert('error', 'Erro', 'Ocorreu um erro ao processar sua solicitação.')
       setPaymentModal(prev => ({ ...prev, isLoading: false }))
     }
