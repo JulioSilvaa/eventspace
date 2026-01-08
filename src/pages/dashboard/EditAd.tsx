@@ -522,6 +522,7 @@ export default function EditAd() {
         }
 
         // Rastrear atualização geral
+        console.log('Sending trackListingUpdated', changedFields);
         if (changedFields.length > 0) {
           await trackListingUpdated(changedFields, {
             totalChanges: changedFields.length,

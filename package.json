@@ -14,6 +14,7 @@
     "@hookform/resolvers": "^3.3.4",
     "@stripe/stripe-js": "^7.6.1",
     "@types/leaflet": "^1.9.20",
+    "axios": "^1.13.2",
     "browser-image-compression": "^2.0.2",
     "clsx": "^2.1.0",
     "date-fns": "^4.1.0",

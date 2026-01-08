@@ -285,9 +285,7 @@ export default function CreateAd() {
         setValue('contactPhone', profile.phone);
       }
 
-      if (!currentWhatsapp && profile.whatsapp) {
-        setValue('contactWhatsapp', profile.whatsapp);
-      } else if (!currentWhatsapp && profile.phone) {
+      if (!currentWhatsapp && profile.phone) {
         // Fallback to phone if whatsapp is empty
         setValue('contactWhatsapp', profile.phone);
       }

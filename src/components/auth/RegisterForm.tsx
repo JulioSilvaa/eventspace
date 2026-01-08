@@ -161,7 +161,7 @@ export default function RegisterForm() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
-            label="Telefone/WhatsApp"
+            label="Telefone"
             type="tel"
             placeholder="(11) 99999-9999"
             error={form.formState.errors.phone}

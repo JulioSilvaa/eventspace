@@ -380,9 +380,9 @@ export default function AdDetails() {
   // }
 
   const openWhatsApp = () => {
-    const phone = ad.contact_whatsapp || ad.contact_phone || ad.owner?.whatsapp || ad.owner?.phone
+    const phone = ad.contact_whatsapp || ad.contact_phone
     if (!phone) {
-      toast.warning('WhatsApp não disponível', 'Este anunciante não cadastrou um número de WhatsApp.')
+      toast.warning('WhatsApp não disponível', 'Este anunciante não cadastrou um número de WhatsApp para este espaço.')
       return
     }
 
@@ -395,9 +395,9 @@ export default function AdDetails() {
   }
 
   const callPhone = () => {
-    const phone = ad.contact_phone || ad.contact_whatsapp || ad.owner?.phone || ad.owner?.whatsapp
+    const phone = ad.contact_phone || ad.contact_whatsapp
     if (!phone) {
-      toast.warning('Telefone não disponível', 'Este anunciante não cadastrou um número de telefone.')
+      toast.warning('Telefone não disponível', 'Este anunciante não cadastrou um número de telefone para este espaço.')
       return
     }
 
@@ -438,12 +438,12 @@ export default function AdDetails() {
     setIsModalOpen(false)
   }
 
-  // Helper getters for contact info with fallback
-  const displayPhone = ad.contact_phone || ad.owner?.phone;
-  const displayWhatsapp = ad.contact_whatsapp || ad.owner?.whatsapp;
-  const displayEmail = ad.contact_email || ad.owner?.email;
-  const displayInstagram = ad.contact_instagram || ad.owner?.instagram_url;
-  const displayFacebook = ad.contact_facebook || ad.owner?.facebook_url;
+  // Helper getters for contact info (only use listing contacts, no fallback to owner)
+  const displayPhone = ad.contact_phone;
+  const displayWhatsapp = ad.contact_whatsapp;
+  const displayEmail = ad.contact_email;
+  const displayInstagram = ad.contact_instagram;
+  const displayFacebook = ad.contact_facebook;
 
   const hasAnyContact = displayPhone || displayWhatsapp || displayEmail || displayInstagram || displayFacebook;
   const hasActionableContact = displayPhone || displayWhatsapp;
@@ -824,7 +824,7 @@ export default function AdDetails() {
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Entre em Contato</h3>
 
               <div className="mb-6 pb-6 border-b border-gray-100">
-                <span className="block text-sm text-gray-500 mb-1">Valor do investimento</span>
+                <span className="block text-sm text-gray-500 mb-1">Valor</span>
                 <p className="text-3xl font-bold text-green-600">
                   {formatPrice(ad.price, ad.price_type).split('/')[0]}
                   <span className="text-sm font-normal text-gray-500 ml-1">

@@ -309,7 +309,7 @@ export default function Home() {
 
                               <div className="flex items-center justify-between mt-auto">
                                 <Link
-                                  to={`/espaco/${ad.id}`}
+                                  to={`/espacos/${ad.id}`}
                                   className="inline-flex items-center justify-center bg-primary-600 text-white px-5 py-2.5 rounded-lg hover:bg-primary-700 transition-colors font-medium text-sm w-full md:w-auto"
                                 >
                                   Ver Detalhes

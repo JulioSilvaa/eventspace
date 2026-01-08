@@ -14,6 +14,7 @@ import {
   Settings as SettingsIcon
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
+import { useUserRealTimeMetrics, useEventTracking } from '@/hooks/useRealTimeMetrics'
 import { apiClient } from '@/lib/api-client'
 import { maskPhone, maskCEP, unmask } from '@/utils/masks'
 import { Instagram, Facebook } from 'lucide-react'
@@ -161,9 +162,6 @@ function PersonalInformationSection() {
     full_name: '',
     email: '',
     phone: '',
-    whatsapp: '',
-    facebook_url: '',
-    instagram_url: ''
   })
 
   // Load user data from database
@@ -180,9 +178,6 @@ function PersonalInformationSection() {
             full_name: data.data.name || data.data.full_name || '',
             email: data.data.email || '',
             phone: maskPhone(data.data.phone || ''),
-            whatsapp: maskPhone(data.data.whatsapp || ''),
-            facebook_url: data.data.facebook_url || '',
-            instagram_url: data.data.instagram_url || ''
           })
         }
       } catch (err) {
@@ -203,7 +198,6 @@ function PersonalInformationSection() {
       const result = await updateProfile({
         ...formData,
         phone: unmask(formData.phone),
-        whatsapp: unmask(formData.whatsapp)
       })
       if (result.error) {
         alert('Erro ao atualizar perfil: ' + result.error)
@@ -293,62 +287,7 @@ function PersonalInformationSection() {
               </div>
             </div>
 
-            <div>
-              <label htmlFor="whatsapp" className="block text-sm font-bold text-gray-700 mb-2 px-1">
-                WhatsApp Principal
-              </label>
-              <div className="relative group">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary-500 transition-colors">
-                  <Phone className="w-5 h-5" />
-                </div>
-                <input
-                  type="tel"
-                  id="whatsapp"
-                  value={formData.whatsapp}
-                  onChange={(e) => setFormData({ ...formData, whatsapp: maskPhone(e.target.value) })}
-                  placeholder="(00) 00000-0000"
-                  className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all outline-none font-medium text-gray-900"
-                />
-              </div>
-            </div>
 
-            <div>
-              <label htmlFor="facebook" className="block text-sm font-bold text-gray-700 mb-2 px-1">
-                Link do Facebook
-              </label>
-              <div className="relative group">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary-500 transition-colors">
-                  <Facebook className="w-5 h-5" />
-                </div>
-                <input
-                  type="url"
-                  id="facebook"
-                  value={formData.facebook_url}
-                  onChange={(e) => setFormData({ ...formData, facebook_url: e.target.value })}
-                  placeholder="https://facebook.com/seu-perfil"
-                  className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all outline-none font-medium text-gray-900"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="instagram" className="block text-sm font-bold text-gray-700 mb-2 px-1">
-                Link do Instagram
-              </label>
-              <div className="relative group">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary-500 transition-colors">
-                  <Instagram className="w-5 h-5" />
-                </div>
-                <input
-                  type="url"
-                  id="instagram"
-                  value={formData.instagram_url}
-                  onChange={(e) => setFormData({ ...formData, instagram_url: e.target.value })}
-                  placeholder="https://instagram.com/seu-perfil"
-                  className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all outline-none font-medium text-gray-900"
-                />
-              </div>
-            </div>
           </div>
 
           <div className="flex justify-end border-t border-gray-50 pt-8">
@@ -365,9 +304,9 @@ function PersonalInformationSection() {
               SALVAR ALTERAÇÕES
             </button>
           </div>
-        </form>
-      </div>
-    </div>
+        </form >
+      </div >
+    </div >
   )
 }
 
@@ -530,6 +469,8 @@ function PropertySection() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [spaceId, setSpaceId] = useState<string | null>(null)
+
+  const { trackListingUpdated } = useEventTracking(spaceId || undefined)
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -576,7 +517,7 @@ function PropertySection() {
 
             // For contacts: try Space, then Profile
             phone: maskPhone(space.contact_phone || profile?.phone || ''),
-            whatsapp: maskPhone(space.contact_whatsapp || profile?.whatsapp || space.contact_phone || profile?.phone || ''),
+            whatsapp: maskPhone(space.contact_whatsapp || space.contact_phone || profile?.phone || ''),
 
             address: {
               street: space.address?.street || '',
@@ -619,11 +560,25 @@ function PropertySection() {
       if (error) {
         alert('Erro ao atualizar anúncio: ' + error.message)
       } else {
+        // Track update event
+        if (spaceId) {
+          try {
+            // We don't have granular changedFields here easily without diffing, 
+            // but we can just say "settings_updated" or specific fields if we want.
+            // For now, let's generic "updated"
+            await trackListingUpdated(['settings_update'], {
+              source: 'settings_page'
+            })
+          } catch (e) {
+            console.error('Error tracking update:', e)
+          }
+        }
+
         alert('Anúncio atualizado com sucesso!')
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error updating space:', err)
-      alert('Erro inesperado ao atualizar anúncio')
+      alert('Erro ao atualizar anúncio: ' + err.message)
     } finally {
       setIsSaving(false)
     }
@@ -851,20 +806,43 @@ function PropertySection() {
           </div>
 
           <div className="md:col-span-2 border-t pt-6 mt-2">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-green-50 rounded-lg text-green-600">
-                <Phone className="w-5 h-5" />
+            <h4 className="font-bold text-gray-900 mb-4">Informações de Contato do Anúncio</h4>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="p-1.5 bg-blue-50 rounded-lg text-blue-600">
+                    <Phone className="w-4 h-4" />
+                  </div>
+                  <label className="text-sm font-semibold text-gray-700">Telefone</label>
+                </div>
+                <input
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: maskPhone(e.target.value) })}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all outline-none"
+                  placeholder="(00) 00000-0000"
+                  required
+                />
               </div>
-              <h4 className="font-bold text-gray-900">Contato (WhatsApp)</h4>
+
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="p-1.5 bg-green-50 rounded-lg text-green-600">
+                    <Phone className="w-4 h-4" />
+                  </div>
+                  <label className="text-sm font-semibold text-gray-700">WhatsApp</label>
+                </div>
+                <input
+                  type="tel"
+                  value={formData.whatsapp}
+                  onChange={(e) => setFormData({ ...formData, whatsapp: maskPhone(e.target.value) })}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all outline-none"
+                  placeholder="(00) 00000-0000"
+                  required
+                />
+              </div>
             </div>
-            <input
-              type="tel"
-              value={formData.whatsapp}
-              onChange={(e) => setFormData({ ...formData, whatsapp: maskPhone(e.target.value) })}
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all outline-none"
-              placeholder="(00) 00000-0000"
-              required
-            />
           </div>
         </div>
       </div>

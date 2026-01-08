@@ -10,9 +10,7 @@ export interface User {
   city: string
   region?: string
   listings_count?: number
-  whatsapp?: string
-  facebook_url?: string
-  instagram_url?: string
+
   // Consent tracking fields
   terms_accepted_at?: string
   privacy_accepted_at?: string
@@ -70,9 +68,7 @@ export interface Ad {
   contact_email?: string
   contact_instagram?: string
   contact_facebook?: string
-  whatsapp?: string
-  facebook_url?: string
-  instagram_url?: string
+
   created_at: string
   updated_at: string
   listing_images?: ListingImage[]
@@ -81,10 +77,7 @@ export interface Ad {
   owner?: {
     name: string
     phone?: string
-    whatsapp?: string
-    email?: string
-    facebook_url?: string
-    instagram_url?: string
+
   }
 }
 
