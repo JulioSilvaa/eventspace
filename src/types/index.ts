@@ -58,6 +58,7 @@ export interface Ad {
   delivery_available: boolean
   delivery_fee?: number
   delivery_radius_km?: number
+  comfort?: string[]
   status: 'active' | 'inactive' | 'pending' | 'rejected'
   featured: boolean
   views_count: number

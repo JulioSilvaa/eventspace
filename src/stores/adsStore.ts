@@ -49,6 +49,8 @@ interface SpaceResponse {
   average_rating?: number
   reviews_count?: number
   capacity?: number
+  comfort?: string[]
+  specifications?: Record<string, any>
   owner?: {
     name: string
     phone?: string
@@ -135,6 +137,7 @@ function mapSpaceToAd(space: SpaceResponse): Ad {
       ...space.specifications,
       capacity: space.capacity // Ensure capacity is also in specifications if needed by legacy code
     },
+    comfort: space.comfort || [],
     owner: space.owner,
   }
 }

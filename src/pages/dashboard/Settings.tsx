@@ -127,10 +127,10 @@ export default function Settings() {
                   const Icon = activeTabData?.icon || SettingsIcon
                   return (
                     <>
-                      <div className="w-1.5 h-8 bg-primary-600 rounded-full" />
+                      <div className="w-1 h-6 bg-primary-600 rounded-full" />
                       <div>
-                        <h2 className="text-2xl font-black text-gray-900">{activeTabData?.name}</h2>
-                        <p className="text-sm font-medium text-gray-500">{activeTabData?.description}</p>
+                        <h2 className="text-2xl font-black text-gray-900 leading-none">{activeTabData?.name}</h2>
+                        <p className="text-sm font-medium text-gray-500 mt-1">{activeTabData?.description}</p>
                       </div>
                     </>
                   )
@@ -229,8 +229,8 @@ function PersonalInformationSection() {
   return (
     <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
       <div className="p-8">
-        <form onSubmit={handleSubmit} className="space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="md:col-span-2">
               <label htmlFor="full_name" className="block text-sm font-bold text-gray-700 mb-2 px-1">
                 Nome Completo
@@ -244,7 +244,7 @@ function PersonalInformationSection() {
                   id="full_name"
                   value={formData.full_name}
                   onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                  className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all outline-none font-medium"
+                  className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all outline-none font-medium text-gray-900"
                   required
                 />
               </div>
@@ -263,13 +263,13 @@ function PersonalInformationSection() {
                   id="email"
                   value={formData.email}
                   disabled
-                  className="w-full pl-12 pr-28 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-gray-400 cursor-not-allowed font-medium"
+                  className="w-full pl-12 pr-28 py-3 bg-gray-50 border border-gray-100 rounded-xl text-gray-400 cursor-not-allowed font-medium"
                 />
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 bg-white px-3 py-1 rounded-lg border border-gray-100 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 bg-white px-2 py-1 rounded-lg border border-gray-100 text-[10px] font-black text-gray-400 uppercase tracking-widest shadow-sm">
                   Protegido
                 </div>
               </div>
-              <p className="mt-3 text-xs text-gray-400 font-bold px-1 italic">
+              <p className="mt-2 text-[10px] text-gray-400 font-bold px-1 italic">
                 * Para alterar o email de acesso, entre em contato com nosso suporte técnico.
               </p>
             </div>
@@ -288,7 +288,7 @@ function PersonalInformationSection() {
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: maskPhone(e.target.value) })}
                   placeholder="(00) 00000-0000"
-                  className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all outline-none font-medium"
+                  className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all outline-none font-medium text-gray-900"
                 />
               </div>
             </div>
@@ -307,7 +307,7 @@ function PersonalInformationSection() {
                   value={formData.whatsapp}
                   onChange={(e) => setFormData({ ...formData, whatsapp: maskPhone(e.target.value) })}
                   placeholder="(00) 00000-0000"
-                  className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all outline-none font-medium"
+                  className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all outline-none font-medium text-gray-900"
                 />
               </div>
             </div>
@@ -326,7 +326,7 @@ function PersonalInformationSection() {
                   value={formData.facebook_url}
                   onChange={(e) => setFormData({ ...formData, facebook_url: e.target.value })}
                   placeholder="https://facebook.com/seu-perfil"
-                  className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all outline-none font-medium"
+                  className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all outline-none font-medium text-gray-900"
                 />
               </div>
             </div>
@@ -345,7 +345,7 @@ function PersonalInformationSection() {
                   value={formData.instagram_url}
                   onChange={(e) => setFormData({ ...formData, instagram_url: e.target.value })}
                   placeholder="https://instagram.com/seu-perfil"
-                  className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all outline-none font-medium"
+                  className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all outline-none font-medium text-gray-900"
                 />
               </div>
             </div>

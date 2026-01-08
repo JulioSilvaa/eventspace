@@ -22,6 +22,7 @@ import {
 import StarRating from '@/components/reviews/StarRating'
 import FavoriteButton from '@/components/favorites/FavoriteButton'
 import { formatPrice } from '@/lib/utils'
+import { AMENITY_LABELS } from '@/constants/amenities'
 
 
 interface AdCardProps {
@@ -41,6 +42,7 @@ interface AdCardProps {
       amenities?: string[]
       features?: string[]
     }
+    comfort?: string[]
     featured?: boolean
     views_count: number
     rating?: number
@@ -52,6 +54,9 @@ interface AdCardProps {
   showViewCount?: boolean
   showDate?: boolean
 }
+
+// Map old AdCard amenity names to new labels if needed, or better, import generic mapping if possible.
+// For now, we reuse existing local map but prioritize 'comfort' array which uses new keys.
 
 const AMENITIES_ICONS = {
   wifi: Wifi,
@@ -65,43 +70,17 @@ const AMENITIES_ICONS = {
   garden: TreePine,
   sound_system: Music,
   lighting: Lightbulb,
-}
-
-const AMENITIES_NAMES = {
-  wifi: 'Wi-Fi',
-  parking: 'Estacionamento',
-  kitchen: 'Cozinha',
-  bathrooms: 'Banheiros',
-  air_conditioning: 'Ar Condicionado',
-  ventilation: 'Ventilação',
-  tv: 'TV/Televisão',
-  furniture: 'Mobiliário',
-  coffee_area: 'Área de Café',
-  microwave: 'Micro-ondas',
-  refrigerator: 'Geladeira/Frigobar',
-  washing_machine: 'Máquina de Lavar',
-  sound_basic: 'Som Básico',
-  phone: 'Telefone',
-  location_access: 'Fácil Acesso',
-  pool: 'Piscina',
-  bbq: 'Churrasqueira',
-  garden: 'Área Verde/Jardim',
-  soccer_field: 'Campo de Futebol',
-  game_room: 'Salão de Jogos',
-  gym: 'Academia',
-  sound_system: 'Som Ambiente',
-  lighting: 'Iluminação Especial',
-  decoration: 'Decoração Inclusa',
-  professional_sound: 'Som Profissional',
-  lighting_system: 'Sistema de Iluminação',
-  decoration_items: 'Itens Decorativos',
-  recording_equipment: 'Equipamento de Gravação',
-  cleaning: 'Limpeza',
-  security: 'Segurança',
-  waitstaff: 'Garçom/Atendimento',
-  catering: 'Buffet/Catering',
-  setup: 'Montagem/Desmontagem',
-}
+  // Add mappings for new portuguese keys if they appear raw? 
+  // The backend sends 'wifi', 'piscina' etc. 
+  // We need to map 'piscina' -> Waves.
+  piscina: Waves,
+  churrasqueira: Flame,
+  'ar condicionado': Snowflake,
+  estacionamento: Car,
+  cozinha: Utensils,
+  som: Music,
+  iluminação: Lightbulb
+} as any
 
 export default function AdCard({
   ad,
@@ -111,6 +90,11 @@ export default function AdCard({
 }: AdCardProps) {
 
   const getTopAmenities = () => {
+    // Prioritize new 'comfort' field
+    if (ad.comfort && ad.comfort.length > 0) {
+      return ad.comfort.slice(0, 3)
+    }
+    // Fallback to old specifications
     const allAmenities = [
       ...(ad.specifications?.amenities || []),
       ...(ad.specifications?.features || [])
@@ -119,6 +103,8 @@ export default function AdCard({
   }
 
   const topAmenities = getTopAmenities()
+  const totalAmenitiesCount = (ad.comfort?.length || 0) || ((ad.specifications?.amenities || []).length + (ad.specifications?.features || []).length)
+
   const isSpace = ad.categories?.type === 'space'
   const defaultImage = isSpace
     ? 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&h=300&fit=crop'
@@ -151,6 +137,7 @@ export default function AdCard({
             src={ad.listing_images?.[0]?.image_url || defaultImage}
             alt={ad.title}
             className={imageClasses[size]}
+            loading="lazy"
             onError={(e) => {
               const target = e.target as HTMLImageElement
               target.src = defaultImage
@@ -189,7 +176,7 @@ export default function AdCard({
         {/* Content */}
         <div className={paddingClasses[size]}>
           {/* Title */}
-          <h3 className={`font-bold text-gray-900 mb-2 group-hover:text-primary-600 transition-colors ${size === 'small' ? 'text-base' : size === 'medium' ? 'text-lg' : 'text-xl'
+          <h3 className={`font-bold text-gray-900 mb-2 group-hover:text-primary-600 transition-colors line-clamp-2 ${size === 'small' ? 'text-base' : size === 'medium' ? 'text-lg' : 'text-xl'
             }`}>
             {ad.title}
           </h3>
@@ -213,22 +200,35 @@ export default function AdCard({
             </div>
           )}
 
+
+
           {/* Top amenities */}
           {topAmenities.length > 0 && (
             <div className="flex flex-wrap gap-1 mb-3">
               {topAmenities.map((amenity, index) => {
-                const IconComponent = AMENITIES_ICONS[amenity as keyof typeof AMENITIES_ICONS]
-                const amenityName = AMENITIES_NAMES[amenity as keyof typeof AMENITIES_NAMES] || amenity
+                const normalizedKey = amenity.toLowerCase().trim()
+                // Try to find icon by exact match or normalized key
+                let IconComponent = AMENITIES_ICONS[amenity] || AMENITIES_ICONS[normalizedKey]
+
+                // Fallback for icon if not found
+                if (!IconComponent) {
+                  const key = Object.keys(AMENITIES_ICONS).find(k => normalizedKey.includes(k))
+                  IconComponent = key ? AMENITIES_ICONS[key] : Star
+                }
+
+                // Name lookup
+                const amenityName = AMENITY_LABELS[amenity] || AMENITY_LABELS[normalizedKey] || amenity
+
                 return (
                   <div key={index} className="flex items-center gap-1 bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs">
                     {IconComponent && <IconComponent className="w-3 h-3" />}
-                    <span>{amenityName}</span>
+                    <span className="truncate max-w-[100px]">{amenityName}</span>
                   </div>
                 )
               })}
-              {(ad.specifications?.amenities || []).length + (ad.specifications?.features || []).length > 3 && (
+              {totalAmenitiesCount > 3 && (
                 <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs">
-                  +{(ad.specifications?.amenities || []).length + (ad.specifications?.features || []).length - 3} mais
+                  +{totalAmenitiesCount - 3} mais
                 </span>
               )}
             </div>

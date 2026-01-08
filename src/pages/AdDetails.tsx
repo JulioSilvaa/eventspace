@@ -58,7 +58,8 @@ import {
   Microwave,
   Refrigerator,
   WashingMachine,
-  Speaker
+  Speaker,
+  Armchair
 } from 'lucide-react'
 
 const AMENITIES_ICONS = {
@@ -145,6 +146,86 @@ const SERVICES_LABELS = {
   waitstaff: 'Garçom/Atendimento',
   catering: 'Buffet/Catering',
   setup: 'Montagem/Desmontagem',
+}
+
+import { AMENITY_LABELS } from '@/constants/amenities'
+
+function ComfortItem({ name }: { name: string }) {
+  const normalized = name.toLowerCase().trim()
+  // Try to find translation by key (name) or match normalized
+  // The database stores keys like 'wifi', 'pool' which match keys in AMENITY_LABELS
+  const label = AMENITY_LABELS[name] || AMENITY_LABELS[normalized] || name
+
+  const icons: Record<string, any> = {
+    'wifi': Wifi,
+    'wi-fi': Wifi,
+    'internet': Wifi,
+    'ar condicionado': Snowflake,
+    'ar-condicionado': Snowflake,
+    'ar_conditioning': Snowflake, // key from constants
+    'climatização': Snowflake,
+    'ventilation': Wind, // key from constants
+    'som': Speaker,
+    'sound_basic': Speaker, // key from constants
+    'iluminação': Lightbulb,
+    'cadeiras': Armchair,
+    'mesas': Armchair, // Using Armchair as generic furniture
+    'furniture': Sofa, // key from constants
+    'cozinha': Utensils,
+    'kitchen': Utensils, // key from constants
+    'freezer': Snowflake,
+    'geladeira': Refrigerator,
+    'refrigerator': Refrigerator, // key from constants
+    'microwave': Microwave, // key from constants
+    'coffee_area': Coffee, // key from constants
+    'washing_machine': WashingMachine, // key from constants
+    'phone': Phone, // key from constants
+    'location_access': MapPin, // key from constants
+    'tv': Tv, // key from constants
+    'piscina': Waves,
+    'pool': Waves, // key from constants
+    'churrasqueira': Flame,
+    'bbq': Flame, // key from constants
+    'estacionamento': Car,
+    'parking': Car, // key from constants
+    'segurança': Shield,
+    'security': Shield, // key from constants
+    'limpeza': Sparkles,
+    'cleaning': Sparkles, // key from constants
+    'jogos': Gamepad2,
+    'game_room': Gamepad2, // key from constants
+    'futebol': Users, // Generic for sports
+    'soccer_field': Users, // key from constants
+    'garden': TreePine, // key from constants
+    'gym': Dumbbell, // key from constants
+    'sound_system': Music, // key from constants
+    'lighting': Lightbulb, // key from constants
+    'decoration': Palette, // key from constants
+    'professional_sound': Volume2, // key from constants
+    'lighting_system': Lightbulb, // key from constants
+    'decoration_items': Palette, // key from constants
+    'recording_equipment': Camera, // key from constants
+    'waitstaff': UserCheck, // key from constants
+    'catering': UtensilsCrossed, // key from constants
+    'setup': Users, // key from constants
+  }
+
+  // Find a matching icon
+  // First check if the exact name exists as key (for english keys like 'wifi')
+  // Then check normalized includes for partial matches
+  let Icon = icons[name] || icons[normalized]
+
+  if (!Icon) {
+    const key = Object.keys(icons).find(k => normalized.includes(k))
+    Icon = key ? icons[key] : Sparkles // Default icon
+  }
+
+  return (
+    <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border border-gray-100 h-full">
+      <Icon className="w-4 h-4 text-gray-500 flex-shrink-0" />
+      <span className="text-gray-700 font-medium text-[11px] sm:text-xs md:text-sm break-words leading-tight">{label}</span>
+    </div>
+  )
 }
 
 export default function AdDetails() {
@@ -368,7 +449,7 @@ export default function AdDetails() {
   const hasActionableContact = displayPhone || displayWhatsapp;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pb-40 lg:pb-0">
       <div className="max-w-7xl mx-auto py-6 px-4">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -403,8 +484,34 @@ export default function AdDetails() {
             {/* Galeria de imagens */}
             {images.length > 0 ? (
               <div className="space-y-4">
-                {/* Galeria em grid */}
-                <div className="grid gap-4">
+                {/* Mobile Gallery (Swipeable Carousel) */}
+                <div className="md:hidden relative -mx-4">
+                  <div className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide aspect-video">
+                    {images.map((image, index) => (
+                      <div
+                        key={index}
+                        className="snap-center flex-shrink-0 w-full h-full relative"
+                        onClick={() => openModal(index)}
+                      >
+                        <img
+                          src={typeof image === 'string' ? image : (image as ImageData)?.url || (image as ImageData)?.image_url || '/placeholder-image.jpg'}
+                          alt={`${ad.title} - Imagem ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  {images.length > 1 && (
+                    <div className="absolute bottom-3 right-4 bg-black/60 backdrop-blur-sm text-white text-xs px-3 py-1.5 rounded-full font-medium flex items-center gap-1 pointer-events-none">
+                      <Camera className="w-3 h-3" />
+                      <span>{images.length} fotos</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Desktop Gallery (Grid) */}
+                <div className="hidden md:grid gap-4">
                   {images.length === 1 ? (
                     /* Uma única imagem - exibir maior */
                     <div className="relative group">
@@ -534,121 +641,85 @@ export default function AdDetails() {
             )}
 
             {/* Informações principais */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <div className="flex items-center gap-3 mb-2">
-                    <h1 className="text-3xl font-bold text-gray-900">{ad.title}</h1>
+            <div className="bg-white lg:rounded-lg lg:shadow px-4 py-6 md:p-6 -mx-4 md:mx-0 border-b md:border-b-0 border-gray-100">
+              <div className="flex items-start justify-between mb-4 gap-4">
+                <div className="flex-1 min-w-0">
+                  <div className="mb-2">
+                    <h1 className="text-xl md:text-3xl font-bold text-gray-900 break-words leading-snug">{ad.title}</h1>
                   </div>
-                  <p className="text-lg text-green-600 font-semibold">{formatPrice(ad.price, ad.price_type)}</p>
+                  <p className="text-lg md:text-xl text-green-600 font-bold tracking-tight">{formatPrice(ad.price, ad.price_type)}</p>
                 </div>
                 {ad.featured && (
-                  <span className="bg-yellow-100 text-yellow-800 text-sm px-3 py-1 rounded-full font-medium">
-                    ⭐ Destaque
+                  <span className="flex-shrink-0 bg-yellow-100 text-yellow-800 text-[10px] uppercase font-bold px-2 py-1 rounded-full tracking-wide">
+                    Destaque
                   </span>
                 )}
               </div>
 
-              <div className="flex items-center gap-6 text-sm text-gray-600 mb-6">
-                <span className="flex items-center gap-1">
-                  <MapPin className="w-4 h-4" />
-                  {ad.city}, {ad.state}
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-500 mb-6">
+                <span className="flex items-center gap-1.5">
+                  <MapPin className="w-4 h-4 flex-shrink-0" />
+                  <span className="truncate max-w-[200px]">{ad.city}, {ad.state}</span>
                 </span>
-                <span className="flex items-center gap-1">
-                  <Calendar className="w-4 h-4" />
-                  Publicado em {new Date(ad.created_at).toLocaleDateString('pt-BR')}
+                <span className="flex items-center gap-1.5">
+                  <Calendar className="w-4 h-4 flex-shrink-0" />
+                  <span>{new Date(ad.created_at).toLocaleDateString('pt-BR')}</span>
                 </span>
               </div>
 
               {/* Informações específicas para espaços */}
-              {/* Informações específicas para espaços */}
               {typeof specifications.capacity === 'number' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                  <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg">
-                    <Users className="w-6 h-6 text-blue-600" />
-                    <div>
-                      <p className="font-semibold text-gray-900">Capacidade</p>
-                      <p className="text-sm text-gray-600">{String(specifications.capacity)} pessoas</p>
+                <div className="grid grid-cols-2 gap-3 mb-6">
+                  <div className="flex flex-col justify-center p-3 bg-gray-50 rounded-xl border border-gray-100">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Users className="w-4 h-4 text-blue-600" />
+                      <span className="text-xs font-semibold text-gray-500 uppercase">Capacidade</span>
                     </div>
+                    <p className="font-bold text-gray-900">{String(specifications.capacity)} pessoas</p>
                   </div>
                   {typeof specifications.area_sqm === 'number' && (
-                    <div className="flex items-center gap-3 p-4 bg-green-50 rounded-lg">
-                      <Ruler className="w-6 h-6 text-green-600" />
-                      <div>
-                        <p className="font-semibold text-gray-900">Área</p>
-                        <p className="text-sm text-gray-600">{String(specifications.area_sqm)} m²</p>
+                    <div className="flex flex-col justify-center p-3 bg-gray-50 rounded-xl border border-gray-100">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Ruler className="w-4 h-4 text-green-600" />
+                        <span className="text-xs font-semibold text-gray-500 uppercase">Área</span>
                       </div>
+                      <p className="font-bold text-gray-900">{String(specifications.area_sqm)} m²</p>
                     </div>
                   )}
                 </div>
               )}
 
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">Descrição</h3>
-                <p className="text-gray-700 leading-relaxed whitespace-pre-line">{ad.description}</p>
+              <div className="prose prose-sm md:prose-base max-w-none text-gray-600">
+                <h3 className="text-base font-semibold text-gray-900 mb-2">Descrição</h3>
+                <p className="whitespace-pre-line leading-relaxed">{ad.description}</p>
               </div>
             </div>
 
-            {/* Comodidades e Recursos */}
-            {(amenities.length > 0 || features.length > 0 || services.length > 0) && (
+            {/* Comodidades e Recursos (Unified Comfort List) */}
+            {(ad.comfort && ad.comfort.length > 0) || amenities.length > 0 || features.length > 0 || services.length > 0 ? (
               <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-6">Comodidades e Recursos</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-6">O que esse lugar oferece</h3>
 
-                {amenities.length > 0 && (
-                  <div className="mb-6">
-                    <h4 className="font-medium text-gray-900 mb-3">Comodidades Básicas</h4>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                      {amenities.map((amenity) => {
-                        const Icon = AMENITIES_ICONS[amenity as keyof typeof AMENITIES_ICONS] || Wifi
-                        const label = AMENITIES_LABELS[amenity as keyof typeof AMENITIES_LABELS] || amenity
-                        return (
-                          <div key={String(amenity)} className="flex items-center gap-2 p-2 bg-primary-50 rounded-lg">
-                            <Icon className="w-4 h-4 text-primary-600" />
-                            <span className="text-sm font-medium text-gray-900">{String(label)}</span>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </div>
-                )}
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-4">
+                  {/* Render ad.comfort items with flexible matching */}
+                  {ad.comfort && ad.comfort.map((item: string) => (
+                    <ComfortItem key={item} name={item} />
+                  ))}
 
-                {features.length > 0 && (
-                  <div className="mb-6">
-                    <h4 className="font-medium text-gray-900 mb-3">Recursos Especiais</h4>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                      {features.map((feature) => {
-                        const Icon = FEATURES_ICONS[feature as keyof typeof FEATURES_ICONS] || Music
-                        const label = FEATURES_LABELS[feature as keyof typeof FEATURES_LABELS] || feature
-                        return (
-                          <div key={String(feature)} className="flex items-center gap-2 p-2 bg-green-50 rounded-lg">
-                            <Icon className="w-4 h-4 text-green-600" />
-                            <span className="text-sm font-medium text-gray-900">{String(label)}</span>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {services.length > 0 && (
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-3">Serviços Inclusos</h4>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                      {services.map((service) => {
-                        const Icon = SERVICES_ICONS[service as keyof typeof SERVICES_ICONS] || UserCheck
-                        const label = SERVICES_LABELS[service as keyof typeof SERVICES_LABELS] || service
-                        return (
-                          <div key={String(service)} className="flex items-center gap-2 p-2 bg-blue-50 rounded-lg">
-                            <Icon className="w-4 h-4 text-blue-600" />
-                            <span className="text-sm font-medium text-gray-900">{String(label)}</span>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </div>
-                )}
+                  {/* Fallback for legacy amenities/features if comfort is empty but others exist */}
+                  {(!ad.comfort || ad.comfort.length === 0) && amenities.map((amenity: any) => {
+                    const Icon = AMENITIES_ICONS[amenity as keyof typeof AMENITIES_ICONS] || Wifi
+                    const label = AMENITIES_LABELS[amenity as keyof typeof AMENITIES_LABELS] || amenity
+                    return (
+                      <div key={String(amenity)} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                        <Icon className="w-5 h-5 text-gray-600" />
+                        <span className="text-gray-700">{String(label)}</span>
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
-            )}
+            ) : null}
 
             {/* Localização */}
             <div className="bg-white rounded-lg shadow p-6">
@@ -762,7 +833,7 @@ export default function AdDetails() {
                 </p>
               </div>
 
-              <div className="space-y-3 mb-8">
+              <div className="space-y-3 mb-8 hidden lg:block">
                 {hasActionableContact && (
                   <>
                     {displayWhatsapp && (
@@ -906,77 +977,99 @@ export default function AdDetails() {
         </div>
 
         {/* Modal de imagem */}
+        {/* Modal de imagens */}
         {isModalOpen && (
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-90" onClick={closeModal}>
-            <div className="relative max-w-7xl max-h-full w-full h-full flex items-center justify-center p-4" onClick={(e) => e.stopPropagation()}>
-              {/* Botão fechar */}
-              <button
-                onClick={closeModal}
-                className="absolute top-4 right-4 z-10 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition-opacity"
-              >
-                <X className="w-6 h-6" />
-              </button>
+          <div className="fixed inset-0 z-50 bg-black bg-opacity-95 flex flex-col items-center justify-center p-4 md:p-8">
+            <button
+              onClick={closeModal}
+              className="absolute top-4 right-4 text-white p-2 rounded-full bg-black/50 hover:bg-white/20 transition-colors z-50 backdrop-blur-sm"
+            >
+              <X className="w-6 h-6 md:w-8 md:h-8" />
+            </button>
 
-              {/* Imagem */}
-              <div className="relative max-w-full max-h-full">
-                <img
-                  src={typeof images[modalImageIndex] === 'string'
-                    ? images[modalImageIndex]
-                    : (images[modalImageIndex] as ImageData)?.url || (images[modalImageIndex] as ImageData)?.image_url || '/placeholder-image.jpg'}
-                  alt={`${ad.title} - Imagem ${modalImageIndex + 1}`}
-                  className="max-w-full max-h-full object-contain rounded-lg"
-                />
+            <div className="relative w-full h-full max-w-5xl flex items-center justify-center">
+              <img
+                src={typeof images[modalImageIndex] === 'string' ? images[modalImageIndex] : (images[modalImageIndex] as ImageData)?.url || (images[modalImageIndex] as ImageData)?.image_url || '/placeholder-image.jpg'}
+                alt={`Imagem ${modalImageIndex + 1}`}
+                className="max-w-full max-h-full md:max-h-[80vh] object-contain rounded-lg shadow-2xl"
+              />
 
-                {/* Navegação do modal */}
-                {images.length > 1 && (
-                  <>
-                    <button
-                      onClick={prevModalImage}
-                      className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-3 rounded-full hover:bg-opacity-70 transition-opacity"
+              {/* Navigation buttons */}
+              {images.length > 1 && (
+                <>
+                  <button
+                    onClick={prevModalImage}
+                    className="absolute left-2 top-1/2 transform -translate-y-1/2 text-white/75 hover:text-white transition-colors"
+                  >
+                    <ChevronLeft className="w-8 h-8 md:w-12 md:h-12 drop-shadow-lg" />
+                  </button>
+                  <button
+                    onClick={nextModalImage}
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white/75 hover:text-white transition-colors"
+                  >
+                    <ChevronRight className="w-8 h-8 md:w-12 md:h-12 drop-shadow-lg" />
+                  </button>
+                </>
+              )}
+
+              {/* Counter */}
+              <div className="absolute bottom-20 md:bottom-4 left-1/2 transform -translate-x-1/2 bg-black/50 backdrop-blur-sm text-white px-3 py-1.5 md:px-4 md:py-2 rounded-full text-xs md:text-sm font-medium border border-white/10">
+                {modalImageIndex + 1} / {images.length}
+              </div>
+            </div>
+
+            {/* Thumbnails - Hidden on mobile, visible on desktop */}
+            {images.length > 1 && (
+              <div className="hidden md:block absolute bottom-4 left-4 right-4">
+                <div className="flex justify-center gap-2 max-w-full overflow-x-auto py-2">
+                  {images.map((image, index) => (
+                    <div
+                      key={index}
+                      className={`flex-shrink-0 w-16 h-16 bg-gray-200 rounded-md overflow-hidden cursor-pointer border-2 transition-all ${index === modalImageIndex
+                        ? 'border-white ring-2 ring-primary-400'
+                        : 'border-transparent hover:border-gray-300'
+                        }`}
+                      onClick={() => setModalImageIndex(index)}
                     >
-                      <ChevronLeft className="w-8 h-8" />
-                    </button>
-                    <button
-                      onClick={nextModalImage}
-                      className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-3 rounded-full hover:bg-opacity-70 transition-opacity"
-                    >
-                      <ChevronRight className="w-8 h-8" />
-                    </button>
-                  </>
-                )}
-
-                {/* Contador no modal */}
-                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-4 py-2 rounded-full text-sm">
-                  {modalImageIndex + 1} / {images.length}
+                      <img
+                        src={typeof image === 'string' ? image : (image as ImageData)?.url || (image as ImageData)?.image_url || '/placeholder-image.jpg'}
+                        alt={`Miniatura ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ))}
                 </div>
               </div>
-
-              {/* Miniaturas no modal */}
-              {images.length > 1 && (
-                <div className="absolute bottom-4 left-4 right-4">
-                  <div className="flex justify-center gap-2 max-w-full overflow-x-auto py-2">
-                    {images.map((image, index) => (
-                      <div
-                        key={index}
-                        className={`flex-shrink-0 w-16 h-16 bg-gray-200 rounded-md overflow-hidden cursor-pointer border-2 transition-all ${index === modalImageIndex
-                          ? 'border-white ring-2 ring-primary-400'
-                          : 'border-transparent hover:border-gray-300'
-                          }`}
-                        onClick={() => setModalImageIndex(index)}
-                      >
-                        <img
-                          src={typeof image === 'string' ? image : (image as ImageData)?.url || (image as ImageData)?.image_url || '/placeholder-image.jpg'}
-                          alt={`Miniatura ${index + 1}`}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
+            )}
           </div>
         )}
+
+
+        {/* Mobile Fixed Bottom Action Bar */}
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[9999]">
+          {/* Gradient fade */}
+          <div className="h-8 bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none" />
+
+          <div className="bg-white px-4 pb-4 pt-2 shadow-[0_-4px_20px_-4px_rgba(0,0,0,0.05)]">
+            <div className="flex gap-3">
+              <button
+                onClick={openWhatsApp}
+                className="flex-1 bg-[#25D366] text-white font-semibold py-3 px-4 rounded-xl shadow-sm hover:bg-[#20ba5a] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+              >
+                <MessageCircle className="w-5 h-5" />
+                WhatsApp
+              </button>
+              <button
+                onClick={callPhone}
+                className="flex-1 bg-blue-600 text-white font-semibold py-3 px-4 rounded-xl shadow-sm hover:bg-blue-700 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+              >
+                <Phone className="w-5 h-5" />
+                Ligar
+              </button>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   )

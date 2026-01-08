@@ -50,26 +50,24 @@ export default function SearchFiltersComponent({
       : ['DJ', 'Fotógrafo', 'Buffet', 'Decoração', 'Animação', 'Bartender']
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
+    <div className="max-w-4xl mx-auto mb-8">
       {/* Busca Principal */}
-      <form onSubmit={handleSearch} className="mb-4">
-        <div className="flex gap-2">
+      <form onSubmit={handleSearch} className="mb-6 relative z-10">
+        <div className="flex gap-2 shadow-lg rounded-2xl p-2 bg-white border border-gray-100 focus-within:ring-4 focus-within:ring-primary-100 transition-all">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder={`Buscar ${filters.type === 'advertiser' ? 'anunciantes' :
-                filters.type === 'space' ? 'espaços' : 'anúncios'
-                }...`}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              placeholder={`O que você procura? Ex: ${filters.type === 'advertiser' ? 'Buffet, DJ...' : 'Chácara com piscina...'}`}
+              className="w-full pl-12 pr-4 py-3 bg-transparent border-none focus:ring-0 text-gray-900 placeholder-gray-400 text-lg"
             />
           </div>
           <button
             type="submit"
             disabled={loading}
-            className="bg-primary-600 text-white px-6 py-3 rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-primary-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-primary-700 transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-primary-200"
           >
             {loading ? 'Buscando...' : 'Buscar'}
           </button>
@@ -77,14 +75,14 @@ export default function SearchFiltersComponent({
       </form>
 
       {/* Sugestões de Busca Rápida */}
-      <div className="mb-4">
-        <p className="text-sm text-gray-600 mb-2">Sugestões:</p>
+      <div className="mb-8 flex flex-wrap items-center gap-3 justify-center">
+        <p className="text-sm font-medium text-gray-500">Busca rápida:</p>
         <div className="flex flex-wrap gap-2">
           {suggestions.map(suggestion => (
             <button
               key={suggestion}
               onClick={() => handleQuickSearch(suggestion)}
-              className="text-sm bg-gray-100 text-gray-700 px-3 py-1 rounded-full hover:bg-gray-200 transition-colors"
+              className="text-sm px-4 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-full hover:border-primary-300 hover:text-primary-700 hover:bg-primary-50 transition-all shadow-sm"
             >
               {suggestion}
             </button>
@@ -93,15 +91,17 @@ export default function SearchFiltersComponent({
       </div>
 
       {/* Toggle Filtros Avançados */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-center">
         <button
           onClick={() => setShowAdvanced(!showAdvanced)}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors"
+          className={`flex items-center gap-2 px-6 py-2 rounded-full transition-all ${showAdvanced
+            ? 'bg-primary-50 text-primary-700 font-medium'
+            : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'}`}
         >
           <Filter className="w-4 h-4" />
-          Filtros Avançados
+          {showAdvanced ? 'Ocultar filtros' : 'Filtros avançados'}
           {activeFiltersCount > 0 && (
-            <span className="bg-primary-600 text-white text-xs px-2 py-1 rounded-full">
+            <span className="ml-1 bg-primary-600 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full">
               {activeFiltersCount}
             </span>
           )}
@@ -110,17 +110,17 @@ export default function SearchFiltersComponent({
         {activeFiltersCount > 0 && (
           <button
             onClick={onClearFilters}
-            className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            className="ml-4 flex items-center gap-1 text-sm text-red-500 hover:text-red-700 transition-colors font-medium"
           >
             <X className="w-4 h-4" />
-            Limpar filtros
+            Limpar
           </button>
         )}
       </div>
 
       {/* Filtros Avançados */}
       {showAdvanced && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="mt-6 bg-white rounded-2xl shadow-xl border border-gray-100 p-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-in fade-in slide-in-from-top-4 duration-300">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Categoria

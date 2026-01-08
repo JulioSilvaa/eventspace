@@ -287,7 +287,7 @@ export default function MyAds() {
                       </div>
 
                       {/* Stats Grid */}
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-5">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-5">
                         <div className="flex items-center gap-3 px-3 py-2 bg-gray-50 rounded-lg border border-gray-100">
                           <div className="p-2 bg-white rounded-md shadow-sm">
                             <Eye className="w-4 h-4 text-blue-500" />
@@ -308,7 +308,7 @@ export default function MyAds() {
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-3 px-3 py-2 bg-green-50 rounded-lg border border-green-100">
+                        <div className="flex items-center gap-3 px-3 py-2 bg-green-50 rounded-lg border border-green-100 col-span-2 sm:col-span-1">
                           <div className="p-2 bg-white rounded-md shadow-sm">
                             <TrendingUp className="w-4 h-4 text-green-600" />
                           </div>
@@ -320,13 +320,13 @@ export default function MyAds() {
                       </div>
                     </div>
 
-                    <div className="mt-6 pt-5 border-t border-gray-100 flex items-center justify-between">
+                    <div className="mt-6 pt-5 border-t border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                       <div className="flex items-center gap-2 text-[11px] font-medium text-gray-400">
                         <Calendar className="w-3.5 h-3.5" />
                         Publicado em {ad.created_at ? new Date(ad.created_at).toLocaleDateString('pt-BR') : 'Recente'}
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 self-end sm:self-auto">
                         <Tooltip content="Editar anúncio">
                           <Link
                             to={`/dashboard/anuncios/${ad.id}/editar`}

@@ -168,29 +168,29 @@ export default function Dashboard() {
       {/* Header */}
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between py-6 gap-4">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 mb-1">
                 {isWelcome ? '🎉 Bem-vindo ao EventSpace!' : `Olá, ${profile?.full_name?.split(' ')[0] || 'Anunciante'}! 👋`}
               </h1>
-              <p className="text-gray-600">
+              <p className="text-gray-600 text-sm md:text-base">
                 {userAds.length > 0 ? 'Acompanhe o desempenho do seu anúncio no EventSpace' : 'Gerencie seu perfil e navegue pelos espaços disponíveis'}
               </p>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               {/* Botão Voltar para Home */}
               <Link
                 to="/"
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex-1 md:flex-none justify-center whitespace-nowrap"
               >
                 <Home className="w-4 h-4" />
-                Voltar para Home
+                <span className="md:inline">Home</span>
               </Link>
               {userAds.length === 0 && (
                 <Link
                   to="/dashboard/criar-anuncio"
-                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors flex-1 md:flex-none justify-center whitespace-nowrap"
                 >
                   <Plus className="w-4 h-4" />
                   Criar Anúncio
@@ -198,7 +198,7 @@ export default function Dashboard() {
               )}
               <button
                 onClick={signOut}
-                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 flex-1 md:flex-none justify-center"
               >
                 <LogOut className="h-4 w-4" />
                 Sair

@@ -36,6 +36,7 @@ export interface SearchResult {
     image_url: string
     display_order?: number
   }>
+  comfort?: string[]
 }
 
 export interface SearchResponse {
@@ -76,6 +77,7 @@ interface SpaceResponse {
   category_id?: number
   category_name?: string
   category_type?: string
+  comfort?: string[]
 }
 
 interface SpacesListResponse {
@@ -162,7 +164,8 @@ export async function searchAds(filters: SearchFilters): Promise<SearchResponse>
         listing_images: processedImages.map((img, index) => ({
           image_url: img.medium || img.large || img.thumbnail,
           display_order: index
-        }))
+        })),
+        comfort: space.comfort || []
       }
     })
 

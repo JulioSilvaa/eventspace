@@ -111,8 +111,8 @@ export default function Home() {
 
       {/* Hero Section */}
       <section className="relative bg-white pt-20 pb-32 overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px] opacity-30"></div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px] opacity-30 pointer-events-none"></div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
               <div className="mb-6">
@@ -131,36 +131,19 @@ export default function Home() {
                 Encontre o local ideal e tudo que precisa em um só lugar.
               </p>
 
-              <div className="space-y-4 mb-8">
-                <div className="flex flex-col md:flex-row gap-4">
-                  <input
-                    type="text"
-                    id="search-term"
-                    placeholder="Qual tipo de espaço?"
-                    className="flex-1 px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <input
-                    type="text"
-                    id="search-location"
-                    placeholder="Cidade ou região"
-                    className="flex-1 px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <button
-                  onClick={() => {
-                    const searchTerm = (document.getElementById('search-term') as HTMLInputElement)?.value || '';
-                    const searchLocation = (document.getElementById('search-location') as HTMLInputElement)?.value || '';
-
-                    const params = new URLSearchParams();
-                    if (searchTerm) params.set('query', searchTerm);
-                    if (searchLocation) params.set('city', searchLocation);
-
-                    window.location.href = `/espacos?${params.toString()}`;
-                  }}
-                  className="w-full md:w-auto bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              <div className="flex flex-col sm:flex-row gap-4 mb-10">
+                <Link
+                  to="/espacos"
+                  className="inline-flex items-center justify-center px-8 py-4 text-base font-bold text-white transition-all duration-200 bg-blue-600 border border-transparent rounded-full hover:bg-blue-700 hover:shadow-lg hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600"
                 >
-                  Buscar no EventSpace
-                </button>
+                  Explorar Espaços
+                </Link>
+                <Link
+                  to="/como-funciona"
+                  className="inline-flex items-center justify-center px-8 py-4 text-base font-bold text-gray-700 transition-all duration-200 bg-white border border-gray-200 rounded-full hover:bg-gray-50 hover:text-blue-600 hover:border-blue-200 hover:shadow-md hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200"
+                >
+                  Como Funciona
+                </Link>
               </div>
 
               <div className="grid grid-cols-3 gap-6 text-center">
@@ -179,7 +162,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="relative lg:mt-0 mt-12">
+            <div className="relative lg:mt-0 mt-16 max-w-md mx-auto transform hover:scale-[1.02] transition-transform duration-500">
               <div className="absolute -inset-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl opacity-20 blur-2xl animate-pulse"></div>
               <div className="relative bg-white rounded-3xl p-4 shadow-2xl ring-1 ring-gray-100">
                 <img
@@ -274,33 +257,36 @@ export default function Home() {
                       <div key={ad.id} className="w-full flex-shrink-0">
                         <div className="bg-white rounded-2xl shadow-xl overflow-hidden mx-2">
                           <div className="md:flex">
-                            <div className="md:w-1/2">
+                            <div className="md:w-5/12 relative h-64 md:h-80">
                               <img
                                 src={ad.listing_images?.[0]?.image_url || 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=800&q=80'}
                                 alt={ad.title}
-                                className="w-full h-64 md:h-full object-cover"
+                                className="w-full h-full object-cover"
+                                loading="lazy"
                               />
                             </div>
-                            <div className="md:w-1/2 p-8">
-                              <div className="flex items-center gap-2 mb-4">
-                                <div className="flex items-center gap-1 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-                                  <Building2 className="w-4 h-4" />
-                                  Espaço
-                                </div>
+                            <div className="md:w-7/12 p-4 md:p-6 flex flex-col justify-center">
+                              <div className="flex items-center gap-2 mb-3">
+                                <span className="flex items-center gap-1 bg-blue-50 text-blue-700 px-2.5 py-0.5 rounded-full text-xs font-medium">
+                                  <Building2 className="w-3 h-3" />
+                                  {ad.categories?.name || 'Espaço'}
+                                </span>
                               </div>
 
-                              <h3 className="text-2xl font-bold text-gray-900 mb-3">{ad.title}</h3>
+                              <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-2 line-clamp-1">{ad.title}</h3>
 
-                              <div className="flex items-center text-gray-600 mb-3">
-                                <MapPin className="w-5 h-5 mr-2" />
+                              <div className="flex items-center text-gray-600 mb-3 text-sm">
+                                <MapPin className="w-4 h-4 mr-1.5" />
                                 <span>{ad.city}, {ad.state}</span>
                               </div>
 
                               <div className="flex items-center mb-4">
                                 <div className="flex items-center">
-                                  <Star className="w-5 h-5 text-yellow-400 fill-current" />
-                                  <span className="font-medium ml-2">{ad.rating || 4.8}</span>
+                                  <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                                  <span className="font-medium ml-1.5 text-sm">{ad.rating || 4.8}</span>
                                 </div>
+                                <span className="mx-2 text-gray-300">|</span>
+                                <span className="text-sm text-gray-500">{ad.reviews_count || 0} avaliações</span>
                               </div>
 
                               {typeof ad.specifications?.capacity === 'number' && (
@@ -308,19 +294,23 @@ export default function Home() {
                               )}
 
                               <div className="flex flex-wrap gap-2 mb-6">
-                                {Array.isArray(ad.specifications?.amenities) &&
-                                  ad.specifications.amenities.slice(0, 3).map((amenity: string, index: number) => (
+                                {ad.comfort && ad.comfort.slice(0, 3).map((amenity: string, index: number) => {
+                                  // Local mapping if needed, or just display raw
+                                  // Ideally import AMENITY_LABELS, but let's just display for now to fix TS error
+                                  // or use the same logic as AdCard if we want icons.
+                                  // Simple text for now as it was before.
+                                  return (
                                     <span key={index} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
                                       {amenity}
                                     </span>
-                                  ))}
+                                  )
+                                })}
                               </div>
 
-                              <div className="flex items-center justify-between">
-
+                              <div className="flex items-center justify-between mt-auto">
                                 <Link
-                                  to={`/anuncio/${ad.id}`}
-                                  className="bg-primary-600 text-white px-6 py-3 rounded-lg hover:bg-primary-700 transition-colors font-medium"
+                                  to={`/espaco/${ad.id}`}
+                                  className="inline-flex items-center justify-center bg-primary-600 text-white px-5 py-2.5 rounded-lg hover:bg-primary-700 transition-colors font-medium text-sm w-full md:w-auto"
                                 >
                                   Ver Detalhes
                                 </Link>
@@ -338,13 +328,13 @@ export default function Home() {
                   <>
                     <button
                       onClick={() => setCurrentSlide(currentSlide === 0 ? Math.min(displayedFeaturedAds.length, 4) - 1 : currentSlide - 1)}
-                      className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white shadow-lg rounded-full p-3 hover:bg-gray-50 transition-colors"
+                      className="hidden md:block absolute left-4 top-1/2 transform -translate-y-1/2 bg-white shadow-lg rounded-full p-3 hover:bg-gray-50 transition-colors z-10"
                     >
                       <ChevronLeft className="w-6 h-6 text-gray-600" />
                     </button>
                     <button
                       onClick={() => setCurrentSlide(currentSlide === Math.min(displayedFeaturedAds.length, 4) - 1 ? 0 : currentSlide + 1)}
-                      className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white shadow-lg rounded-full p-3 hover:bg-gray-50 transition-colors"
+                      className="hidden md:block absolute right-4 top-1/2 transform -translate-y-1/2 bg-white shadow-lg rounded-full p-3 hover:bg-gray-50 transition-colors z-10"
                     >
                       <ChevronRight className="w-6 h-6 text-gray-600" />
                     </button>

@@ -142,20 +142,20 @@ export default function ReviewsManagement() {
       {/* Header */}
       <div className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-4 py-6">
+          <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 py-6 transition-all">
             <Link
               to="/dashboard"
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors self-start md:self-auto"
             >
               <ArrowLeft className="w-5 h-5" />
-              Voltar ao Dashboard
+              <span className="md:inline">Voltar</span>
             </Link>
-            <div className="h-6 w-px bg-gray-300"></div>
+            <div className="hidden md:block h-6 w-px bg-gray-300"></div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
+              <h1 className="text-xl md:text-2xl font-bold text-gray-900">
                 {hasSpecificListing ? 'Avaliações do Anúncio' : 'Gerenciar Avaliações'}
               </h1>
-              <p className="text-gray-600">
+              <p className="text-sm md:text-base text-gray-600">
                 {hasSpecificListing
                   ? 'Responda às avaliações deste anúncio específico'
                   : 'Responda às avaliações dos seus anúncios'
@@ -167,41 +167,41 @@ export default function ReviewsManagement() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto py-6 md:py-8 px-4 sm:px-6 lg:px-8">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6 mb-8">
+          <div className="col-span-2 md:col-span-1 bg-white rounded-lg border border-gray-200 p-4 md:p-6">
             <div className="flex items-center gap-3">
               <div className="bg-blue-100 p-2 rounded-lg">
                 <Star className="w-5 h-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Total de Avaliações</p>
-                <p className="text-2xl font-bold text-gray-900">{reviews.length}</p>
+                <p className="text-xs md:text-sm text-gray-600 font-medium">Total de Avaliações</p>
+                <p className="text-2xl md:text-3xl font-bold text-gray-900">{reviews.length}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <div className="flex items-center gap-3">
+          <div className="col-span-1 bg-white rounded-lg border border-gray-200 p-4 md:p-6">
+            <div className="flex items-center gap-2 md:gap-3">
               <div className="bg-orange-100 p-2 rounded-lg">
-                <MessageSquareReply className="w-5 h-5 text-orange-600" />
+                <MessageSquareReply className="w-4 h-4 md:w-5 md:h-5 text-orange-600" />
               </div>
-              <div>
-                <p className="text-sm text-gray-600">Pendentes</p>
-                <p className="text-2xl font-bold text-gray-900">{pendingReviews.length}</p>
+              <div className="min-w-0">
+                <p className="text-xs md:text-sm text-gray-600 font-medium truncate">Pendentes</p>
+                <p className="text-xl md:text-2xl font-bold text-gray-900">{pendingReviews.length}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <div className="flex items-center gap-3">
+          <div className="col-span-1 bg-white rounded-lg border border-gray-200 p-4 md:p-6">
+            <div className="flex items-center gap-2 md:gap-3">
               <div className="bg-green-100 p-2 rounded-lg">
-                <Eye className="w-5 h-5 text-green-600" />
+                <Eye className="w-4 h-4 md:w-5 md:h-5 text-green-600" />
               </div>
-              <div>
-                <p className="text-sm text-gray-600">Respondidas</p>
-                <p className="text-2xl font-bold text-gray-900">{reviews.filter(r => r.reply).length}</p>
+              <div className="min-w-0">
+                <p className="text-xs md:text-sm text-gray-600 font-medium truncate">Respondidas</p>
+                <p className="text-xl md:text-2xl font-bold text-gray-900">{reviews.filter(r => r.reply).length}</p>
               </div>
             </div>
           </div>
@@ -215,8 +215,8 @@ export default function ReviewsManagement() {
                 <button
                   onClick={() => setActiveTab('all')}
                   className={`py-3 px-6 text-sm font-medium ${activeTab === 'all'
-                      ? 'border-b-2 border-primary-500 text-primary-600'
-                      : 'text-gray-500 hover:text-gray-700'
+                    ? 'border-b-2 border-primary-500 text-primary-600'
+                    : 'text-gray-500 hover:text-gray-700'
                     }`}
                 >
                   Todas as Avaliações ({reviews.length})
@@ -224,8 +224,8 @@ export default function ReviewsManagement() {
                 <button
                   onClick={() => setActiveTab('pending')}
                   className={`py-3 px-6 text-sm font-medium ${activeTab === 'pending'
-                      ? 'border-b-2 border-primary-500 text-primary-600'
-                      : 'text-gray-500 hover:text-gray-700'
+                    ? 'border-b-2 border-primary-500 text-primary-600'
+                    : 'text-gray-500 hover:text-gray-700'
                     }`}
                 >
                   Pendentes ({pendingReviews.length})

@@ -100,17 +100,17 @@ export default function DashboardStats({
   return (
     <div>
       <div className="mb-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900 mb-1">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <h2 className="text-lg font-semibold text-gray-900">
             Resumo dos seus anúncios
           </h2>
           {isRealTime && (
-            <div className="flex items-center text-xs text-green-600">
+            <div className="flex items-center text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full self-start sm:self-auto">
               <div className="w-2 h-2 bg-green-600 rounded-full animate-pulse mr-1"></div>
               Real-time
               {lastUpdated && (
-                <span className="text-gray-500 ml-2">
-                  Atualizado {lastUpdated.toLocaleTimeString()}
+                <span className="text-gray-500 ml-2 border-l border-green-200 pl-2">
+                  {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </span>
               )}
             </div>
