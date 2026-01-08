@@ -8,7 +8,7 @@ import { useAuth } from '@/hooks/useAuth'
 // import UpgradeModal from '@/components/modals/UpgradeModal'
 import { useAdsStore } from '@/stores/adsStore'
 import { useToast } from '@/contexts/ToastContext'
-import subscriptionService from '@/services/subscriptionService'
+
 import {
   ArrowLeft,
   ArrowRight,
