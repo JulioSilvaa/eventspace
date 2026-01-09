@@ -64,6 +64,7 @@ export interface Ad {
   rating?: number
   reviews_count?: number
   contact_whatsapp?: string
+  contact_whatsapp_alternative?: string
   contact_phone?: string
   contact_email?: string
   contact_instagram?: string

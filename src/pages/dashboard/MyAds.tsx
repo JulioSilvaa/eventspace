@@ -164,54 +164,56 @@ export default function MyAds() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto py-6 px-4">
+    <div className="min-h-screen bg-gray-50/50">
+      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div className="flex items-center gap-4">
             <Link
               to="/dashboard"
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2.5 bg-white border border-gray-200 hover:bg-gray-50 rounded-xl transition-colors shadow-sm"
             >
               <ArrowLeft className="w-5 h-5 text-gray-600" />
             </Link>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Meus Anúncios</h1>
-              <p className="text-gray-600">{userAds.length > 0 ? 'Gerencie seus anúncios no EventSpace' : 'Seus anúncios aparecerão aqui quando criados'}</p>
+              <h1 className="text-2xl font-black text-gray-900 tracking-tight">Meus Anúncios</h1>
+              <p className="text-sm font-medium text-gray-500">{userAds.length > 0 ? 'Gerencie seus anúncios' : 'Seus anúncios aparecerão aqui'}</p>
             </div>
           </div>
           {userAds.length === 0 && (
             <Link
               to="/dashboard/criar-anuncio"
-              className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-primary-600 text-white px-5 py-2.5 rounded-xl hover:bg-primary-700 shadow-lg shadow-primary-500/20 transition-all font-bold active:scale-95"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-5 h-5" />
               Criar Meu Anúncio
             </Link>
           )}
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <div className="bg-white rounded-lg p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between">
+        <div className="grid grid-cols-2 md:grid-cols-2 gap-3 md:gap-6 mb-8">
+          <div className="bg-white rounded-2xl p-4 md:p-6 border border-gray-100 shadow-sm relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-16 h-16 bg-purple-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+            <div className="flex items-center justify-between relative z-10">
               <div>
-                <p className="text-[11px] font-black uppercase tracking-wider text-gray-400 mb-1">Visualizações Reais</p>
-                <p className="text-2xl font-bold text-purple-600">{metrics.totalViews}</p>
+                <p className="text-[10px] md:text-xs font-black uppercase tracking-wider text-gray-400 mb-1">Visualizações</p>
+                <p className="text-xl md:text-3xl font-black text-purple-600 tracking-tight">{metrics.totalViews}</p>
               </div>
-              <div className="bg-purple-50 p-2.5 rounded-xl border border-purple-100">
-                <Eye className="w-5 h-5 text-purple-600" />
+              <div className="bg-purple-50 p-2 md:p-3 rounded-xl border border-purple-100 shadow-sm">
+                <Eye className="w-4 h-4 md:w-5 md:h-5 text-purple-600" />
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-lg p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between">
+          <div className="bg-white rounded-2xl p-4 md:p-6 border border-gray-100 shadow-sm relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-16 h-16 bg-orange-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+            <div className="flex items-center justify-between relative z-10">
               <div>
-                <p className="text-[11px] font-black uppercase tracking-wider text-gray-400 mb-1">Contatos Convertidos</p>
-                <p className="text-2xl font-bold text-orange-600">{metrics.totalContacts}</p>
+                <p className="text-[10px] md:text-xs font-black uppercase tracking-wider text-gray-400 mb-1">Contatos</p>
+                <p className="text-xl md:text-3xl font-black text-orange-600 tracking-tight">{metrics.totalContacts}</p>
               </div>
-              <div className="bg-orange-50 p-2.5 rounded-xl border border-orange-100">
-                <MessageCircle className="w-5 h-5 text-orange-600 fill-current" />
+              <div className="bg-orange-50 p-2 md:p-3 rounded-xl border border-orange-100 shadow-sm">
+                <MessageCircle className="w-4 h-4 md:w-5 md:h-5 text-orange-600 fill-current" />
               </div>
             </div>
           </div>
@@ -220,136 +222,123 @@ export default function MyAds() {
 
         {/* Ads List */}
         {userAds.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-12 text-center">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Star className="w-8 h-8 text-gray-400" />
+          <div className="bg-white rounded-3xl border border-dashed border-gray-200 p-8 md:p-12 text-center">
+            <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+              <Star className="w-8 h-8 text-gray-300" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
               Você ainda não criou seu anúncio
             </h3>
-            <p className="text-gray-600 mb-6">
-              Crie seu anúncio e alcance milhares de pessoas interessadas em equipamentos e espaços para eventos
+            <p className="text-gray-500 font-medium mb-8 max-w-md mx-auto">
+              Crie seu anúncio agora e comece a receber contatos de pessoas interessadas em alugar seu espaço ou equipamento.
             </p>
             <Link
               to="/dashboard/criar-anuncio"
-              className="bg-primary-600 text-white px-6 py-3 rounded-lg hover:bg-primary-700 transition-colors inline-flex items-center gap-2"
+              className="bg-primary-600 text-white px-8 py-3.5 rounded-xl hover:bg-primary-700 shadow-xl shadow-primary-500/20 transition-all inline-flex items-center gap-2 font-bold hover:-translate-y-0.5 active:translate-y-0"
             >
-              <Plus className="w-4 h-4" />
-              Criar Meu Anúncio
+              <Plus className="w-5 h-5" />
+              Começar Agora
             </Link>
           </div>
         ) : (
           <div className="grid gap-6">
             {userAds.map((ad) => (
-              <div key={ad.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all duration-300 group">
+              <div key={ad.id} className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg hover:shadow-gray-200/50 transition-all duration-300 group">
                 <div className="flex flex-col md:flex-row">
                   {/* Thumbnail Section */}
-                  <div className="w-full md:w-56 h-48 md:h-auto relative bg-gray-100 shrink-0">
+                  <div className="w-full md:w-72 h-56 md:h-auto relative bg-gray-100 shrink-0 overflow-hidden">
                     {ad.listing_images && ad.listing_images.length > 0 ? (
                       <img
                         src={ad.listing_images[0].image_url}
                         alt={ad.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center">
+                      <div className="w-full h-full flex items-center justify-center bg-gray-50">
                         <Star className="w-10 h-10 text-gray-300" />
                       </div>
                     )}
-                    <div className="absolute top-3 left-3">
-                      <span className={`text-[10px] uppercase tracking-wider px-2.5 py-1.5 rounded-lg font-bold shadow-sm ${getStatusColor(ad.status)}`}>
+                    <div className="absolute top-4 left-4">
+                      <span className={`text-[10px] uppercase tracking-wider px-3 py-1.5 rounded-lg font-bold shadow-sm backdrop-blur-md bg-white/90 ${ad.status === 'active' ? 'text-green-700' :
+                          ad.status === 'inactive' ? 'text-yellow-700' : 'text-gray-700'
+                        }`}>
                         {getStatusText(ad.status)}
                       </span>
                     </div>
+                    {/* Mobile Overlay Gradient for text readability if needed, but text is outside */}
                   </div>
 
                   {/* Content Section */}
-                  <div className="flex-1 p-5 md:p-6 flex flex-col justify-between">
+                  <div className="flex-1 p-5 md:p-7 flex flex-col justify-between">
                     <div>
-                      <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-start justify-between mb-4">
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-xl font-bold text-gray-900 truncate group-hover:text-primary-600 transition-colors">
+                          <h3 className="text-xl md:text-2xl font-bold text-gray-900 truncate group-hover:text-primary-600 transition-colors">
                             {ad.title}
                           </h3>
-                          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                            <span className="text-sm font-medium text-gray-500 flex items-center gap-1">
-                              <Star className="w-3.5 h-3.5 text-gray-400" />
-                              {ad.categories?.name || 'Categoria não encontrada'}
+                          <div className="flex items-center gap-3 mt-2 flex-wrap text-sm">
+                            <span className="font-semibold text-gray-500 bg-gray-50 px-2 py-1 rounded-md border border-gray-100">
+                              {ad.categories?.name || 'Geral'}
                             </span>
-                            <span className="text-gray-300 text-xs">•</span>
-                            <span className="text-sm font-medium text-gray-500 flex items-center gap-1">
-                              <MapPin className="w-3.5 h-3.5 text-gray-400" />
+                            <span className="text-gray-400 font-medium flex items-center gap-1.5">
+                              <MapPin className="w-3.5 h-3.5" />
                               {ad.city}, {ad.state}
                             </span>
                           </div>
                         </div>
-
                       </div>
 
                       {/* Stats Grid */}
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-5">
-                        <div className="flex items-center gap-3 px-3 py-2 bg-gray-50 rounded-lg border border-gray-100">
-                          <div className="p-2 bg-white rounded-md shadow-sm">
-                            <Eye className="w-4 h-4 text-blue-500" />
-                          </div>
-                          <div className="flex flex-col leading-tight">
-                            <span className="text-[10px] text-gray-400 uppercase font-black tracking-tighter">Views</span>
-                            <span className="text-base font-bold text-gray-900">{ad.views_count || 0}</span>
-                          </div>
+                      <div className="grid grid-cols-3 gap-3 mt-6">
+                        <div className="flex flex-col items-center justify-center p-3 bg-blue-50/50 rounded-2xl border border-blue-100/50">
+                          <span className="text-xl font-bold text-blue-600 mb-0.5">{ad.views_count || 0}</span>
+                          <span className="text-[10px] text-blue-400 uppercase font-black tracking-wider">Views</span>
                         </div>
 
-                        <div className="flex items-center gap-3 px-3 py-2 bg-gray-50 rounded-lg border border-gray-100">
-                          <div className="p-2 bg-white rounded-md shadow-sm">
-                            <MessageCircle className="w-4 h-4 text-green-500" />
-                          </div>
-                          <div className="flex flex-col leading-tight">
-                            <span className="text-[10px] text-gray-400 uppercase font-black tracking-tighter">Contatos</span>
-                            <span className="text-base font-bold text-gray-900">{ad.contacts_count || 0}</span>
-                          </div>
+                        <div className="flex flex-col items-center justify-center p-3 bg-green-50/50 rounded-2xl border border-green-100/50">
+                          <span className="text-xl font-bold text-green-600 mb-0.5">{ad.contacts_count || 0}</span>
+                          <span className="text-[10px] text-green-500 uppercase font-black tracking-wider">Contatos</span>
                         </div>
 
-                        <div className="flex items-center gap-3 px-3 py-2 bg-green-50 rounded-lg border border-green-100 col-span-2 sm:col-span-1">
-                          <div className="p-2 bg-white rounded-md shadow-sm">
-                            <TrendingUp className="w-4 h-4 text-green-600" />
-                          </div>
-                          <div className="flex flex-col leading-tight">
-                            <span className="text-[10px] text-green-600/70 uppercase font-black tracking-tighter">Investimento</span>
-                            <span className="text-base font-bold text-green-700">{formatPrice(ad.price, ad.price_type)}</span>
-                          </div>
+                        <div className="flex flex-col items-center justify-center p-3 bg-gray-50/50 rounded-2xl border border-gray-100/50">
+                          <span className="text-sm font-bold text-gray-700 mb-1">{formatPrice(ad.price, ad.price_type)}</span>
+                          <span className="text-[10px] text-gray-400 uppercase font-black tracking-wider">Valor</span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="mt-6 pt-5 border-t border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                      <div className="flex items-center gap-2 text-[11px] font-medium text-gray-400">
+                    <div className="mt-6 pt-5 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+                      <div className="flex items-center gap-2 text-xs font-semibold text-gray-400 order-2 sm:order-1 w-full sm:w-auto justify-center sm:justify-start">
                         <Calendar className="w-3.5 h-3.5" />
                         Publicado em {ad.created_at ? new Date(ad.created_at).toLocaleDateString('pt-BR') : 'Recente'}
                       </div>
 
-                      <div className="flex items-center gap-2 self-end sm:self-auto">
+                      <div className="flex items-center gap-2 w-full sm:w-auto order-1 sm:order-2">
                         <Tooltip content="Editar anúncio">
                           <Link
                             to={`/dashboard/anuncios/${ad.id}/editar`}
-                            className="flex items-center justify-center p-2.5 text-gray-500 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-all duration-200"
+                            className="flex-1 sm:flex-none flex items-center justify-center h-11 px-4 text-gray-600 hover:text-primary-600 hover:bg-primary-50 border border-gray-200 hover:border-primary-200 rounded-xl transition-all font-bold"
                           >
-                            <Edit className="w-5 h-5" />
+                            <span className="sm:hidden mr-2 text-sm">Editar</span>
+                            <Edit className="w-4 h-4" />
                           </Link>
                         </Tooltip>
 
-                        <div className="w-px h-6 bg-gray-100 mx-1 hidden sm:block"></div>
+                        <div className="w-px h-6 bg-gray-200 mx-1 hidden sm:block"></div>
 
                         <Tooltip content={ad.status === 'active' ? 'Pausar anúncio' : 'Ativar anúncio'}>
                           <button
                             onClick={() => handleToggleStatus(ad.id, ad.status)}
-                            className={`flex items-center justify-center p-2.5 rounded-xl transition-all duration-200 ${ad.status === 'active'
-                              ? 'text-amber-500 hover:bg-amber-50'
-                              : 'text-emerald-500 hover:bg-emerald-50'
+                            className={`flex-1 sm:flex-none flex items-center justify-center h-11 px-4 rounded-xl border transition-all ${ad.status === 'active'
+                              ? 'text-amber-600 bg-amber-50 border-amber-100 hover:bg-amber-100'
+                              : 'text-emerald-600 bg-emerald-50 border-emerald-100 hover:bg-emerald-100'
                               }`}
                           >
+                            <span className="sm:hidden mr-2 text-sm font-bold">{ad.status === 'active' ? 'Pausar' : 'Ativar'}</span>
                             {ad.status === 'active' ? (
-                              <Pause className="w-5 h-5 fill-current" />
+                              <Pause className="w-4 h-4 fill-current" />
                             ) : (
-                              <Play className="w-5 h-5 fill-current" />
+                              <Play className="w-4 h-4 fill-current" />
                             )}
                           </button>
                         </Tooltip>
@@ -358,24 +347,22 @@ export default function MyAds() {
                           <Link
                             to={`/anuncio/${ad.id}`}
                             target="_blank"
-                            className="flex items-center justify-center p-2.5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-xl transition-all duration-200"
+                            className="flex-1 sm:flex-none flex items-center justify-center h-11 px-4 text-gray-400 hover:text-blue-600 hover:bg-blue-50 border border-gray-200 hover:border-blue-100 rounded-xl transition-all"
                           >
-                            <Eye className="w-5 h-5" />
+                            <span className="sm:hidden mr-2 text-sm font-bold">Ver</span>
+                            <Eye className="w-4 h-4" />
                           </Link>
                         </Tooltip>
 
                         <Tooltip content="Excluir anúncio">
                           <button
                             onClick={() => handleDeleteAd(ad.id)}
-                            className="flex items-center justify-center p-2.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all duration-200"
+                            className="flex-1 sm:flex-none flex items-center justify-center h-11 px-4 text-gray-400 hover:text-red-600 hover:bg-red-50 border border-gray-200 hover:border-red-100 rounded-xl transition-all"
                           >
-                            <Trash2 className="w-5 h-5" />
+                            <span className="sm:hidden mr-2 text-sm font-bold">Excluir</span>
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         </Tooltip>
-
-                        <button className="flex items-center justify-center p-2.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-all duration-200">
-                          <MoreVertical className="w-5 h-5" />
-                        </button>
                       </div>
                     </div>
                   </div>

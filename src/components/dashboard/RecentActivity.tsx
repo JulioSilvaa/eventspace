@@ -417,61 +417,63 @@ export default function RecentActivity({
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-1">
-          Atividade Recente
-        </h2>
-        <p className="text-sm text-gray-600">
-          Acompanhe as últimas interações com seus anúncios
-        </p>
+    <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-5 md:p-6 h-full">
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-bold text-gray-900 mb-1">
+            Atividade Recente
+          </h2>
+          <p className="text-sm font-medium text-gray-500">
+            Últimas interações
+          </p>
+        </div>
+        <div className="p-2 bg-primary-50 text-primary-600 rounded-xl">
+          <Clock className="w-5 h-5" />
+        </div>
       </div>
 
       {error ? (
         <div className="text-center py-8">
           <Package className="h-12 w-12 text-red-300 mx-auto mb-4" />
-          <p className="text-red-500 text-sm mb-2">
+          <p className="text-red-500 text-sm mb-2 font-medium">
             {error}
           </p>
           <button
             onClick={() => window.location.reload()}
-            className="text-xs text-primary-600 hover:text-primary-700 font-medium"
+            className="text-xs text-primary-600 hover:text-primary-700 font-bold bg-primary-50 px-3 py-1.5 rounded-lg"
           >
             Tentar novamente
           </button>
         </div>
       ) : activities.length === 0 ? (
-        <div className="text-center py-8">
+        <div className="text-center py-12 bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
           <Package className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500 text-sm">
+          <p className="text-gray-500 text-sm font-medium">
             Nenhuma atividade recente
           </p>
           <p className="text-gray-400 text-xs mt-1">
-            Crie seu primeiro anúncio para começar a receber interações
+            Suas notificações aparecerão aqui
           </p>
         </div>
       ) : (
-        <div className="space-y-4 max-h-96 overflow-y-auto pr-2" style={{
-          scrollbarWidth: 'thin',
-          scrollbarColor: '#d1d5db #f3f4f6'
-        }}>
+        <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
           {activities.map((activity) => (
             <div
               key={activity.id}
-              className={`flex items-start gap-3 p-3 rounded-lg border ${getActivityColor(activity.type)}`}
+              className={`flex items-start gap-4 p-4 rounded-2xl border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all bg-white group`}
             >
-              <div className="flex-shrink-0 p-1">
+              <div className={`flex-shrink-0 p-2.5 rounded-xl ${getActivityColor(activity.type)} group-hover:scale-110 transition-transform duration-300`}>
                 {getActivityIcon(activity.type)}
               </div>
 
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <p className="text-sm font-medium text-gray-900">
+                <div className="flex items-center gap-2 mb-1 w-full">
+                  <p className="text-sm font-medium text-gray-900 break-words line-clamp-2">
                     {activity.title}
                   </p>
                 </div>
 
-                <p className="text-xs mt-1 text-gray-600">
+                <p className="text-xs mt-1 text-gray-600 break-words line-clamp-3">
                   {activity.description}
                 </p>
 
@@ -486,8 +488,8 @@ export default function RecentActivity({
 
                 {activity.metadata?.adTitle && (
                   <div className="flex items-center justify-between mt-1">
-                    <p className="text-xs text-gray-500">
-                      Anúncio: {activity.metadata.adTitle}
+                    <p className="text-xs text-gray-500 break-words line-clamp-1 flex-1 min-w-0">
+                      Anúncio: <span className="text-gray-700">{activity.metadata.adTitle}</span>
                     </p>
                     {activity.metadata?.listingId && (activity.type === 'view' || activity.type === 'contact' || activity.type === 'rating') && (
                       <Link

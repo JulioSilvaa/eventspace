@@ -34,11 +34,11 @@ const FormSelect = forwardRef<HTMLSelectElement, FormSelectProps>(
           <select
             ref={ref}
             className={`
-              w-full px-3 py-2 border rounded-lg shadow-sm appearance-none
+              w-full px-4 py-3 border rounded-xl shadow-sm appearance-none transition-all
               focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
               disabled:bg-gray-50 disabled:text-gray-500
-              ${errorMessage 
-                ? 'border-red-300 focus:ring-red-500' 
+              ${errorMessage
+                ? 'border-red-300 focus:ring-red-500'
                 : 'border-gray-300'
               }
               ${className}
@@ -51,8 +51,8 @@ const FormSelect = forwardRef<HTMLSelectElement, FormSelectProps>(
               </option>
             )}
             {options.map((option) => (
-              <option 
-                key={option.value} 
+              <option
+                key={option.value}
                 value={option.value}
                 disabled={option.disabled}
               >
@@ -60,7 +60,7 @@ const FormSelect = forwardRef<HTMLSelectElement, FormSelectProps>(
               </option>
             ))}
           </select>
-          
+
           {/* Chevron Icon */}
           <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
             <ChevronDown className="h-4 w-4 text-gray-400" />

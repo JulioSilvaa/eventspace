@@ -149,6 +149,9 @@ const createListingSchema = z.object({
   contactWhatsapp: z.string()
     .max(25, 'WhatsApp muito longo')
     .optional(),
+  contactWhatsappAlternative: z.string()
+    .max(25, 'WhatsApp alternativo muito longo')
+    .optional(),
   contactEmail: z.string().email('Email inválido').optional().or(z.literal('')),
   contactInstagram: z.string()
     .max(50, 'Instagram muito longo')
@@ -264,6 +267,7 @@ export default function CreateAd() {
       priceType: undefined,
       contactPhone: '',
       contactWhatsapp: '',
+      contactWhatsappAlternative: '',
       contactEmail: '',
       contactInstagram: '',
       contactFacebook: '',
@@ -272,31 +276,7 @@ export default function CreateAd() {
     }
   })
 
-  // Pre-fill contact info from profile
-  const prefilledRef = useRef(false);
-  useEffect(() => {
-    if (profile && !prefilledRef.current) {
-      // Only pre-fill if fields are empty
-      const currentPhone = watch('contactPhone');
-      const currentWhatsapp = watch('contactWhatsapp');
-      const currentEmail = watch('contactEmail');
 
-      if (!currentPhone && profile.phone) {
-        setValue('contactPhone', profile.phone);
-      }
-
-      if (!currentWhatsapp && profile.phone) {
-        // Fallback to phone if whatsapp is empty
-        setValue('contactWhatsapp', profile.phone);
-      }
-
-      if (!currentEmail && profile.email) {
-        setValue('contactEmail', profile.email);
-      }
-
-      prefilledRef.current = true;
-    }
-  }, [profile, setValue, watch]);
 
   // Log validation errors for debugging
   useEffect(() => {
@@ -461,6 +441,7 @@ export default function CreateAd() {
 
       const formattedPhone = processPhone(data.contactPhone)
       const formattedWhatsapp = processPhone(data.contactWhatsapp)
+      const formattedWhatsappAlternative = processPhone(data.contactWhatsappAlternative)
 
       // Extrair arquivos de imagem
       const imageFiles = images.map(img => img.file)
@@ -495,6 +476,7 @@ export default function CreateAd() {
         comfort: allComfort,
         contact_phone: formattedPhone,
         contact_whatsapp: formattedWhatsapp,
+        contact_whatsapp_alternative: formattedWhatsappAlternative,
         contact_email: data.contactEmail,
         contact_instagram: data.contactInstagram,
         contact_facebook: data.contactFacebook,
@@ -577,7 +559,7 @@ export default function CreateAd() {
                 key="description"
                 rows={6}
                 placeholder="Descreva a capacidade, infraestrutura, comodidades disponíveis..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all shadow-sm"
                 {...register('description')}
               />
               {errors.description && (
@@ -773,7 +755,7 @@ export default function CreateAd() {
                     key="price-input"
                     type="text"
                     placeholder="R$ 0,00"
-                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all shadow-sm"
                     {...register('price')}
                     onChange={(e) => handleMaskedChange(e, maskCurrency, 'price')}
                   />
@@ -848,7 +830,7 @@ export default function CreateAd() {
 
             <FormField
               key="contactPhone"
-              label="Telefone/WhatsApp"
+              label="Telefone para Ligações"
               type="tel"
               placeholder="(11) 99999-9999"
               error={errors.contactPhone}
@@ -859,12 +841,22 @@ export default function CreateAd() {
 
             <FormField
               key="contactWhatsapp"
-              label="WhatsApp alternativo"
+              label="WhatsApp Principal"
               type="tel"
               placeholder="(11) 99999-9999 (opcional)"
               error={errors.contactWhatsapp}
               {...register('contactWhatsapp')}
               onChange={(e) => handleMaskedChange(e, utilMaskPhone, 'contactWhatsapp')}
+            />
+
+            <FormField
+              key="contactWhatsappAlternative"
+              label="WhatsApp Alternativo"
+              type="tel"
+              placeholder="(11) 99999-9999 (opcional)"
+              error={errors.contactWhatsappAlternative}
+              {...register('contactWhatsappAlternative')}
+              onChange={(e) => handleMaskedChange(e, utilMaskPhone, 'contactWhatsappAlternative')}
             />
 
             <FormField
@@ -1216,12 +1208,12 @@ export default function CreateAd() {
         </div>
 
         {/* Navigation */}
-        <div className="flex justify-between items-center gap-4">
+        <div className="flex flex-col-reverse md:flex-row justify-between items-stretch md:items-center gap-4">
           <button
             type="button"
             onClick={prevStep}
             disabled={currentStep === 1}
-            className="flex items-center gap-2 px-6 py-3 border-2 border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow"
+            className="flex items-center justify-center gap-2 px-6 py-4 md:py-3 border-2 border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow"
           >
             <ArrowLeft className="w-5 h-5" />
             Anterior
@@ -1231,7 +1223,7 @@ export default function CreateAd() {
             <button
               type="button"
               onClick={nextStep}
-              className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl font-semibold hover:from-primary-700 hover:to-primary-800 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+              className="flex items-center justify-center gap-2 px-8 py-4 md:py-3 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl font-semibold hover:from-primary-700 hover:to-primary-800 transition-all shadow-lg hover:shadow-xl transform active:scale-95 md:hover:scale-105"
             >
               Próximo
               <ArrowRight className="w-5 h-5" />
@@ -1242,7 +1234,7 @@ export default function CreateAd() {
               onClick={handleSubmit(onSubmit)}
               loading={isSubmitting}
               size="lg"
-              className="px-10 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
+              className="px-10 py-4 md:py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 rounded-xl font-semibold shadow-lg hover:shadow-xl transform active:scale-95 md:hover:scale-105 transition-all w-full md:w-auto flex justify-center"
             >
               {isSubmitting ? 'Publicando...' : 'Publicar Anúncio'}
             </FormButton>

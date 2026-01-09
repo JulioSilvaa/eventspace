@@ -63,37 +63,39 @@ export default function Settings() {
               className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-primary-600 transition-colors mb-4 group"
             >
               <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
-              Voltar ao Dashboard
+              Voltar à Área do Anunciante
             </Link>
             <div className="flex items-center gap-4">
               <div className="bg-primary-600 p-3 rounded-2xl shadow-lg shadow-primary-500/20">
                 <SettingsIcon className="w-8 h-8 text-white" />
               </div>
               <div>
-                <h1 className="text-4xl font-black text-gray-900 tracking-tight">Configurações</h1>
-                <p className="text-gray-500 font-medium">Personalize sua experiência na plataforma</p>
+                <div>
+                  <h1 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">Configurações</h1>
+                  <p className="text-gray-500 font-medium">Personalize sua experiência na plataforma</p>
+                </div>
               </div>
             </div>
-          </div>
 
-          {profile && (
-            <div className="bg-white px-6 py-4 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-700 rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-inner">
-                {profile.full_name?.charAt(0).toUpperCase() || 'U'}
+            {profile && (
+              <div className="bg-white px-6 py-4 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4 hidden md:flex">
+                <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-700 rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-inner">
+                  {profile.full_name?.charAt(0).toUpperCase() || 'U'}
+                </div>
+                <div>
+                  <div className="text-sm font-bold text-gray-900">{profile.full_name}</div>
+                  <div className="text-xs font-medium text-gray-500">{profile.email}</div>
+                </div>
               </div>
-              <div>
-                <div className="text-sm font-bold text-gray-900">{profile.full_name}</div>
-                <div className="text-xs font-medium text-gray-500">{profile.email}</div>
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {/* Settings Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10">
           {/* Enhanced Sidebar */}
           <div className="lg:col-span-3">
-            <nav className="space-y-3 sticky top-24">
+            <nav className="flex lg:block overflow-x-auto pb-4 lg:pb-0 space-x-4 lg:space-x-0 lg:space-y-3 lg:sticky lg:top-24 no-scrollbar">
               {tabs.map((tab) => {
                 const Icon = tab.icon
                 const isActive = activeTab === tab.id
@@ -101,7 +103,7 @@ export default function Settings() {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`w-full group flex items-center gap-4 p-4 rounded-2xl transition-all duration-300 ${isActive
+                    className={`flex-shrink-0 lg:w-full group flex items-center gap-3 md:gap-4 p-3 md:p-4 rounded-2xl transition-all duration-300 ${isActive
                       ? 'bg-white text-primary-600 shadow-md shadow-gray-200/50 border border-gray-100'
                       : 'text-gray-500 hover:bg-white hover:text-gray-900 hover:shadow-sm'
                       }`}
@@ -109,9 +111,13 @@ export default function Settings() {
                     <div className={`p-2 rounded-xl transition-colors ${isActive ? 'bg-primary-50' : 'bg-gray-100 group-hover:bg-gray-200'}`}>
                       <Icon className="w-5 h-5" />
                     </div>
-                    <div className="text-left">
+                    <div className="text-left hidden md:block">
                       <div className="font-bold text-sm leading-tight">{tab.name}</div>
                       <div className="text-[10px] uppercase tracking-wider font-bold opacity-60 mt-0.5">{tab.description}</div>
+                    </div>
+                    {/* Mobile Only Label */}
+                    <div className="block md:hidden font-bold text-sm whitespace-nowrap">
+                      {tab.name}
                     </div>
                   </button>
                 )
@@ -122,10 +128,9 @@ export default function Settings() {
           {/* Main Content Area */}
           <div className="lg:col-span-9">
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="flex items-center gap-3 mb-8 px-2">
+              <div className="flex items-center gap-3 mb-6 md:mb-8 px-2">
                 {(() => {
                   const activeTabData = tabs.find(tab => tab.id === activeTab)
-                  const Icon = activeTabData?.icon || SettingsIcon
                   return (
                     <>
                       <div className="w-1 h-6 bg-primary-600 rounded-full" />
@@ -139,7 +144,7 @@ export default function Settings() {
               </div>
 
               {/* Tab Content */}
-              <div className="p-6">
+              <div className="md:p-2">
                 {activeTab === 'personal' && <PersonalInformationSection />}
                 {activeTab === 'security' && <SecuritySection />}
                 {activeTab === 'property' && <PropertySection />}
@@ -222,9 +227,9 @@ function PersonalInformationSection() {
 
   return (
     <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-      <div className="p-8">
+      <div className="p-5 md:p-8">
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
             <div className="md:col-span-2">
               <label htmlFor="full_name" className="block text-sm font-bold text-gray-700 mb-2 px-1">
                 Nome Completo
@@ -294,7 +299,7 @@ function PersonalInformationSection() {
             <button
               type="submit"
               disabled={isLoading}
-              className="flex items-center gap-2 px-10 py-4 bg-primary-600 text-white font-black rounded-2xl hover:bg-primary-700 shadow-xl shadow-primary-500/20 transition-all active:scale-95 disabled:opacity-50"
+              className="w-full md:w-auto flex items-center justify-center gap-2 px-10 py-4 bg-primary-600 text-white font-black rounded-2xl hover:bg-primary-700 shadow-xl shadow-primary-500/20 transition-all active:scale-95 disabled:opacity-50"
             >
               {isLoading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -356,10 +361,10 @@ function SecuritySection() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 md:space-y-8">
       {/* Change Password Card */}
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
-        <div className="flex items-center gap-3 mb-8">
+      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-5 md:p-8">
+        <div className="flex items-center gap-3 mb-6 md:mb-8">
           <div className="p-2 bg-amber-50 rounded-xl text-amber-600">
             <Shield className="w-5 h-5" />
           </div>
@@ -382,7 +387,7 @@ function SecuritySection() {
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
               <div>
                 <label htmlFor="newPassword" className="block text-sm font-bold text-gray-700 mb-2 px-1">
                   Nova Senha
@@ -419,7 +424,7 @@ function SecuritySection() {
             <button
               type="submit"
               disabled={isLoading}
-              className="flex items-center gap-2 px-8 py-4 bg-primary-600 text-white font-black rounded-2xl hover:bg-primary-700 shadow-lg shadow-primary-500/20 transition-all active:scale-95 disabled:opacity-50"
+              className="w-full md:w-auto flex items-center justify-center gap-2 px-8 py-4 bg-primary-600 text-white font-black rounded-2xl hover:bg-primary-700 shadow-lg shadow-primary-500/20 transition-all active:scale-95 disabled:opacity-50"
             >
               {isLoading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -433,7 +438,7 @@ function SecuritySection() {
       </div>
 
       {/* Change Email Card */}
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
+      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-5 md:p-8">
         <div className="flex items-center gap-3 mb-6">
           <div className="p-2 bg-blue-50 rounded-xl text-blue-600">
             <Bell className="w-5 h-5" />
@@ -451,7 +456,7 @@ function SecuritySection() {
           </div>
           <a
             href="mailto:suporte@eventspace.com.br"
-            className="flex items-center justify-center gap-2 px-6 py-3 bg-white text-blue-600 font-bold rounded-xl border border-blue-200 hover:bg-blue-600 hover:text-white transition-all whitespace-nowrap"
+            className="flex items-center justify-center gap-2 px-6 py-3 bg-white text-blue-600 font-bold rounded-xl border border-blue-200 hover:bg-blue-600 hover:text-white transition-all whitespace-nowrap w-full md:w-auto"
           >
             Falar com Suporte
           </a>
@@ -468,9 +473,11 @@ function PropertySection() {
   const { user, profile } = useAuth()
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
-  const [spaceId, setSpaceId] = useState<string | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [spaces, setSpaces] = useState<any[]>([])
+  const [selectedSpaceId, setSelectedSpaceId] = useState<string | null>(null)
 
-  const { trackListingUpdated } = useEventTracking(spaceId || undefined)
+  const { trackListingUpdated } = useEventTracking(selectedSpaceId || undefined)
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -490,67 +497,76 @@ function PropertySection() {
     }
   })
 
+  // Load spaces
   useEffect(() => {
-    async function loadSpace() {
+    async function loadSpaces() {
       if (!user?.id) return
 
       try {
         const { data, error } = await apiClient.get<any>(`/api/spaces?owner_id=${user.id}`)
 
         if (error) {
-          console.error('Error loading space:', error)
+          console.error('Error loading spaces:', error)
           return
         }
 
-        const spaces = data?.spaces || []
-        if (spaces.length > 0) {
-          const space = spaces[0]
-          setSpaceId(space.id)
+        const loadedSpaces = data?.spaces || []
+        setSpaces(loadedSpaces)
 
-          // Pre-fill with priority: Space Data > User Profile Data
-          setFormData({
-            title: space.title || '',
-            description: space.description || '',
-            price_per_day: space.price_per_day || 0,
-            price_per_weekend: space.price_per_weekend || 0,
-            capacity: space.capacity || 0,
-
-            // For contacts: try Space, then Profile
-            phone: maskPhone(space.contact_phone || profile?.phone || ''),
-            whatsapp: maskPhone(space.contact_whatsapp || space.contact_phone || profile?.phone || ''),
-
-            address: {
-              street: space.address?.street || '',
-              number: space.address?.number || '',
-              neighborhood: space.address?.neighborhood || '',
-              city: space.address?.city || '',
-              state: space.address?.state || '',
-              zipcode: maskCEP(space.address?.zipcode || space.address?.postal_code || ''),
-              country: space.address?.country || 'Brasil'
-            }
-          })
+        if (loadedSpaces.length > 0 && !selectedSpaceId) {
+          setSelectedSpaceId(loadedSpaces[0].id)
         }
       } catch (err) {
-        console.error('Unexpected error loading space:', err)
+        console.error('Unexpected error loading spaces:', err)
       } finally {
         setIsLoading(false)
       }
     }
 
-    loadSpace()
-  }, [user?.id, profile])
+    loadSpaces()
+  }, [user?.id])
+
+  // Update form data when selected space changes
+  useEffect(() => {
+    if (!selectedSpaceId || spaces.length === 0) return
+
+    const space = spaces.find(s => s.id === selectedSpaceId)
+    if (!space) return
+
+    setFormData({
+      title: space.title || '',
+      description: space.description || '',
+      price_per_day: space.price_per_day || 0,
+      price_per_weekend: space.price_per_weekend || 0,
+      capacity: space.capacity || 0,
+
+      // For contacts: try Space, then Profile
+      phone: maskPhone(space.contact_phone || profile?.phone || ''),
+      whatsapp: maskPhone(space.contact_whatsapp || space.contact_phone || profile?.phone || ''),
+
+      address: {
+        street: space.address?.street || '',
+        number: space.address?.number || '',
+        neighborhood: space.address?.neighborhood || '',
+        city: space.address?.city || '',
+        state: space.address?.state || '',
+        zipcode: maskCEP(space.address?.zipcode || space.address?.postal_code || ''),
+        country: space.address?.country || 'Brasil'
+      }
+    })
+  }, [selectedSpaceId, spaces, profile])
 
   const handleUpdateSpace = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!spaceId) return
+    if (!selectedSpaceId) return
 
     setIsSaving(true)
     try {
-      const { error } = await apiClient.patch(`/api/spaces/${spaceId}`, {
+      const { error } = await apiClient.patch(`/api/spaces/${selectedSpaceId}`, {
         ...formData,
         phone: unmask(formData.phone),
         contact_phone: unmask(formData.phone),
-        contact_whatsapp: unmask(formData.whatsapp), // Send whatsapp to backend
+        contact_whatsapp: unmask(formData.whatsapp),
         address: {
           ...formData.address,
           zipcode: unmask(formData.address.zipcode)
@@ -560,20 +576,10 @@ function PropertySection() {
       if (error) {
         alert('Erro ao atualizar anúncio: ' + error.message)
       } else {
-        // Track update event
-        if (spaceId) {
-          try {
-            // We don't have granular changedFields here easily without diffing, 
-            // but we can just say "settings_updated" or specific fields if we want.
-            // For now, let's generic "updated"
-            await trackListingUpdated(['settings_update'], {
-              source: 'settings_page'
-            })
-          } catch (e) {
-            console.error('Error tracking update:', e)
-          }
-        }
+        await trackListingUpdated(['settings_update'], { source: 'settings_page' })
 
+        // Update local state
+        setSpaces(prev => prev.map(s => s.id === selectedSpaceId ? { ...s, ...formData } : s))
         alert('Anúncio atualizado com sucesso!')
       }
     } catch (err: any) {
@@ -581,6 +587,40 @@ function PropertySection() {
       alert('Erro ao atualizar anúncio: ' + err.message)
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  const handleDeleteSpace = async () => {
+    if (!selectedSpaceId) return
+
+    if (!window.confirm('Tem certeza que deseja excluir este anúncio? Esta ação não pode ser desfeita.')) {
+      return
+    }
+
+    setIsDeleting(true)
+    try {
+      const { error } = await apiClient.delete(`/api/spaces/${selectedSpaceId}`)
+
+      if (error) {
+        alert('Erro ao excluir anúncio: ' + error.message)
+      } else {
+        alert('Anúncio excluído com sucesso!')
+
+        // Remove from local state
+        const remainingSpaces = spaces.filter(s => s.id !== selectedSpaceId)
+        setSpaces(remainingSpaces)
+
+        if (remainingSpaces.length > 0) {
+          setSelectedSpaceId(remainingSpaces[0].id)
+        } else {
+          setSelectedSpaceId(null)
+        }
+      }
+    } catch (err: any) {
+      console.error('Error deleting space:', err)
+      alert('Erro ao excluir anúncio: ' + err.message)
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -592,7 +632,7 @@ function PropertySection() {
     )
   }
 
-  if (!spaceId) {
+  if (spaces.length === 0) {
     return (
       <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
         <Home className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -610,6 +650,47 @@ function PropertySection() {
 
   return (
     <form onSubmit={handleUpdateSpace} className="space-y-8">
+
+      {/* Space Selector & Actions */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        {spaces.length > 1 ? (
+          <div className="w-full sm:w-auto sm:min-w-[300px]">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Selecione o Anúncio</label>
+            <div className="relative">
+              <select
+                value={selectedSpaceId || ''}
+                onChange={(e) => setSelectedSpaceId(e.target.value)}
+                className="w-full pl-4 pr-10 py-3 bg-white border border-gray-200 rounded-xl appearance-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all outline-none font-medium text-gray-900 cursor-pointer shadow-sm"
+              >
+                {spaces.map(space => (
+                  <option key={space.id} value={space.id}>
+                    {space.title}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
+                <SettingsIcon className="w-4 h-4" />
+              </div>
+            </div>
+            <p className="mt-2 text-xs text-gray-500">
+              O anúncio selecionado abaixo será carregado para edição ou exclusão.
+            </p>
+          </div>
+        ) : (
+          <div></div> // Spacer
+        )}
+
+        <button
+          type="button"
+          onClick={handleDeleteSpace}
+          disabled={isDeleting}
+          className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 text-red-600 font-bold hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+        >
+          {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+          Excluir Anúncio
+        </button>
+      </div>
+
       {/* Basic Info Card */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
         <div className="flex items-center gap-3 mb-6">

@@ -689,9 +689,9 @@ export default function AdDetails() {
                 </div>
               )}
 
-              <div className="prose prose-sm md:prose-base max-w-none text-gray-600">
+              <div className="prose prose-sm md:prose-base max-w-none text-gray-600 overflow-hidden">
                 <h3 className="text-base font-semibold text-gray-900 mb-2">Descrição</h3>
-                <p className="whitespace-pre-line leading-relaxed">{ad.description}</p>
+                <p className="whitespace-pre-wrap break-words break-all leading-relaxed">{ad.description}</p>
               </div>
             </div>
 
@@ -1045,32 +1045,34 @@ export default function AdDetails() {
         )}
 
 
-        {/* Mobile Fixed Bottom Action Bar */}
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[9999]">
-          {/* Gradient fade */}
-          <div className="h-8 bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none" />
+      </div>
 
-          <div className="bg-white px-4 pb-4 pt-2 shadow-[0_-4px_20px_-4px_rgba(0,0,0,0.05)]">
-            <div className="flex gap-3">
+      {/* Mobile Fixed Bottom Action Bar */}
+      {hasActionableContact && (
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[5000] bg-white border-t border-gray-100 shadow-[0_-4px_20px_-4px_rgba(0,0,0,0.1)] box-border max-w-[100vw] overflow-x-hidden">
+          <div className="w-full max-w-md mx-auto px-6 py-4 flex flex-col gap-2 box-border">
+            {displayWhatsapp && (
               <button
                 onClick={openWhatsApp}
-                className="flex-1 bg-[#25D366] text-white font-semibold py-3 px-4 rounded-xl shadow-sm hover:bg-[#20ba5a] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                className="w-full bg-[#25D366] text-white font-bold h-11 rounded-xl shadow-sm hover:bg-[#20ba5a] active:scale-[0.95] transition-all flex items-center justify-center gap-2 text-sm box-border"
               >
-                <MessageCircle className="w-5 h-5" />
-                WhatsApp
+                <MessageCircle className="w-5 h-5 flex-shrink-0" />
+                <span className="truncate">WhatsApp</span>
               </button>
+            )}
+
+            {displayPhone && (
               <button
                 onClick={callPhone}
-                className="flex-1 bg-blue-600 text-white font-semibold py-3 px-4 rounded-xl shadow-sm hover:bg-blue-700 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                className="w-full bg-blue-600 text-white font-bold h-11 rounded-xl shadow-sm hover:bg-blue-700 active:scale-[0.95] transition-all flex items-center justify-center gap-2 text-sm box-border"
               >
-                <Phone className="w-5 h-5" />
-                Ligar
+                <Phone className="w-5 h-5 flex-shrink-0" />
+                <span className="truncate">Ligar</span>
               </button>
-            </div>
+            )}
           </div>
         </div>
-
-      </div>
+      )}
     </div>
   )
 }

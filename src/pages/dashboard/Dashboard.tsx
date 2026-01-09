@@ -164,44 +164,36 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50/50">
       {/* Header */}
-      <header className="bg-white shadow">
+      <header className="bg-white border-b border-gray-100 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row md:items-center justify-between py-6 gap-4">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-1">
-                {isWelcome ? '🎉 Bem-vindo ao EventSpace!' : `Olá, ${profile?.full_name?.split(' ')[0] || 'Anunciante'}! 👋`}
+          <div className="flex flex-col md:flex-row md:items-center justify-between py-5 md:py-6 gap-5">
+            <div className="flex-1">
+              <h1 className="text-xl md:text-3xl font-black text-gray-900 tracking-tight leading-tight">
+                {isWelcome ? '🎉 Bem-vindo!' : `Olá, ${profile?.full_name?.split(' ')[0] || 'Anunciante'}! 👋`}
               </h1>
-              <p className="text-gray-600 text-sm md:text-base">
-                {userAds.length > 0 ? 'Acompanhe o desempenho do seu anúncio no EventSpace' : 'Gerencie seu perfil e navegue pelos espaços disponíveis'}
+              <p className="text-gray-500 font-medium text-xs md:text-base mt-1 truncate max-w-[200px] md:max-w-none">
+                {userAds.length > 0 ? 'Acompanhe seu desempenho' : 'Gerencie seus espaços'}
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               {/* Botão Voltar para Home */}
               <Link
                 to="/"
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex-1 md:flex-none justify-center whitespace-nowrap"
+                className="flex items-center gap-2 px-3 py-2 text-sm font-bold text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 hover:text-primary-600 transition-all active:scale-95"
               >
                 <Home className="w-4 h-4" />
-                <span className="md:inline">Home</span>
+                <span>Home</span>
               </Link>
-              {userAds.length === 0 && (
-                <Link
-                  to="/dashboard/criar-anuncio"
-                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors flex-1 md:flex-none justify-center whitespace-nowrap"
-                >
-                  <Plus className="w-4 h-4" />
-                  Criar Anúncio
-                </Link>
-              )}
+
               <button
                 onClick={signOut}
-                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 flex-1 md:flex-none justify-center"
+                className="flex items-center gap-2 px-3 py-2 text-sm font-bold text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-all active:scale-95"
               >
-                <LogOut className="h-4 w-4" />
-                Sair
+                <LogOut className="w-4 h-4" />
+                <span>Sair</span>
               </button>
             </div>
           </div>
@@ -209,34 +201,35 @@ export default function Dashboard() {
       </header>
 
       {/* Conteúdo principal */}
-      <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+      <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         {/* Mensagem de sucesso para novo anúncio */}
         {isNewAd && (
-          <div className="mb-8 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-6">
-            <div className="flex items-center gap-4">
-              <div className="bg-green-100 p-2 rounded-lg">
-                <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="mb-8 bg-white border border-green-100 rounded-2xl p-6 shadow-sm relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-green-50 rounded-full blur-3xl -translate-y-16 translate-x-16"></div>
+            <div className="relative flex flex-col sm:flex-row items-start gap-4">
+              <div className="bg-green-100 p-3 rounded-xl flex-shrink-0">
+                <svg className="h-6 w-6 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <div>
-                <h3 className="text-lg font-semibold text-green-900 mb-1">
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-gray-900 mb-1">
                   🎉 Anúncio criado com sucesso!
                 </h3>
-                <p className="text-green-700 mb-4">
+                <p className="text-gray-600 font-medium mb-4 text-sm leading-relaxed">
                   Seu anúncio foi publicado e já está disponível para visualização.
                   Agora os interessados podem encontrá-lo e entrar em contato.
                 </p>
-                <div className="flex gap-3">
+                <div className="flex flex-wrap gap-3">
                   <Link
                     to="/dashboard/meus-anuncios"
-                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                    className="flex-1 sm:flex-none justify-center bg-green-600 text-white px-5 py-2.5 rounded-xl hover:bg-green-700 shadow-lg shadow-green-500/20 transition-all text-sm font-bold active:scale-95"
                   >
                     Ver Meus Anúncios
                   </Link>
                   <Link
                     to="/espacos"
-                    className="border border-green-600 text-green-600 px-4 py-2 rounded-lg hover:bg-green-50 transition-colors text-sm font-medium"
+                    className="flex-1 sm:flex-none justify-center border border-green-200 text-green-700 bg-green-50 px-5 py-2.5 rounded-xl hover:bg-green-100 transition-all text-sm font-bold active:scale-95"
                   >
                     Ver na Busca Pública
                   </Link>
@@ -256,49 +249,55 @@ export default function Dashboard() {
         />
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
-          {/* Recent Activity - Takes 2 columns */}
-          <div className="lg:col-span-2">
+        <div className="flex flex-col lg:grid lg:grid-cols-3 gap-6 md:gap-8 mt-6 md:mt-8">
+          {/* Quick Actions - Takes 1 column (Sidebar) */}
+          {/* Mobile: Order 1 (Top) | Desktop: Order 2 (Right Sidebar) */}
+          <div className="order-1 lg:order-2 lg:col-span-1 space-y-6">
+            <QuickActions userAds={userAds} />
+          </div>
+
+          {/* Recent Activity & Tips - Takes 2 columns (Main Content) */}
+          {/* Mobile: Order 2 (Bottom) | Desktop: Order 1 (Left Content) */}
+          <div className="order-2 lg:order-1 lg:col-span-2 space-y-6 md:space-y-8">
             <RecentActivity
               userAds={userAds}
             />
-          </div>
 
-          {/* Quick Actions - Takes 1 column */}
-          <div>
-            <QuickActions userAds={userAds} />
-          </div>
-        </div>
+            {/* Performance Tips */}
+            <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-5 md:p-6 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-green-50 to-transparent rounded-full blur-3xl -translate-y-32 translate-x-32 group-hover:translate-y-[-7rem] transition-transform duration-700"></div>
 
-        {/* Performance Tips */}
-        <div className="mt-8 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-6 border border-green-100">
-          <div className="flex items-start gap-4">
-            <div className="bg-green-100 p-2 rounded-lg">
-              <TrendingUp className="w-5 h-5 text-green-600" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                Dicas para melhorar seu desempenho
-              </h3>
-              <p className="text-sm text-gray-600 mb-4">
-                Anúncios com fotos de qualidade e descrições completas recebem até 5x mais contatos
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex items-center gap-2 text-sm text-gray-700">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  Adicione mais fotos aos seus anúncios
+              <div className="relative">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-green-50 rounded-xl text-green-600">
+                    <TrendingUp className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900">
+                    Dicas de Desempenho
+                  </h3>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-gray-700">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  Complete todas as informações
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-700">
-                  <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                  Responda rapidamente aos contatos
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-700">
-                  <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                  Mantenha preços atualizados
+
+                <p className="text-sm text-gray-500 font-medium mb-5">
+                  Anúncios completos recebem até <strong className="text-green-600">5x mais contatos</strong>. Confira se você já seguiu estas dicas:
+                </p>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-center gap-3 text-sm font-medium text-gray-700 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                    <div className="w-2.5 h-2.5 bg-green-500 rounded-full shadow-sm shadow-green-500/50"></div>
+                    Adicione pelo menos 5 fotos
+                  </div>
+                  <div className="flex items-center gap-3 text-sm font-medium text-gray-700 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                    <div className="w-2.5 h-2.5 bg-green-500 rounded-full shadow-sm shadow-green-500/50"></div>
+                    Preencha todos os campos
+                  </div>
+                  <div className="flex items-center gap-3 text-sm font-medium text-gray-700 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                    <div className="w-2.5 h-2.5 bg-amber-500 rounded-full shadow-sm shadow-amber-500/50"></div>
+                    Responda em até 1 hora
+                  </div>
+                  <div className="flex items-center gap-3 text-sm font-medium text-gray-700 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                    <div className="w-2.5 h-2.5 bg-amber-500 rounded-full shadow-sm shadow-amber-500/50"></div>
+                    Mantenha o calendário atualizado
+                  </div>
                 </div>
               </div>
             </div>

@@ -121,7 +121,7 @@ export default function DashboardStats({
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6">
         {stats.map((stat, index) => (
           <DashboardCard
             key={index}

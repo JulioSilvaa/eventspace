@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -27,29 +27,55 @@ import {
 } from 'recharts'
 import { useAuth } from '@/hooks/useAuth'
 import { useUserRealTimeMetrics } from '@/hooks/useRealTimeMetrics'
+import { useAdsStore } from '@/stores/adsStore'
 import DashboardCard from '@/components/dashboard/DashboardCard'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 
 export default function Analytics() {
   const { user } = useAuth()
   const { metrics, isLoading } = useUserRealTimeMetrics(user?.id)
+  const { userAds, fetchUserAds } = useAdsStore()
   const [timeRange, setTimeRange] = useState('30d')
 
+  useEffect(() => {
+    if (user && userAds.length === 0) {
+      fetchUserAds(user.id)
+    }
+  }, [user, userAds.length, fetchUserAds])
+
+  // Process data for charts
   // Process data for charts
   const filteredData = useMemo(() => {
-    if (!metrics.dailyMetrics || metrics.dailyMetrics.length === 0) return []
-
     const days = timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 90
-    const cutoff = new Date()
-    cutoff.setDate(cutoff.getDate() - days)
+    const result = []
 
-    return metrics.dailyMetrics
-      .filter(item => new Date(item.date) >= cutoff)
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-      .map(item => ({
-        ...item,
-        formattedDate: new Date(item.date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
-      }))
+    // Create map of existing data for quick lookup
+    const dataMap = new Map()
+    if (metrics.dailyMetrics) {
+      metrics.dailyMetrics.forEach(item => {
+        const dateKey = new Date(item.date).toISOString().split('T')[0]
+        dataMap.set(dateKey, item)
+      })
+    }
+
+    // Generate last N days
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date()
+      d.setDate(d.getDate() - i)
+      const dateKey = d.toISOString().split('T')[0]
+      const formattedDate = d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
+
+      const existing = dataMap.get(dateKey)
+
+      result.push({
+        date: dateKey,
+        formattedDate,
+        views_count: existing ? existing.views_count : 0,
+        contacts_count: existing ? existing.contacts_count : 0
+      })
+    }
+
+    return result
   }, [metrics.dailyMetrics, timeRange])
 
   // Calculate stats based on filtered data
@@ -177,7 +203,7 @@ export default function Analytics() {
 
             <div className="h-[350px] w-full">
               {filteredData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                   <AreaChart data={filteredData}>
                     <defs>
                       <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
@@ -217,6 +243,7 @@ export default function Analytics() {
                       strokeWidth={3}
                       fillOpacity={1}
                       fill="url(#colorViews)"
+                      activeDot={{ r: 6, strokeWidth: 0, fill: '#3b82f6' }}
                     />
                     <Area
                       type="monotone"
@@ -226,6 +253,7 @@ export default function Analytics() {
                       strokeWidth={3}
                       fillOpacity={1}
                       fill="url(#colorContacts)"
+                      activeDot={{ r: 6, strokeWidth: 0, fill: '#10b981' }}
                     />
                   </AreaChart>
                 </ResponsiveContainer>
@@ -254,36 +282,41 @@ export default function Analytics() {
                 <tr className="bg-gray-50 text-[11px] uppercase tracking-wider font-bold text-gray-400">
                   <th className="px-6 py-3">Evento</th>
                   <th className="px-6 py-3">Data/Hora</th>
-                  <th className="px-6 py-3">Detalhes</th>
+                  <th className="px-6 py-3">Anúncio</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 italic">
-                {metrics.recentEvents.slice(0, 10).map((event) => (
-                  <tr key={event.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        {event.event_type === 'view' ? (
-                          <div className="bg-blue-100 text-blue-600 p-1.5 rounded-md">
-                            <Eye className="w-3.5 h-3.5" />
-                          </div>
-                        ) : (
-                          <div className="bg-green-100 text-green-600 p-1.5 rounded-md">
-                            <MessageCircle className="w-3.5 h-3.5" />
-                          </div>
-                        )}
-                        <span className="text-sm font-medium text-gray-900">
-                          {event.event_type === 'view' ? 'Visualização' : 'Novo Contato'}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
-                      {new Date(event.created_at).toLocaleString('pt-BR')}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
-                      ID Anúncio: {event.listing_id.slice(0, 8)}...
-                    </td>
-                  </tr>
-                ))}
+                {metrics.recentEvents.slice(0, 10).map((event) => {
+                  const ad = userAds.find(a => a.id === event.listing_id);
+                  const adTitle = ad?.title || event.metadata?.adTitle || event.listing_id.slice(0, 8) + '...';
+
+                  return (
+                    <tr key={event.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          {event.event_type === 'view' ? (
+                            <div className="bg-blue-100 text-blue-600 p-1.5 rounded-md">
+                              <Eye className="w-3.5 h-3.5" />
+                            </div>
+                          ) : (
+                            <div className="bg-green-100 text-green-600 p-1.5 rounded-md">
+                              <MessageCircle className="w-3.5 h-3.5" />
+                            </div>
+                          )}
+                          <span className="text-sm font-medium text-gray-900">
+                            {event.event_type === 'view' ? 'Visualização' : 'Novo Contato'}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-500">
+                        {new Date(event.created_at).toLocaleString('pt-BR')}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-900 font-medium not-italic">
+                        {adTitle}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

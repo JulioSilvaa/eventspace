@@ -347,7 +347,7 @@ const AdminDashboard: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-700/50">
-              {lists?.latestSubscriptions.map(sub => (
+              {lists?.latestSubscriptions?.map(sub => (
                 <tr key={sub.id} className="hover:bg-slate-700/30 transition-colors">
                   <td className="px-6 py-4">
                     <div className="font-bold text-white">{sub.users.name}</div>

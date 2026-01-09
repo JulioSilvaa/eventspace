@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import adminApi from '../../services/adminApi';
 import { Loader2, Search, Trash2, Ban, CheckCircle, MoreHorizontal } from 'lucide-react';
+import ConfirmModal from '../../components/ui/ConfirmModal';
+import UserSpacesModal from '../../components/admin/UserSpacesModal';
 
 interface User {
   id: string;
@@ -18,16 +20,18 @@ const UsersList: React.FC = () => {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean; userId: string; status: string } | null>(null);
+  const [userSpacesModal, setUserSpacesModal] = useState<{ isOpen: boolean; userId: string; userName: string } | null>(null);
   const limit = 10;
 
   const loadUsers = async () => {
     setLoading(true);
     try {
-      const { data } = await adminApi.get('/admin/users', {
+      const response = await adminApi.get('/admin/users', {
         params: { page, limit, search }
       });
-      setUsers(data.data);
-      setTotal(data.total);
+      setUsers(response.data.data);
+      setTotal(response.data.total);
     } catch (error) {
       console.error(error);
     } finally {
@@ -37,29 +41,67 @@ const UsersList: React.FC = () => {
 
   useEffect(() => {
     loadUsers();
-  }, [page]);
+  }, [page, search]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setPage(1);
-    loadUsers();
   };
 
-  const handleStatusUpdate = async (id: string, newStatus: string) => {
-    if (!confirm('Tem certeza?')) return;
+  const handleStatusUpdate = async () => {
+    if (!confirmModal) return;
+
     try {
-      await adminApi.patch(`/admin/users/${id}/status`, { status: newStatus });
+      await adminApi.patch(`/admin/users/${confirmModal.userId}/status`, { status: confirmModal.status });
       loadUsers();
+      setConfirmModal(null);
     } catch (error) {
       console.error(error);
       alert('Erro ao atualizar status');
     }
   };
 
+  const initStatusUpdate = (id: string, newStatus: string) => {
+    setConfirmModal({
+      isOpen: true,
+      userId: id,
+      status: newStatus
+    });
+  };
+
+  const openUserSpaces = (user: User) => {
+    setUserSpacesModal({
+      isOpen: true,
+      userId: user.id,
+      userName: user.name
+    });
+  };
+
   const totalPages = Math.ceil(total / limit);
 
   return (
     <div className="p-8">
+      {confirmModal && (
+        <ConfirmModal
+          isOpen={confirmModal.isOpen}
+          onClose={() => setConfirmModal(null)}
+          onConfirm={handleStatusUpdate}
+          title={confirmModal.status === 'active' ? 'Ativar Usuário' : 'Bloquear Usuário'}
+          message={`Tem certeza que deseja ${confirmModal.status === 'active' ? 'ativar' : 'bloquear'} este usuário?`}
+          type={confirmModal.status === 'active' ? 'default' : 'danger'}
+          confirmText={confirmModal.status === 'active' ? 'Ativar' : 'Bloquear'}
+        />
+      )}
+
+      {userSpacesModal && (
+        <UserSpacesModal
+          isOpen={userSpacesModal.isOpen}
+          onClose={() => setUserSpacesModal(null)}
+          userId={userSpacesModal.userId}
+          userName={userSpacesModal.userName}
+        />
+      )}
+
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-2xl font-bold text-white">Usuários</h1>
         <form onSubmit={handleSearch} className="flex gap-2">
@@ -96,9 +138,13 @@ const UsersList: React.FC = () => {
               <tr><td colSpan={6} className="p-8 text-center text-slate-400">Nenhum usuário encontrado</td></tr>
             ) : (
               users.map(user => (
-                <tr key={user.id} className="text-slate-300 hover:bg-slate-700/50">
-                  <td className="p-4">
-                    <p className="text-white font-medium">{user.name}</p>
+                <tr key={user.id} className="text-slate-300 hover:bg-slate-700/50 transition-colors">
+                  <td
+                    className="p-4 cursor-pointer hover:bg-slate-700"
+                    onClick={() => openUserSpaces(user)}
+                    title="Clique para ver os anúncios deste usuário"
+                  >
+                    <p className="text-white font-medium hover:text-blue-400 transition-colors">{user.name}</p>
                     <p className="text-sm text-slate-500">{user.email}</p>
                   </td>
                   <td className="p-4 text-slate-300">
@@ -120,7 +166,7 @@ const UsersList: React.FC = () => {
                     <div className="flex justify-end gap-2">
                       {user.status !== 'active' && (
                         <button
-                          onClick={() => handleStatusUpdate(user.id, 'active')}
+                          onClick={() => initStatusUpdate(user.id, 'active')}
                           className="p-2 hover:bg-emerald-500/10 text-emerald-500 rounded-lg"
                           title="Ativar"
                         >
@@ -129,7 +175,7 @@ const UsersList: React.FC = () => {
                       )}
                       {user.status === 'active' && (
                         <button
-                          onClick={() => handleStatusUpdate(user.id, 'inactive')}
+                          onClick={() => initStatusUpdate(user.id, 'inactive')}
                           className="p-2 hover:bg-red-500/10 text-red-500 rounded-lg"
                           title="Bloquear"
                         >

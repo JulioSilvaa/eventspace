@@ -132,6 +132,9 @@ const editAdSchema = z.object({
   contactWhatsapp: z.string()
     .max(25, 'WhatsApp muito longo')
     .optional(),
+  contactWhatsappAlternative: z.string()
+    .max(25, 'WhatsApp alternativo muito longo')
+    .optional(),
   contactEmail: z.string().email('Email inválido').optional().or(z.literal('')),
   contactInstagram: z.string()
     .max(50, 'Instagram muito longo')
@@ -260,6 +263,7 @@ export default function EditAd() {
         priceType: currentAd.price_type,
         contactPhone: currentAd.contact_phone || '',
         contactWhatsapp: currentAd.contact_whatsapp || '',
+        contactWhatsappAlternative: currentAd.contact_whatsapp_alternative || '',
         contactEmail: currentAd.contact_email || '',
         contactInstagram: currentAd.contact_instagram || '',
         contactFacebook: currentAd.contact_facebook || '',
@@ -435,6 +439,7 @@ export default function EditAd() {
         postal_code: data.postal_code || undefined,
         contact_phone: data.contactPhone,
         contact_whatsapp: data.contactWhatsapp || undefined,
+        contact_whatsapp_alternative: data.contactWhatsappAlternative || undefined,
         contact_email: data.contactEmail?.trim() || undefined,
         contact_instagram: data.contactInstagram || undefined,
         contact_facebook: data.contactFacebook || undefined,
@@ -493,6 +498,7 @@ export default function EditAd() {
         // Detectar mudanças nos contatos
         const contactChanged = (
           currentAd?.contact_whatsapp !== data.contactWhatsapp ||
+          currentAd?.contact_whatsapp_alternative !== data.contactWhatsappAlternative ||
           currentAd?.contact_phone !== data.contactPhone ||
           currentAd?.contact_email !== data.contactEmail ||
           currentAd?.contact_instagram !== data.contactInstagram ||
@@ -503,6 +509,7 @@ export default function EditAd() {
           changedFields.push('contatos')
           const updatedContactFields = []
           if (currentAd?.contact_whatsapp !== data.contactWhatsapp) updatedContactFields.push('WhatsApp')
+          if (currentAd?.contact_whatsapp_alternative !== data.contactWhatsappAlternative) updatedContactFields.push('WhatsApp Alternativo')
           if (currentAd?.contact_phone !== data.contactPhone) updatedContactFields.push('Telefone')
           if (currentAd?.contact_email !== data.contactEmail) updatedContactFields.push('E-mail')
           if (currentAd?.contact_instagram !== data.contactInstagram) updatedContactFields.push('Instagram')
@@ -592,7 +599,7 @@ export default function EditAd() {
               <textarea
                 rows={6}
                 placeholder="Descreva a capacidade, infraestrutura, comodidades disponíveis..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all shadow-sm"
                 {...register('description')}
               />
               {errors.description && (
@@ -909,7 +916,7 @@ export default function EditAd() {
             </div>
 
             <FormField
-              label="Telefone/WhatsApp"
+              label="Telefone para Ligações"
               type="tel"
               placeholder="(11) 99999-9999"
               error={errors.contactPhone}
@@ -923,12 +930,25 @@ export default function EditAd() {
             />
 
             <FormField
-              label="WhatsApp alternativo"
+              label="WhatsApp Principal"
               type="tel"
               placeholder="(11) 99999-9999 (opcional)"
               error={errors.contactWhatsapp}
-              hint="Caso tenha um número diferente para WhatsApp"
+              hint="Número principal para mensagens WhatsApp"
               {...register('contactWhatsapp', {
+                onChange: (e) => {
+                  e.target.value = formatPhone(e.target.value)
+                }
+              })}
+            />
+
+            <FormField
+              label="WhatsApp Alternativo"
+              type="tel"
+              placeholder="(11) 99999-9999 (opcional)"
+              error={errors.contactWhatsappAlternative}
+              hint="Número secundário para WhatsApp"
+              {...register('contactWhatsappAlternative', {
                 onChange: (e) => {
                   e.target.value = formatPhone(e.target.value)
                 }
@@ -1263,12 +1283,12 @@ export default function EditAd() {
         </div>
 
         {/* Navigation */}
-        <div className="flex justify-between items-center gap-4">
+        <div className="flex flex-col-reverse md:flex-row justify-between items-stretch md:items-center gap-4">
           <button
             type="button"
             onClick={prevStep}
             disabled={currentStep === 1}
-            className="flex items-center gap-2 px-6 py-3 border-2 border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow"
+            className="flex items-center justify-center gap-2 px-6 py-4 md:py-3 border-2 border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow"
           >
             <ArrowLeft className="w-5 h-5" />
             Anterior
@@ -1278,7 +1298,7 @@ export default function EditAd() {
             <button
               type="button"
               onClick={nextStep}
-              className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl font-semibold hover:from-primary-700 hover:to-primary-800 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+              className="flex items-center justify-center gap-2 px-8 py-4 md:py-3 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl font-semibold hover:from-primary-700 hover:to-primary-800 transition-all shadow-lg hover:shadow-xl transform active:scale-95 md:hover:scale-105"
             >
               Próximo
               <ArrowRight className="w-5 h-5" />
@@ -1286,13 +1306,10 @@ export default function EditAd() {
           ) : (
             <FormButton
               type="button"
-              onClick={handleSubmit(onSubmit, (errors) => {
-                console.error('Validation errors:', errors)
-                toast.error('Erro de validação', 'Verifique se todos os campos obrigatórios foram preenchidos corretamente.')
-              })}
+              onClick={handleSubmit(onSubmit)}
               loading={isSubmitting}
               size="lg"
-              className="px-10 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
+              className="px-10 py-4 md:py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 rounded-xl font-semibold shadow-lg hover:shadow-xl transform active:scale-95 md:hover:scale-105 transition-all w-full md:w-auto flex justify-center"
             >
               {isSubmitting ? 'Salvando...' : 'Salvar Alterações'}
             </FormButton>

@@ -6,6 +6,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { ChevronRight, MapPin, Star, Check, ChevronLeft, Building2, Search, PartyPopper } from 'lucide-react'
 import { useAdsStore } from '@/stores/adsStore'
 import { AdCard } from '@/components/ads'
+import { AMENITY_LABELS } from '@/constants/amenities'
 
 export default function Home() {
   const [currentSlide, setCurrentSlide] = useState(0)
@@ -235,7 +236,7 @@ export default function Home() {
 
       {/* Featured Ads Slider */}
       <section className="py-24 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <div className="flex items-center justify-center gap-2 mb-4">
               <Star className="w-8 h-8 text-yellow-600 fill-current" />
@@ -257,7 +258,7 @@ export default function Home() {
                       <div key={ad.id} className="w-full flex-shrink-0">
                         <div className="bg-white rounded-2xl shadow-xl overflow-hidden mx-2">
                           <div className="md:flex">
-                            <div className="md:w-5/12 relative h-64 md:h-80">
+                            <div className="md:w-5/12 relative h-56 md:h-72">
                               <img
                                 src={ad.listing_images?.[0]?.image_url || 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=800&q=80'}
                                 alt={ad.title}
@@ -295,13 +296,10 @@ export default function Home() {
 
                               <div className="flex flex-wrap gap-2 mb-6">
                                 {ad.comfort && ad.comfort.slice(0, 3).map((amenity: string, index: number) => {
-                                  // Local mapping if needed, or just display raw
-                                  // Ideally import AMENITY_LABELS, but let's just display for now to fix TS error
-                                  // or use the same logic as AdCard if we want icons.
-                                  // Simple text for now as it was before.
+                                  const amenityName = AMENITY_LABELS[amenity] || AMENITY_LABELS[amenity.toLowerCase()] || amenity
                                   return (
                                     <span key={index} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-                                      {amenity}
+                                      {amenityName}
                                     </span>
                                   )
                                 })}
@@ -385,8 +383,8 @@ export default function Home() {
           </div>
 
           {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {Array.from({ length: 6 }).map((_, index) => (
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {Array.from({ length: 8 }).map((_, index) => (
                 <div key={index} className="bg-white rounded-2xl shadow-lg overflow-hidden animate-pulse">
                   <div className="h-48 bg-gray-200"></div>
                   <div className="p-6">
@@ -402,12 +400,12 @@ export default function Home() {
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {popularSpaces.slice(0, 6).map((space) => (
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {popularSpaces.slice(0, 8).map((space) => (
                 <AdCard
                   key={space.id}
                   ad={space}
-                  size="medium"
+                  size="small"
                   showViewCount={false}
                   showDate={false}
                 />
@@ -469,7 +467,7 @@ export default function Home() {
                       <img
                         src={step.image}
                         alt={step.title}
-                        className="relative w-full h-[400px] object-cover rounded-3xl shadow-2xl transform transition-transform duration-300 group-hover:-translate-y-2"
+                        className="relative w-full h-64 md:h-[400px] object-cover rounded-3xl shadow-2xl transform transition-transform duration-300 group-hover:-translate-y-2"
                       />
                     </div>
                   </div>
