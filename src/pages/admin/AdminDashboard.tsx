@@ -9,6 +9,8 @@ interface DashboardStats {
   activeAds: number;
   totalViews: number;
   revenue: number;
+  mmr: number;
+  churnRate: number;
   growth: {
     users: number;
     ads: number;
@@ -43,6 +45,14 @@ interface DashboardLists {
     title: string;
     views: number;
     users: { name: string };
+  }>;
+  latestSubscriptions: Array<{
+    id: string;
+    plan: string;
+    price: number;
+    status: string;
+    next_billing_date: string;
+    users: { name: string; email: string };
   }>;
 }
 
@@ -136,15 +146,15 @@ const AdminDashboard: React.FC = () => {
           color="purple"
         />
         <StatsCard
-          title="Visualizações Totais"
-          value={stats?.totalViews || 0}
-          icon={Eye}
-          trend={stats?.growth.views || 0}
-          color="emerald"
+          title="Churn Rate"
+          value={(stats?.churnRate || 0) + '%'}
+          icon={Activity}
+          trend={-2.5} // Example trend
+          color="emerald" // Red might be better if high, but let's stick to palette
         />
         <StatsCard
-          title="Receita Estimada"
-          value={formatCurrency(stats?.revenue || 0)}
+          title="MMR Mensal"
+          value={formatCurrency(stats?.mmr || 0)}
           icon={DollarSign}
           trend={stats?.growth.revenue || 0}
           color="amber"
@@ -172,7 +182,7 @@ const AdminDashboard: React.FC = () => {
             </div>
           </div>
           <div className="h-[350px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
@@ -311,6 +321,53 @@ const AdminDashboard: React.FC = () => {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Subscriptions Table (New) */}
+      <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-700/50 overflow-hidden shadow-xl">
+        <div className="p-6 border-b border-slate-700/50 bg-slate-800/50 flex justify-between items-center">
+          <h3 className="font-bold text-white flex items-center text-lg">
+            <div className="p-2 bg-green-500/10 rounded-lg mr-3">
+              <DollarSign className="w-5 h-5 text-green-500" />
+            </div>
+            Pagamentos Recorrentes
+          </h3>
+          <button className="text-sm font-medium text-green-400 hover:text-green-300 transition-colors">Ver todos</button>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm text-left text-slate-300">
+            <thead className="bg-slate-900/50 text-xs uppercase font-bold text-slate-400 tracking-wider">
+              <tr>
+                <th className="px-6 py-4">Usuário</th>
+                <th className="px-6 py-4">Plano</th>
+                <th className="px-6 py-4">Status</th>
+                <th className="px-6 py-4">Valor</th>
+                <th className="px-6 py-4 text-right">Próxima Cobrança</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-700/50">
+              {lists?.latestSubscriptions.map(sub => (
+                <tr key={sub.id} className="hover:bg-slate-700/30 transition-colors">
+                  <td className="px-6 py-4">
+                    <div className="font-bold text-white">{sub.users.name}</div>
+                    <div className="text-xs text-slate-400">{sub.users.email}</div>
+                  </td>
+                  <td className="px-6 py-4 uppercase font-medium">{sub.plan}</td>
+                  <td className="px-6 py-4">
+                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${sub.status === 'active' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-red-500/10 text-red-500 border border-red-500/20'}`}>
+                      {sub.status === 'active' ? 'Ativo' : 'Cancelado'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 font-mono text-white">{formatCurrency(sub.price)}</td>
+                  <td className="px-6 py-4 text-right font-mono text-slate-400">{sub.next_billing_date ? formatDate(sub.next_billing_date) : '-'}</td>
+                </tr>
+              ))}
+              {(!lists?.latestSubscriptions || lists.latestSubscriptions.length === 0) && (
+                <tr><td colSpan={5} className="p-8 text-center text-slate-500">Nenhum pagamento recente.</td></tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 
