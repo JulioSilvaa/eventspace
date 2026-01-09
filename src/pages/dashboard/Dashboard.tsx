@@ -52,7 +52,7 @@ export default function Dashboard() {
   // Hook para métricas em tempo real
   const {
     metrics: realTimeMetrics,
-    isLoading: metricsLoading
+    isLoading: _metricsLoading
   } = useUserRealTimeMetrics(user?.id, {
     pollingInterval: 30000, // 30 segundos
     enablePolling: true // Endpoint implementado!
@@ -117,7 +117,7 @@ export default function Dashboard() {
         activeAds: activeAds.length,
         totalViews: safeTotalViews,
         totalContacts: safeTotalContacts,
-        averageRating: 4.8, // Mock por enquanto
+        averageRating: 0, // Zero por padrão até termos reviews reais
         thisMonthViews: Math.floor(safeTotalViews * 0.6), // Mock - 60% do total
         lastMonthViews: Math.floor(safeTotalViews * 0.4), // Mock - 40% do total
         thisMonthContacts: Math.floor(safeTotalContacts * 0.6),
@@ -157,7 +157,7 @@ export default function Dashboard() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Carregando dashboard...</p>
+          <p className="text-gray-600">Carregando área do anunciante...</p>
         </div>
       </div>
     )

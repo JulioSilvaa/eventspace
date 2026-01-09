@@ -127,10 +127,12 @@ const editAdSchema = z.object({
 
   contactPhone: z.string()
     .min(1, 'Telefone é obrigatório')
-    .max(25, 'Telefone muito longo')
-    .regex(/^\(\d{2}\)\s\d{4,5}-\d{4}$/, 'Formato: (11) 99999-9999'),
+    .max(25, 'Telefone muito longo'),
   contactWhatsapp: z.string()
     .max(25, 'WhatsApp muito longo')
+    .optional(),
+  contactWhatsappAlternative: z.string()
+    .max(25, 'WhatsApp alternativo muito longo')
     .optional(),
   contactEmail: z.string().email('Email inválido').optional().or(z.literal('')),
   contactInstagram: z.string()
@@ -260,6 +262,7 @@ export default function EditAd() {
         priceType: currentAd.price_type,
         contactPhone: currentAd.contact_phone || '',
         contactWhatsapp: currentAd.contact_whatsapp || '',
+        contactWhatsappAlternative: currentAd.contact_whatsapp_alternative || '',
         contactEmail: currentAd.contact_email || '',
         contactInstagram: currentAd.contact_instagram || '',
         contactFacebook: currentAd.contact_facebook || '',
@@ -435,10 +438,12 @@ export default function EditAd() {
         postal_code: data.postal_code || undefined,
         contact_phone: data.contactPhone,
         contact_whatsapp: data.contactWhatsapp || undefined,
+        contact_whatsapp_alternative: data.contactWhatsappAlternative || undefined,
         contact_email: data.contactEmail?.trim() || undefined,
         contact_instagram: data.contactInstagram || undefined,
         contact_facebook: data.contactFacebook || undefined,
         featured: data.featured || false,
+        comfort: allAmenities,
         specifications: Object.keys(specifications).length > 0 ? specifications : undefined
       }
 
@@ -909,7 +914,7 @@ export default function EditAd() {
             </div>
 
             <FormField
-              label="Telefone/WhatsApp"
+              label="Telefone (Ligações)" // Renamed
               type="tel"
               placeholder="(11) 99999-9999"
               error={errors.contactPhone}
@@ -923,12 +928,25 @@ export default function EditAd() {
             />
 
             <FormField
-              label="WhatsApp alternativo"
+              label="WhatsApp (Principal)" // Renamed
               type="tel"
               placeholder="(11) 99999-9999 (opcional)"
               error={errors.contactWhatsapp}
               hint="Caso tenha um número diferente para WhatsApp"
               {...register('contactWhatsapp', {
+                onChange: (e) => {
+                  e.target.value = formatPhone(e.target.value)
+                }
+              })}
+            />
+
+            <FormField
+              label="WhatsApp Alternativo" // Added
+              type="tel"
+              placeholder="(11) 99999-9999 (opcional)"
+              error={errors.contactWhatsappAlternative}
+              hint="Outro número de WhatsApp para contato"
+              {...register('contactWhatsappAlternative', {
                 onChange: (e) => {
                   e.target.value = formatPhone(e.target.value)
                 }

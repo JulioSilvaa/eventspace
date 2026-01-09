@@ -149,6 +149,9 @@ const createListingSchema = z.object({
   contactWhatsapp: z.string()
     .max(25, 'WhatsApp muito longo')
     .optional(),
+  contactWhatsappAlternative: z.string()
+    .max(25, 'WhatsApp alternativo muito longo')
+    .optional(),
   contactEmail: z.string().email('Email inválido').optional().or(z.literal('')),
   contactInstagram: z.string()
     .max(50, 'Instagram muito longo')
@@ -264,6 +267,7 @@ export default function CreateAd() {
       priceType: undefined,
       contactPhone: '',
       contactWhatsapp: '',
+      contactWhatsappAlternative: '',
       contactEmail: '',
       contactInstagram: '',
       contactFacebook: '',
@@ -277,18 +281,18 @@ export default function CreateAd() {
   useEffect(() => {
     if (profile && !prefilledRef.current) {
       // Only pre-fill if fields are empty
-      const currentPhone = watch('contactPhone');
-      const currentWhatsapp = watch('contactWhatsapp');
+      // const currentPhone = watch('contactPhone');
+      // const currentWhatsapp = watch('contactWhatsapp');
       const currentEmail = watch('contactEmail');
 
-      if (!currentPhone && profile.phone) {
-        setValue('contactPhone', profile.phone);
-      }
+      // REMOVIDO: Cliente solicitou que telefones iniciem vazios
+      // if (!currentPhone && profile.phone) {
+      //   setValue('contactPhone', profile.phone);
+      // }
 
-      if (!currentWhatsapp && profile.phone) {
-        // Fallback to phone if whatsapp is empty
-        setValue('contactWhatsapp', profile.phone);
-      }
+      // if (!currentWhatsapp && profile.phone) {
+      //   setValue('contactWhatsapp', profile.phone);
+      // }
 
       if (!currentEmail && profile.email) {
         setValue('contactEmail', profile.email);
@@ -495,6 +499,7 @@ export default function CreateAd() {
         comfort: allComfort,
         contact_phone: formattedPhone,
         contact_whatsapp: formattedWhatsapp,
+        contact_whatsapp_alternative: processPhone(data.contactWhatsappAlternative),
         contact_email: data.contactEmail,
         contact_instagram: data.contactInstagram,
         contact_facebook: data.contactFacebook,
@@ -848,7 +853,7 @@ export default function CreateAd() {
 
             <FormField
               key="contactPhone"
-              label="Telefone/WhatsApp"
+              label="Telefone (Ligações)" // Renamed
               type="tel"
               placeholder="(11) 99999-9999"
               error={errors.contactPhone}
@@ -859,12 +864,22 @@ export default function CreateAd() {
 
             <FormField
               key="contactWhatsapp"
-              label="WhatsApp alternativo"
+              label="WhatsApp (Principal)" // Renamed
               type="tel"
               placeholder="(11) 99999-9999 (opcional)"
               error={errors.contactWhatsapp}
               {...register('contactWhatsapp')}
               onChange={(e) => handleMaskedChange(e, utilMaskPhone, 'contactWhatsapp')}
+            />
+
+            <FormField
+              key="contactWhatsappAlternative"
+              label="WhatsApp Alternativo" // Added
+              type="tel"
+              placeholder="(11) 99999-9999 (opcional)"
+              error={errors.contactWhatsappAlternative}
+              {...register('contactWhatsappAlternative')}
+              onChange={(e) => handleMaskedChange(e, utilMaskPhone, 'contactWhatsappAlternative')}
             />
 
             <FormField

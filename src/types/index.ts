@@ -68,6 +68,7 @@ export interface Ad {
   contact_email?: string
   contact_instagram?: string
   contact_facebook?: string
+  contact_whatsapp_alternative?: string
 
   created_at: string
   updated_at: string

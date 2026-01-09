@@ -6,6 +6,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { ChevronRight, MapPin, Star, Check, ChevronLeft, Building2, Search, PartyPopper } from 'lucide-react'
 import { useAdsStore } from '@/stores/adsStore'
 import { AdCard } from '@/components/ads'
+import { AMENITY_LABELS } from '@/constants/amenities'
 
 export default function Home() {
   const [currentSlide, setCurrentSlide] = useState(0)
@@ -295,13 +296,12 @@ export default function Home() {
 
                               <div className="flex flex-wrap gap-2 mb-6">
                                 {ad.comfort && ad.comfort.slice(0, 3).map((amenity: string, index: number) => {
-                                  // Local mapping if needed, or just display raw
-                                  // Ideally import AMENITY_LABELS, but let's just display for now to fix TS error
-                                  // or use the same logic as AdCard if we want icons.
-                                  // Simple text for now as it was before.
+                                  const normalized = amenity.toLowerCase().trim()
+                                  const label = AMENITY_LABELS[amenity] || AMENITY_LABELS[normalized] || amenity
+
                                   return (
                                     <span key={index} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-                                      {amenity}
+                                      {label}
                                     </span>
                                   )
                                 })}

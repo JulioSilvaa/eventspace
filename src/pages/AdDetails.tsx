@@ -441,11 +441,12 @@ export default function AdDetails() {
   // Helper getters for contact info (only use listing contacts, no fallback to owner)
   const displayPhone = ad.contact_phone;
   const displayWhatsapp = ad.contact_whatsapp;
+  const displayWhatsappAlternative = ad.contact_whatsapp_alternative;
   const displayEmail = ad.contact_email;
   const displayInstagram = ad.contact_instagram;
   const displayFacebook = ad.contact_facebook;
 
-  const hasAnyContact = displayPhone || displayWhatsapp || displayEmail || displayInstagram || displayFacebook;
+  const hasAnyContact = displayPhone || displayWhatsapp || displayWhatsappAlternative || displayEmail || displayInstagram || displayFacebook;
   const hasActionableContact = displayPhone || displayWhatsapp;
 
   return (
@@ -886,6 +887,15 @@ export default function AdDetails() {
                           <span>WhatsApp</span>
                         </div>
                         <span className="text-sm font-semibold text-gray-900">{formatPhone(displayWhatsapp)}</span>
+                      </div>
+                    )}
+                    {displayWhatsappAlternative && (
+                      <div className="flex items-center justify-between group">
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <MessageCircle className="w-4 h-4 text-gray-400 group-hover:text-green-500 transition-colors" />
+                          <span>WhatsApp (Alt.)</span>
+                        </div>
+                        <span className="text-sm font-semibold text-gray-900">{formatPhone(displayWhatsappAlternative)}</span>
                       </div>
                     )}
                     {displayEmail && (

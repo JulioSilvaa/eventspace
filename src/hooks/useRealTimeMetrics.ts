@@ -14,6 +14,7 @@ export type ActivityEventType =
   | 'share'
   | 'listing_created'
   | 'listing_updated'
+  | 'listing_deleted'
   | 'price_updated'
   | 'photos_updated'
   | 'description_updated'
@@ -216,6 +217,19 @@ export function useEventTracking(listingId?: string) {
     })
   }
 
+  const trackListingDeleted = async (listingTitle: string) => {
+    if (!user?.id || !listingId) return
+    // Store title in metadata since the listing itself will be gone
+    await realTimeService.trackEvent({
+      listing_id: listingId,
+      user_id: user.id,
+      event_type: 'listing_deleted',
+      metadata: {
+        listing_title: listingTitle
+      }
+    })
+  }
+
   return {
     trackListingUpdated,
     trackPriceUpdated,
@@ -224,7 +238,8 @@ export function useEventTracking(listingId?: string) {
     trackContactUpdated,
     trackView,
     trackWhatsAppContact,
-    trackPhoneContact
+    trackPhoneContact,
+    trackListingDeleted
   }
 }
 

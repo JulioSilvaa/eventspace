@@ -38,19 +38,15 @@ export default function QuickActions({ userAds }: QuickActionsProps) {
     }
   ]
 
-  // Adicionar ação de criar anúncio se o usuário não tem anúncios
-  const actions: QuickAction[] = userAds.length === 0
-    ? [
-      {
-        title: 'Criar Anúncio',
-        description: 'Crie seu primeiro anúncio',
-        icon: Plus,
-        href: '/dashboard/criar-anuncio',
-        color: 'bg-green-500 hover:bg-green-600'
-      },
-      ...baseActions
-    ]
-    : baseActions
+  const createAdAction: QuickAction = {
+    title: 'Cadastrar Anúncio',
+    description: 'Divulgue seu espaço',
+    icon: Plus,
+    href: '/dashboard/criar-anuncio',
+    color: 'bg-green-500 hover:bg-green-600'
+  }
+
+  const actions: QuickAction[] = [createAdAction, ...baseActions]
 
   return (
     <div>

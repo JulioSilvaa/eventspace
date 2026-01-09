@@ -13,6 +13,7 @@ export type ActivityEventType =
   | 'share'
   | 'listing_created'
   | 'listing_updated'
+  | 'listing_deleted'
   | 'price_updated'
   | 'photos_updated'
   | 'description_updated'
@@ -299,7 +300,7 @@ class RealTimeService {
       const listingIds = Array.from(new Set(metrics.recentEvents.map(e => e.listing_id)))
       geoInsights = await geolocationService.getUserGeographicInsights(
         listingIds,
-        metrics.recentEvents as Record<string, any>[]
+        metrics.recentEvents as unknown as Record<string, unknown>[]
       ).catch(() => undefined)
     }
 

@@ -41,6 +41,7 @@ interface SpaceResponse {
   contact_email?: string
   contact_instagram?: string
   contact_facebook?: string
+  contact_whatsapp_alternative?: string
   created_at: string
   updated_at: string
   images?: (string | SpaceImage)[]
@@ -117,6 +118,7 @@ function mapSpaceToAd(space: SpaceResponse): Ad {
     contact_email: space.contact_email,
     contact_instagram: space.contact_instagram,
     contact_facebook: space.contact_facebook,
+    contact_whatsapp_alternative: space.contact_whatsapp_alternative,
     created_at: space.created_at,
     updated_at: space.updated_at,
     delivery_available: false,
@@ -416,6 +418,17 @@ export const useAdsStore = create<AdsState>((set, get) => ({
 
       // Status
       status: adData.status || 'active',
+
+      // Category
+      category_id: adData.category_id,
+
+      // Contacts
+      contact_whatsapp: adData.contact_whatsapp,
+      contact_phone: adData.contact_phone,
+      contact_email: adData.contact_email,
+      contact_instagram: adData.contact_instagram,
+      contact_facebook: adData.contact_facebook,
+      contact_whatsapp_alternative: adData.contact_whatsapp_alternative,
     }
 
     // Filter out undefined values

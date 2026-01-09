@@ -65,7 +65,7 @@ function Header() {
                   to="/dashboard"
                   className="text-gray-700 hover:text-primary-600 transition-colors"
                 >
-                  Dashboard
+                  Área do Anunciante
                 </Link>
                 {!isHomePage && (
                   <button
@@ -143,7 +143,7 @@ function Header() {
                       className="text-gray-700 hover:text-primary-600 transition-colors"
                       onClick={() => setIsMenuOpen(false)}
                     >
-                      Dashboard
+                      Área do Anunciante
                     </Link>
                     {!isHomePage && (
                       <button

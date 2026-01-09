@@ -37,19 +37,47 @@ export default function Analytics() {
 
   // Process data for charts
   const filteredData = useMemo(() => {
-    if (!metrics.dailyMetrics || metrics.dailyMetrics.length === 0) return []
-
     const days = timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 90
-    const cutoff = new Date()
-    cutoff.setDate(cutoff.getDate() - days)
+    const result = []
 
-    return metrics.dailyMetrics
-      .filter(item => new Date(item.date) >= cutoff)
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-      .map(item => ({
-        ...item,
-        formattedDate: new Date(item.date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
-      }))
+    // Create a map of existing data for faster lookup
+    // Key: YYYY-MM-DD
+    const metricsMap = new Map()
+    if (metrics.dailyMetrics) {
+      metrics.dailyMetrics.forEach(item => {
+        const dateKey = new Date(item.date).toISOString().split('T')[0]
+        metricsMap.set(dateKey, item)
+      })
+    }
+
+    // Generate last N days
+    for (let i = days - 1; i >= 0; i--) {
+      const date = new Date()
+      date.setDate(date.getDate() - i)
+      const dateKey = date.toISOString().split('T')[0]
+
+      const found = metricsMap.get(dateKey)
+
+      if (found) {
+        result.push({
+          ...found,
+          formattedDate: new Date(found.date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
+        })
+      } else {
+        result.push({
+          date: date.toISOString(),
+          views_count: 0,
+          contacts_count: 0,
+          favorites_count: 0,
+          reviews_count: 0,
+          shares_count: 0,
+          listing_id: 'placeholder',
+          formattedDate: date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
+        })
+      }
+    }
+
+    return result
   }, [metrics.dailyMetrics, timeRange])
 
   // Calculate stats based on filtered data

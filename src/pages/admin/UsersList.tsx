@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import adminApi from '../../services/adminApi';
-import { Loader2, Search, Trash2, Ban, CheckCircle, MoreHorizontal } from 'lucide-react';
+import { Loader2, Search, Trash2, Ban, CheckCircle, MoreHorizontal, X, ExternalLink } from 'lucide-react';
 
 interface User {
   id: string;
@@ -8,6 +8,8 @@ interface User {
   email: string;
   phone: string;
   region?: string;
+  files?: any[];
+  spaces?: { id: string; title: string; status: string }[];
   status: string;
   created_at: string;
 }
@@ -18,6 +20,8 @@ const UsersList: React.FC = () => {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+
   const limit = 10;
 
   const loadUsers = async () => {
@@ -45,14 +49,42 @@ const UsersList: React.FC = () => {
     loadUsers();
   };
 
-  const handleStatusUpdate = async (id: string, newStatus: string) => {
+  const handleUserStatusUpdate = async (id: string, newStatus: string) => {
     if (!confirm('Tem certeza?')) return;
     try {
       await adminApi.patch(`/admin/users/${id}/status`, { status: newStatus });
       loadUsers();
     } catch (error) {
       console.error(error);
-      alert('Erro ao atualizar status');
+      alert('Erro ao atualizar status do usuário');
+    }
+  };
+
+  const handleSpaceStatusUpdate = async (spaceId: string, newStatus: string) => {
+    if (!confirm(`Deseja realmente ${newStatus === 'active' ? 'ativar' : 'desativar'} este espaço?`)) return;
+    try {
+      await adminApi.patch(`/admin/spaces/${spaceId}/status`, { status: newStatus });
+
+      // Update local state for immediate feedback
+      if (selectedUser) {
+        setSelectedUser({
+          ...selectedUser,
+          spaces: selectedUser.spaces?.map(s =>
+            s.id === spaceId ? { ...s, status: newStatus } : s
+          )
+        });
+
+        // Also update the main list
+        setUsers(users.map(u =>
+          u.id === selectedUser.id ? {
+            ...u,
+            spaces: u.spaces?.map(s => s.id === spaceId ? { ...s, status: newStatus } : s)
+          } : u
+        ));
+      }
+    } catch (error) {
+      console.error(error);
+      alert('Erro ao atualizar status do espaço');
     }
   };
 
@@ -96,7 +128,11 @@ const UsersList: React.FC = () => {
               <tr><td colSpan={6} className="p-8 text-center text-slate-400">Nenhum usuário encontrado</td></tr>
             ) : (
               users.map(user => (
-                <tr key={user.id} className="text-slate-300 hover:bg-slate-700/50">
+                <tr
+                  key={user.id}
+                  className="text-slate-300 hover:bg-slate-700/50 cursor-pointer"
+                  onClick={() => setSelectedUser(user)}
+                >
                   <td className="p-4">
                     <p className="text-white font-medium">{user.name}</p>
                     <p className="text-sm text-slate-500">{user.email}</p>
@@ -117,10 +153,11 @@ const UsersList: React.FC = () => {
                     {new Date(user.created_at).toLocaleDateString()}
                   </td>
                   <td className="p-4 text-right">
-                    <div className="flex justify-end gap-2">
+                    <div className="flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                      {/* Actions intentionally kept separated from row click to prevent accidental triggers */}
                       {user.status !== 'active' && (
                         <button
-                          onClick={() => handleStatusUpdate(user.id, 'active')}
+                          onClick={() => handleUserStatusUpdate(user.id, 'active')}
                           className="p-2 hover:bg-emerald-500/10 text-emerald-500 rounded-lg"
                           title="Ativar"
                         >
@@ -129,7 +166,7 @@ const UsersList: React.FC = () => {
                       )}
                       {user.status === 'active' && (
                         <button
-                          onClick={() => handleStatusUpdate(user.id, 'inactive')}
+                          onClick={() => handleUserStatusUpdate(user.id, 'inactive')}
                           className="p-2 hover:bg-red-500/10 text-red-500 rounded-lg"
                           title="Bloquear"
                         >
@@ -165,6 +202,77 @@ const UsersList: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* User Spaces Modal */}
+      {selectedUser && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+          <div className="bg-slate-800 rounded-xl border border-slate-700 w-full max-w-2xl max-h-[80vh] flex flex-col shadow-2xl">
+            <div className="p-6 border-b border-slate-700 flex justify-between items-center">
+              <div>
+                <h2 className="text-xl font-bold text-white">Espaços de {selectedUser.name}</h2>
+                <p className="text-slate-400 text-sm mt-1">{selectedUser.email}</p>
+              </div>
+              <button
+                onClick={() => setSelectedUser(null)}
+                className="text-slate-400 hover:text-white transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto">
+              {!selectedUser.spaces || selectedUser.spaces.length === 0 ? (
+                <div className="text-center py-12 text-slate-500">
+                  <p>Este usuário não possui espaços cadastrados.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {selectedUser.spaces.map(space => (
+                    <div key={space.id} className="bg-slate-700/30 rounded-lg p-4 flex items-center justify-between border border-slate-700/50">
+                      <div>
+                        <h3 className="text-white font-medium">{space.title}</h3>
+                        <span className={`text-xs px-2 py-0.5 rounded mt-2 inline-block ${space.status === 'active'
+                          ? 'bg-emerald-500/10 text-emerald-500'
+                          : 'bg-red-500/10 text-red-500'
+                          }`}>
+                          {space.status === 'active' ? 'Ativo' : 'Inativo'}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        {space.status !== 'active' ? (
+                          <button
+                            onClick={() => handleSpaceStatusUpdate(space.id, 'active')}
+                            className="text-sm px-3 py-1.5 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 rounded-lg transition-colors font-medium border border-emerald-500/20"
+                          >
+                            Ativar
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleSpaceStatusUpdate(space.id, 'inactive')}
+                            className="text-sm px-3 py-1.5 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-lg transition-colors font-medium border border-red-500/20"
+                          >
+                            Desativar
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 border-t border-slate-700 bg-slate-800/50 flex justify-end">
+              <button
+                onClick={() => setSelectedUser(null)}
+                className="px-4 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-600 transition-colors"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -14,10 +14,9 @@ import {
   Settings as SettingsIcon
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
-import { useUserRealTimeMetrics, useEventTracking } from '@/hooks/useRealTimeMetrics'
+import { useEventTracking } from '@/hooks/useRealTimeMetrics'
 import { apiClient } from '@/lib/api-client'
 import { maskPhone, maskCEP, unmask } from '@/utils/masks'
-import { Instagram, Facebook } from 'lucide-react'
 
 type SettingsTab = 'personal' | 'security' | 'property' | 'account'
 
@@ -63,7 +62,7 @@ export default function Settings() {
               className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-primary-600 transition-colors mb-4 group"
             >
               <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
-              Voltar ao Dashboard
+              Voltar à Área do Anunciante
             </Link>
             <div className="flex items-center gap-4">
               <div className="bg-primary-600 p-3 rounded-2xl shadow-lg shadow-primary-500/20">
@@ -155,7 +154,7 @@ export default function Settings() {
 
 // Personal Information Section
 function PersonalInformationSection() {
-  const { profile, updateProfile, user } = useAuth()
+  const { updateProfile, user } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [isFetching, setIsFetching] = useState(false)
   const [formData, setFormData] = useState({
@@ -468,9 +467,10 @@ function PropertySection() {
   const { user, profile } = useAuth()
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
+  const [spaces, setSpaces] = useState<any[]>([])
   const [spaceId, setSpaceId] = useState<string | null>(null)
 
-  const { trackListingUpdated } = useEventTracking(spaceId || undefined)
+  const { trackListingUpdated, trackListingDeleted } = useEventTracking(spaceId || undefined)
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -490,55 +490,64 @@ function PropertySection() {
     }
   })
 
+  // Load all spaces
   useEffect(() => {
-    async function loadSpace() {
+    async function loadSpaces() {
       if (!user?.id) return
 
       try {
         const { data, error } = await apiClient.get<any>(`/api/spaces?owner_id=${user.id}`)
 
         if (error) {
-          console.error('Error loading space:', error)
+          console.error('Error loading spaces:', error)
           return
         }
 
-        const spaces = data?.spaces || []
-        if (spaces.length > 0) {
-          const space = spaces[0]
-          setSpaceId(space.id)
+        const loadedSpaces = data?.spaces || []
+        setSpaces(loadedSpaces)
 
-          // Pre-fill with priority: Space Data > User Profile Data
-          setFormData({
-            title: space.title || '',
-            description: space.description || '',
-            price_per_day: space.price_per_day || 0,
-            price_per_weekend: space.price_per_weekend || 0,
-            capacity: space.capacity || 0,
-
-            // For contacts: try Space, then Profile
-            phone: maskPhone(space.contact_phone || profile?.phone || ''),
-            whatsapp: maskPhone(space.contact_whatsapp || space.contact_phone || profile?.phone || ''),
-
-            address: {
-              street: space.address?.street || '',
-              number: space.address?.number || '',
-              neighborhood: space.address?.neighborhood || '',
-              city: space.address?.city || '',
-              state: space.address?.state || '',
-              zipcode: maskCEP(space.address?.zipcode || space.address?.postal_code || ''),
-              country: space.address?.country || 'Brasil'
-            }
-          })
+        if (loadedSpaces.length > 0) {
+          setSpaceId(loadedSpaces[0].id)
         }
       } catch (err) {
-        console.error('Unexpected error loading space:', err)
+        console.error('Unexpected error loading spaces:', err)
       } finally {
         setIsLoading(false)
       }
     }
 
-    loadSpace()
-  }, [user?.id, profile])
+    loadSpaces()
+  }, [user?.id])
+
+  // Update form when selected space changes
+  useEffect(() => {
+    if (!spaceId || spaces.length === 0) return
+
+    const space = spaces.find(s => s.id === spaceId)
+    if (!space) return
+
+    setFormData({
+      title: space.title || '',
+      description: space.description || '',
+      price_per_day: space.price_per_day || 0,
+      price_per_weekend: space.price_per_weekend || 0,
+      capacity: space.capacity || 0,
+
+      // For contacts: try Space first, then Profile as fallback default
+      phone: maskPhone(space.contact_phone || profile?.phone || ''),
+      whatsapp: maskPhone(space.contact_whatsapp || space.contact_phone || profile?.phone || ''),
+
+      address: {
+        street: space.address?.street || '',
+        number: space.address?.number || '',
+        neighborhood: space.address?.neighborhood || '',
+        city: space.address?.city || '',
+        state: space.address?.state || '',
+        zipcode: maskCEP(space.address?.zipcode || space.address?.postal_code || ''),
+        country: space.address?.country || 'Brasil'
+      }
+    })
+  }, [spaceId, spaces, profile])
 
   const handleUpdateSpace = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -610,6 +619,33 @@ function PropertySection() {
 
   return (
     <form onSubmit={handleUpdateSpace} className="space-y-8">
+      {/* Space Selector (only if multiple spaces exist) */}
+      {spaces.length > 0 && (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
+          <label className="block text-sm font-bold text-gray-700 mb-2">
+            Selecione o Anúncio para Editar
+          </label>
+          <div className="relative">
+            <Home className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <select
+              value={spaceId || ''}
+              onChange={(e) => setSpaceId(e.target.value)}
+              className="w-full pl-12 pr-10 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all outline-none font-medium text-gray-900 appearance-none cursor-pointer"
+            >
+              {spaces.map((space) => (
+                <option key={space.id} value={space.id}>
+                  {space.title}
+                </option>
+              ))}
+            </select>
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Basic Info Card */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
         <div className="flex items-center gap-3 mb-6">
@@ -861,7 +897,58 @@ function PropertySection() {
           Salvar Alterações
         </button>
       </div>
-    </form>
+
+      {/* Danger Zone */}
+      <div className="mt-8 bg-red-50/30 rounded-2xl border-2 border-red-100 p-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 bg-red-100 rounded-lg text-red-600">
+            <Trash2 className="w-5 h-5" />
+          </div>
+          <h3 className="text-lg font-bold text-red-900">Excluir Anúncio</h3>
+        </div>
+
+        <p className="text-sm text-red-800/70 font-medium mb-4">
+          Esta ação é irreversível e excluirá permanentemente este anúncio e todas as informações associadas a ele.
+        </p>
+
+        <button
+          type="button"
+          onClick={async () => {
+            if (!confirm('Tem certeza que deseja excluir este anúncio? Esta ação não pode ser desfeita.')) return;
+
+            try {
+              setIsSaving(true);
+
+              // Track deletion before removing from DB
+              // The hook will fire a "listing_deleted" event
+              // We pass the title because we can't fetch it after deletion
+              if (formData.title && spaceId) {
+                await trackListingDeleted(formData.title);
+              }
+
+              const { error } = await apiClient.delete(`/api/spaces/${spaceId}`);
+
+              if (error) {
+                alert('Erro ao excluir anúncio: ' + error.message);
+              } else {
+                alert('Anúncio excluído com sucesso!');
+                setSpaceId(null); // Clear local state
+                window.location.reload(); // Refresh to update UI
+              }
+            } catch (err: any) {
+              console.error('Error deleting space:', err);
+              alert('Erro ao excluir anúncio: ' + err.message);
+            } finally {
+              setIsSaving(false);
+            }
+          }}
+          disabled={isSaving}
+          className="px-6 py-3 bg-white text-red-600 font-bold rounded-xl border border-red-200 hover:bg-red-600 hover:text-white transition-all shadow-sm disabled:opacity-50"
+        >
+          {isSaving ? 'Processando...' : 'Excluir Anúncio'}
+        </button>
+      </div>
+    </form >
   )
 }
 
@@ -870,18 +957,7 @@ function AccountManagementSection() {
   const { profile, signOut, user } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleExportData = async () => {
-    setIsLoading(true)
-    try {
-      // TODO: Implement data export functionality
-      alert('Funcionalidade de exportação de dados será implementada em breve')
-    } catch (err) {
-      console.error('Error exporting data:', err)
-      alert('Erro ao exportar dados')
-    } finally {
-      setIsLoading(false)
-    }
-  }
+
 
   const handleDeactivateAccount = async () => {
     if (!confirm('Tem certeza que deseja desativar sua conta? Seus anúncios não serão mais exibidos na plataforma.')) {
@@ -990,25 +1066,7 @@ function AccountManagementSection() {
         </div>
       </div>
 
-      {/* Export Data Card */}
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-2 bg-primary-50 rounded-xl text-primary-600">
-            <Save className="w-5 h-5" />
-          </div>
-          <h3 className="text-xl font-bold text-gray-900 tracking-tight">Portabilidade de Dados</h3>
-        </div>
-        <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100 mb-6 font-medium text-gray-600 text-sm leading-relaxed">
-          Baixe uma cópia completa de todos os seus dados armazenados em nossa plataforma, seguindo as diretrizes da LGPD.
-        </div>
-        <button
-          onClick={handleExportData}
-          disabled={isLoading}
-          className="w-full md:w-auto px-8 py-4 bg-primary-600 text-white font-black rounded-2xl hover:bg-primary-700 shadow-lg shadow-primary-500/20 transition-all active:scale-95 disabled:opacity-50"
-        >
-          {isLoading ? 'PREPARANDO DADOS...' : 'EXPORTAR MEUS DADOS'}
-        </button>
-      </div>
+
 
       {/* Danger Zone Card */}
       <div className="bg-red-50/30 rounded-3xl border-2 border-red-100 p-8">

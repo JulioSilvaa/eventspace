@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Eye, MessageCircle, Star, Package, TrendingUp, MapPin,
-  Clock, Users, BarChart3, Target
+  Clock, Users, BarChart3, Target, LogOut
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useUserRealTimeMetrics } from '@/hooks/useRealTimeMetrics'
@@ -19,7 +19,7 @@ interface ActivityDisplayProps {
   'priority_lead' | 'auto_boost' | 'market_alert' | 'listing_created' |
   'review_received' | 'listing_milestone' | 'performance_insight' |
   'listing_updated' | 'price_updated' | 'photos_updated' |
-  'description_updated' | 'contact_updated'
+  'description_updated' | 'contact_updated' | 'listing_deleted'
   title: string
   description: string
   timestamp: Date
@@ -139,6 +139,12 @@ export default function RecentActivity({
           activityType = 'listing_created'
           title = '🎉 Anúncio Publicado'
           description = `"${adTitle}" foi publicado com sucesso`
+          break
+
+        case 'listing_deleted':
+          activityType = 'status_change'
+          title = '🗑️ Anúncio Removido'
+          description = `"${event.metadata?.listing_title || 'Anúncio'}" foi removido`
           break
 
         case 'listing_updated': {
@@ -342,6 +348,8 @@ export default function RecentActivity({
         return <Package className={`${iconClass} text-violet-500`} />
       case 'listing_created':
         return <Package className={`${iconClass} text-purple-500`} />
+      case 'listing_deleted':
+        return <LogOut className={`${iconClass} text-red-500`} />
       case 'listing_updated':
         return <Package className={`${iconClass} text-blue-600`} />
       case 'price_updated':
@@ -375,6 +383,8 @@ export default function RecentActivity({
         return 'bg-gray-50 border-gray-100'
       case 'listing_created':
         return 'bg-purple-50 border-purple-100'
+      case 'listing_deleted':
+        return 'bg-red-50 border-red-100'
       case 'listing_updated':
         return 'bg-blue-50 border-blue-100'
       case 'price_updated':
@@ -489,13 +499,22 @@ export default function RecentActivity({
                     <p className="text-xs text-gray-500">
                       Anúncio: {activity.metadata.adTitle}
                     </p>
-                    {activity.metadata?.listingId && (activity.type === 'view' || activity.type === 'contact' || activity.type === 'rating') && (
-                      <Link
-                        to={`/dashboard/avaliacoes?listing=${activity.metadata.listingId}`}
-                        className="text-xs text-blue-600 hover:text-blue-700 font-medium"
-                      >
-                        Ver avaliações →
-                      </Link>
+                    {activity.metadata?.listingId && (
+                      activity.type === 'rating' ? (
+                        <Link
+                          to={`/dashboard/avaliacoes?listing=${activity.metadata.listingId}`}
+                          className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                        >
+                          Ver avaliações →
+                        </Link>
+                      ) : (activity.type === 'view' || activity.type === 'contact') ? (
+                        <Link
+                          to="/dashboard/analytics"
+                          className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                        >
+                          Ver estatísticas →
+                        </Link>
+                      ) : null
                     )}
                   </div>
                 )}
