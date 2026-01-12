@@ -12,4 +12,16 @@ adminApi.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   return config;
 });
 
+adminApi.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('@EventSpace:admin_token');
+      localStorage.removeItem('@EventSpace:admin_user');
+      window.location.href = '/admin/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default adminApi;

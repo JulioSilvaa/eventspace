@@ -111,9 +111,9 @@ export default function AdCard({
     : 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=300&fit=crop'
 
   const cardClasses = {
-    small: 'bg-white rounded-lg shadow hover:shadow-md transition-shadow overflow-hidden',
-    medium: 'bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow overflow-hidden',
-    large: 'bg-white rounded-2xl shadow-xl hover:shadow-2xl transition-shadow overflow-hidden'
+    small: 'bg-white rounded-lg shadow hover:shadow-md transition-shadow overflow-hidden flex flex-col h-full',
+    medium: 'bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow overflow-hidden flex flex-col h-full',
+    large: 'bg-white rounded-2xl shadow-xl hover:shadow-2xl transition-shadow overflow-hidden flex flex-col h-full'
   }
 
   const imageClasses = {
@@ -123,13 +123,13 @@ export default function AdCard({
   }
 
   const paddingClasses = {
-    small: 'p-4',
-    medium: 'p-5',
-    large: 'p-6'
+    small: 'p-4 flex flex-col flex-grow',
+    medium: 'p-5 flex flex-col flex-grow',
+    large: 'p-6 flex flex-col flex-grow'
   }
 
   return (
-    <Link to={`/anuncio/${ad.id}`} className="block group">
+    <Link to={`/anuncio/${ad.id}`} className="block group h-full">
       <div className={cardClasses[size]}>
         {/* Image */}
         <div className="relative">

@@ -149,7 +149,7 @@ const AdminDashboard: React.FC = () => {
           title="Churn Rate"
           value={(stats?.churnRate || 0) + '%'}
           icon={Activity}
-          trend={-2.5} // Example trend
+          trend={0}
           color="emerald" // Red might be better if high, but let's stick to palette
         />
         <StatsCard

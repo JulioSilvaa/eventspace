@@ -17,7 +17,20 @@ export default defineConfig({
   },
   server: {
     https: process.env.HTTPS === 'true',
-    host: true, // Permite acesso externo
+    host: true,
     port: 5173,
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          ui: ['lucide-react', 'tailwind-merge', 'clsx'],
+          maps: ['leaflet', 'react-leaflet'],
+          charts: ['recharts'],
+          stripe: ['@stripe/stripe-js', 'stripe'],
+        },
+      },
+    },
   },
 })

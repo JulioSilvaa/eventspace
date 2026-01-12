@@ -78,6 +78,27 @@ class PaymentService {
     }
   }
 
+  async createSubscriptionCheckout(spaceId: string): Promise<void> {
+    try {
+      const { data, error } = await apiClient.post<{ url: string }>('/api/subscription/checkout', {
+        spaceId
+      })
+
+      if (error) {
+        throw new Error(error.message || 'Erro ao criar sessão de checkout')
+      }
+
+      if (data?.url) {
+        window.location.href = data.url
+      } else {
+        throw new Error('URL de checkout não retornada pelo servidor')
+      }
+    } catch (error) {
+      console.error('Error in createSubscriptionCheckout:', error)
+      throw error
+    }
+  }
+
 
   async getPaymentStatus(paymentId: string): Promise<PaymentRecord | null> {
     const { data, error } = await apiClient.get<PaymentRecord>(`/api/payments/${paymentId}`)

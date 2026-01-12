@@ -90,9 +90,19 @@ export default function MyAds() {
 
 
   const handleToggleStatus = async (adId: string, currentStatus: string) => {
-    // Simply toggle between active and inactive
-    const newStatus = currentStatus === 'active' ? 'inactive' : 'active'
-    await updateAd(adId, { status: newStatus as any }) // Type casting if necessary, usually 'active' | 'inactive'
+    if (currentStatus === 'inactive' || currentStatus === 'suspended') {
+      const checkoutUrl = await subscriptionService.createCheckoutSession(adId);
+      if (checkoutUrl) {
+        window.location.href = checkoutUrl;
+      } else {
+        showAlert('error', 'Erro', 'Não foi possível configurar o pagamento para este anúncio.');
+      }
+      return;
+    }
+
+    // Toggle from active to inactive
+    const newStatus = 'inactive';
+    await updateAd(adId, { status: newStatus as any });
   }
 
 
@@ -260,7 +270,7 @@ export default function MyAds() {
                     )}
                     <div className="absolute top-4 left-4">
                       <span className={`text-[10px] uppercase tracking-wider px-3 py-1.5 rounded-lg font-bold shadow-sm backdrop-blur-md bg-white/90 ${ad.status === 'active' ? 'text-green-700' :
-                          ad.status === 'inactive' ? 'text-yellow-700' : 'text-gray-700'
+                        ad.status === 'inactive' ? 'text-yellow-700' : 'text-gray-700'
                         }`}>
                         {getStatusText(ad.status)}
                       </span>

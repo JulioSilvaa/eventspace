@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth'
 // import UpgradeModal from '@/components/modals/UpgradeModal'
 import { useAdsStore } from '@/stores/adsStore'
 import { useToast } from '@/contexts/ToastContext'
+import { paymentService } from '@/services/paymentService'
 
 import {
   ArrowLeft,
@@ -480,24 +481,27 @@ export default function CreateAd() {
         contact_email: data.contactEmail,
         contact_instagram: data.contactInstagram,
         contact_facebook: data.contactFacebook,
-        status: 'active' as const,
+        status: 'inactive' as const,
       }
 
       // Chamada unificada enviando dados e arquivos
-      const result = await createAd(listingData, imageFiles)
+      const result = await createAd(listingData, imageFiles);
 
       if (result.error) {
-        if (loadingToastId) toast.removeToast(loadingToastId)
-        toast.error('Erro ao criar anúncio', result.error)
-        setError(result.error)
-        setIsSubmitting(false)
-        return
+        if (loadingToastId) toast.removeToast(String(loadingToastId));
+        toast.error('Erro ao Criar Anúncio', result.error);
+        return;
       }
 
       if (loadingToastId) toast.removeToast(String(loadingToastId));
 
-      toast.success('Anúncio criado com sucesso!', 'Seu anúncio já está ativo e visível na plataforma!');
-      navigate('/dashboard?newListing=true');
+      toast.success('Anúncio criado!', 'Redirecionando para ativação do plano...');
+
+      if (result.data?.id) {
+        await paymentService.createSubscriptionCheckout(result.data.id);
+      } else {
+        navigate('/dashboard?newListing=true');
+      }
     } catch (error) {
       if (loadingToastId) toast.removeToast(String(loadingToastId))
       const errorMessage = error instanceof Error ? error.message : 'Erro inesperado ao criar anúncio'

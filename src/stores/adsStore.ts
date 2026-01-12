@@ -451,7 +451,10 @@ export const useAdsStore = create<AdsState>((set, get) => ({
       get().fetchUserAds(adData.user_id)
     }
 
-    return { data: data ? mapSpaceToAd(data) : undefined }
+    // If backend returns data wrapped in a data property
+    const spaceResult = (data as any)?.data || data;
+
+    return { data: spaceResult ? mapSpaceToAd(spaceResult) : undefined }
   },
 
   updateAd: async (id: string, adData: Partial<Ad>) => {
