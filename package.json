@@ -37,6 +37,7 @@
     "@types/node": "^25.0.6",
     "@types/react": "^18.3.17",
     "@types/react-dom": "^18.3.5",
+    "@types/react-lazy-load-image-component": "^1.6.5",
     "@vitejs/plugin-basic-ssl": "^2.1.0",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.17",
@@ -45,9 +46,13 @@
     "eslint-plugin-react-refresh": "^0.4.16",
     "globals": "^15.14.0",
     "postcss": "^8.4.33",
+    "react-lazy-load-image-component": "^1.6.3",
     "tailwindcss": "^3.4.1",
     "typescript": "~5.6.2",
     "typescript-eslint": "^8.38.0",
-    "vite": "^6.0.7"
+    "vite": "^6.0.7",
+    "vite-plugin-imagemin": "^0.6.1",
+    "vite-plugin-pwa": "^1.2.0",
+    "workbox-window": "^7.4.0"
   }
 }
