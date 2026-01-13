@@ -334,24 +334,7 @@ export default function MyAds() {
                           </Link>
                         </Tooltip>
 
-                        <div className="w-px h-6 bg-gray-200 mx-1 hidden sm:block"></div>
-
-                        <Tooltip content={ad.status === 'active' ? 'Pausar anúncio' : 'Ativar anúncio'}>
-                          <button
-                            onClick={() => handleToggleStatus(ad.id, ad.status)}
-                            className={`flex-1 sm:flex-none flex items-center justify-center h-11 px-4 rounded-xl border transition-all ${ad.status === 'active'
-                              ? 'text-amber-600 bg-amber-50 border-amber-100 hover:bg-amber-100'
-                              : 'text-emerald-600 bg-emerald-50 border-emerald-100 hover:bg-emerald-100'
-                              }`}
-                          >
-                            <span className="sm:hidden mr-2 text-sm font-bold">{ad.status === 'active' ? 'Pausar' : 'Ativar'}</span>
-                            {ad.status === 'active' ? (
-                              <Pause className="w-4 h-4 fill-current" />
-                            ) : (
-                              <Play className="w-4 h-4 fill-current" />
-                            )}
-                          </button>
-                        </Tooltip>
+                        {/* Pause/Resume button removed as requested */}
 
                         <Tooltip content="Ver anúncio público">
                           <Link
