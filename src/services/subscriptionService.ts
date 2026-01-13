@@ -3,6 +3,7 @@ import { apiClient } from '@/lib/api-client'
 export interface Subscription {
   id: string
   user_id: string
+  space_id?: string
   stripe_subscription_id: string
   stripe_customer_id: string
   stripe_price_id: string
@@ -234,7 +235,26 @@ class SubscriptionService {
       return null;
     }
   }
+
+  async getCurrentPricing(): Promise<{ plan_type: string; price: number; spots_remaining: number; message: string } | null> {
+    try {
+      const { data, error } = await apiClient.get<{ plan_type: string; price: number; spots_remaining: number; message: string }>(
+        '/api/subscription/current-pricing'
+      )
+
+      if (error) {
+        console.error('Failed to get current pricing:', error)
+        return null
+      }
+
+      return data || null
+    } catch (error) {
+      console.error('Error fetching pricing:', error)
+      return null
+    }
+  }
 }
+
 
 export const subscriptionService = new SubscriptionService()
 export default subscriptionService

@@ -417,7 +417,7 @@ export default function RecentActivity({
   }
 
   return (
-    <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-5 md:p-6 h-full">
+    <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-5 md:p-6">
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h2 className="text-lg font-bold text-gray-900 mb-1">
@@ -456,7 +456,7 @@ export default function RecentActivity({
           </p>
         </div>
       ) : (
-        <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+        <div className="space-y-3 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
           {activities.map((activity) => (
             <div
               key={activity.id}

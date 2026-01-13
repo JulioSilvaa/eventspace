@@ -12,6 +12,8 @@ interface User {
   region?: string;
   status: string;
   created_at: string;
+  plan?: string;
+  planValue?: number;
 }
 
 const UsersList: React.FC = () => {

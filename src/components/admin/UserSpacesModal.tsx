@@ -11,6 +11,11 @@ interface Space {
   city?: string;
   state?: string;
   created_at: string;
+  subscription?: {
+    plan: string;
+    price: number;
+    status: string;
+  };
 }
 
 interface UserSpacesModalProps {
@@ -36,7 +41,7 @@ export default function UserSpacesModal({ isOpen, onClose, userId, userName }: U
     setLoading(true);
     try {
       const response = await adminApi.get('/admin/ads', {
-        params: { ownerId: userId, limit: 100 } // Fetch all (or reasonable limit)
+        params: { ownerId: userId, limit: 100 }
       });
       setSpaces(response.data.data);
     } catch (error) {
@@ -53,7 +58,6 @@ export default function UserSpacesModal({ isOpen, onClose, userId, userName }: U
     try {
       await adminApi.patch(`/admin/ads/${space.id}/status`, { status: newStatus });
 
-      // Update local state optimistic logic or reload
       setSpaces(prev => prev.map(s =>
         s.id === space.id ? { ...s, status: newStatus } : s
       ));
@@ -70,12 +74,20 @@ export default function UserSpacesModal({ isOpen, onClose, userId, userName }: U
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="bg-slate-800 border border-slate-700 rounded-xl w-full max-w-2xl max-h-[80vh] flex flex-col shadow-2xl">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-slate-800 border border-slate-700 rounded-xl w-full max-w-2xl max-h-[80vh] flex flex-col shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="p-6 border-b border-slate-700 flex justify-between items-center bg-slate-850 rounded-t-xl">
           <div>
             <h2 className="text-xl font-bold text-white">Anúncios do Usuário</h2>
-            <p className="text-slate-400 text-sm mt-1">{userName}</p>
+            <div className="flex items-center gap-2 mt-1">
+              <p className="text-slate-400 text-sm">{userName}</p>
+            </div>
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors">
             <X className="w-6 h-6" />
@@ -96,7 +108,7 @@ export default function UserSpacesModal({ isOpen, onClose, userId, userName }: U
               {spaces.map(space => (
                 <div key={space.id} className="bg-slate-700/50 rounded-lg p-4 border border-slate-600 flex flex-col sm:flex-row justify-between gap-4 items-start sm:items-center">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <h3 className="font-semibold text-white truncate max-w-[250px]" title={space.title}>
                         {space.title}
                       </h3>
@@ -104,6 +116,11 @@ export default function UserSpacesModal({ isOpen, onClose, userId, userName }: U
                         }`}>
                         {space.status === 'active' ? 'Ativo' : 'Inativo'}
                       </span>
+                      {space.subscription && (
+                        <span className="px-2 py-0.5 rounded text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                          {space.subscription.plan} (R$ {Number(space.subscription.price).toFixed(2)})
+                        </span>
+                      )}
                     </div>
                     <div className="text-sm text-slate-400 flex flex-wrap gap-x-4 gap-y-1">
                       <span>{space.category?.name || 'Sem categoria'}</span>

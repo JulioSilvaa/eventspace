@@ -107,7 +107,7 @@ function mapSpaceToAd(space: SpaceResponse): Ad {
     number: space.address?.number,
     complement: space.address?.complement,
     postal_code: space.address?.zipcode,
-    status: space.status as 'active' | 'inactive' | 'pending' | 'rejected',
+    status: (space.status || 'inactive') as 'active' | 'inactive' | 'pending' | 'rejected',
     featured: space.featured || false,
     views_count: space.views_count || 0,
     contacts_count: space.contacts_count || 0,
