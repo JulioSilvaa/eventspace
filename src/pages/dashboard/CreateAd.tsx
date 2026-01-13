@@ -562,7 +562,7 @@ export default function CreateAd() {
               <textarea
                 key="description"
                 rows={6}
-                placeholder="Descreva a capacidade, infraestrutura, comodidades disponíveis..."
+                placeholder="Exemplo: Chácara Recanto das Flores: Espaço ideal para casamentos e aniversários com 500m². Possuímos piscina aquecida, área de churrasqueira completa, salão de festas coberto para 200 pessoas e estacionamento para 50 carros. Ambiente familiar e aconchegante, perfeito para celebrar momentos especiais..."
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all shadow-sm"
                 {...register('description')}
               />
@@ -973,7 +973,7 @@ export default function CreateAd() {
                   </div>
                   <div className="text-right">
                     <p className="text-3xl font-bold text-green-600">
-                      R$ {watch('price')?.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) || '0,00'}
+                      {watch('price') || 'R$ 0,00'}
                     </p>
                     <p className="text-sm text-gray-500">
                       por {watch('priceType') === 'daily' ? 'dia' : watch('priceType') === 'weekend' ? 'final de semana' : 'período'}
@@ -991,11 +991,11 @@ export default function CreateAd() {
                 <div className="border-t pt-4 grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-xs text-gray-500 uppercase font-semibold">Capacidade</p>
-                    <p className="text-sm text-gray-900">{watch('capacity') || '--'} pessoas</p>
+                    <p className="text-sm text-gray-900">{watch('capacity') ?? '--'} pessoas</p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500 uppercase font-semibold">Área</p>
-                    <p className="text-sm text-gray-900">{watch('area_sqm') || '--'} m²</p>
+                    <p className="text-sm text-gray-900">{watch('area_sqm') ?? '--'} m²</p>
                   </div>
                 </div>
               </div>

@@ -120,7 +120,10 @@ const editAdSchema = z.object({
   price: z.number()
     .min(1, 'Preço deve ser maior que zero')
     .max(100000, 'Preço deve ser menor que R$ 100.000'),
-  price_per_weekend: z.number().optional(),
+  price_per_weekend: z.preprocess(
+    (val) => (val === '' || val === null || Number.isNaN(Number(val))) ? undefined : Number(val),
+    z.number().optional()
+  ),
   priceType: z.enum(['daily', 'hourly', 'event'], {
     required_error: 'Selecione o tipo de preço'
   }),
@@ -174,17 +177,25 @@ const EQUIPMENT_CATEGORIES = [
 ]
 
 const SPACE_CATEGORIES = [
-  { name: 'Salão de Festas', id: 11 },
-  { name: 'Espaço ao Ar Livre', id: 12 },
-  { name: 'Casa de Eventos', id: 13 },
-  { name: 'Chácara', id: 14 },
-  { name: 'Clube', id: 15 },
-  { name: 'Hotel e Pousada', id: 16 },
-  { name: 'Restaurante', id: 17 },
-  { name: 'Praia', id: 18 },
-  { name: 'Fazenda', id: 19 },
-  { name: 'Coworking', id: 20 }
+  { id: 1, name: 'Salão de Festas' },
+  { id: 2, name: 'Chácara' },
+  { id: 3, name: 'Área de Lazer' },
+  { id: 4, name: 'Buffet' },
+  { id: 5, name: 'Decoração' },
+  { id: 6, name: 'Fotografia' },
+  { id: 7, name: 'Som e Iluminação' },
 ]
+
+const formatPhone = (value: string) => {
+  const numbers = value.replace(/\D/g, '')
+  const limitedNumbers = numbers.slice(0, 11)
+
+  if (limitedNumbers.length <= 10) {
+    return limitedNumbers.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3')
+  } else {
+    return limitedNumbers.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3')
+  }
+}
 
 export default function EditAd() {
   const { id } = useParams<{ id: string }>()
@@ -260,38 +271,65 @@ export default function EditAd() {
         postal_code: currentAd.postal_code || '',
         reference_point: (currentAd.specifications?.reference_point as string) || '',
         price: currentAd.price,
+        price_per_weekend: currentAd.price_per_weekend || undefined,
         priceType: currentAd.price_type,
-        contactPhone: currentAd.contact_phone || '',
-        contactWhatsapp: currentAd.contact_whatsapp || '',
-        contactWhatsappAlternative: currentAd.contact_whatsapp_alternative || '',
+        contactPhone: formatPhone((currentAd.contact_phone || '').replace(/^(\+?55|55)\s?/, '').replace(/^\+55/, '')),
+        contactWhatsapp: formatPhone((currentAd.contact_whatsapp || '').replace(/^(\+?55|55)\s?/, '').replace(/^\+55/, '')),
+        contactWhatsappAlternative: formatPhone((currentAd.contact_whatsapp_alternative || '').replace(/^(\+?55|55)\s?/, '').replace(/^\+55/, '')),
         contactEmail: currentAd.contact_email || '',
         contactInstagram: currentAd.contact_instagram || '',
         contactFacebook: currentAd.contact_facebook || '',
         featured: currentAd.featured
       })
 
-      // Como as comodidades agora são salvas todas juntas no array 'amenities',
-      // precisamos separar as padrões das customizadas na hora de carregar
+      // Loading logic: Check specifications first, then fallback to comfort
       if (currentAd.specifications?.amenities && Array.isArray(currentAd.specifications.amenities)) {
-        const standardAmenities = ['wifi', 'parking', 'kitchen', 'bathrooms', 'air_conditioning', 'ventilation', 'tv', 'furniture', 'coffee_area', 'microwave', 'refrigerator', 'washing_machine', 'sound_basic', 'phone', 'location_access']
+        const standardAmenities = Object.keys(AMENITIES_LABELS)
         const selected = (currentAd.specifications.amenities as string[]).filter(item => standardAmenities.includes(item))
         const custom = (currentAd.specifications.amenities as string[]).filter(item => !standardAmenities.includes(item))
         setSelectedAmenities(selected)
         setCustomAmenities(custom)
+      } else if (currentAd.comfort && Array.isArray(currentAd.comfort)) {
+        const standardAmenities = Object.keys(AMENITIES_LABELS)
+        const selected = currentAd.comfort.filter(item => standardAmenities.includes(item))
+        // We only extract what matches known amenities. Custom items in 'comfort' might be features or services without labels? 
+        // Or we check all lists.
+        setSelectedAmenities(selected)
+        // Note: We don't extract 'custom' here yet to avoid duplication if it belongs to features/services. 
+        // We handle custom items after checking all lists? Or assume logic below handles it.
       }
+
       if (currentAd.specifications?.features && Array.isArray(currentAd.specifications.features)) {
-        const standardFeatures = ['pool', 'bbq', 'garden', 'soccer_field', 'game_room', 'gym', 'sound_system', 'lighting', 'decoration', 'professional_sound', 'lighting_system', 'decoration_items', 'recording_equipment']
+        const standardFeatures = Object.keys(FEATURES_LABELS)
         const selected = (currentAd.specifications.features as string[]).filter(item => standardFeatures.includes(item))
         const custom = (currentAd.specifications.features as string[]).filter(item => !standardFeatures.includes(item))
         setSelectedFeatures(selected)
         setCustomFeatures(custom)
+      } else if (currentAd.comfort && Array.isArray(currentAd.comfort)) {
+        const standardFeatures = Object.keys(FEATURES_LABELS)
+        const selected = currentAd.comfort.filter(item => standardFeatures.includes(item))
+        setSelectedFeatures(selected)
       }
+
       if (currentAd.specifications?.services && Array.isArray(currentAd.specifications.services)) {
-        const standardServices = ['cleaning', 'security', 'waitstaff', 'catering', 'setup']
+        const standardServices = Object.keys(SERVICES_LABELS)
         const selected = (currentAd.specifications.services as string[]).filter(item => standardServices.includes(item))
         const custom = (currentAd.specifications.services as string[]).filter(item => !standardServices.includes(item))
         setSelectedServices(selected)
         setCustomServices(custom)
+      } else if (currentAd.comfort && Array.isArray(currentAd.comfort)) {
+        const standardServices = Object.keys(SERVICES_LABELS)
+        const selected = currentAd.comfort.filter(item => standardServices.includes(item))
+        setSelectedServices(selected)
+
+        // Now handle custom items from comfort (anything not in any label list)
+        const allKnown = [
+          ...Object.keys(AMENITIES_LABELS),
+          ...Object.keys(FEATURES_LABELS),
+          ...Object.keys(SERVICES_LABELS)
+        ]
+        const custom = currentAd.comfort.filter(item => !allKnown.includes(item))
+        setCustomAmenities(custom) // Defaulting all unknown items to customAmenities (displayed as 'Outros' or similar)
       }
     }
   }, [currentAd, isLoading, reset])
@@ -351,16 +389,7 @@ export default function EditAd() {
     )
   }
 
-  const formatPhone = (value: string) => {
-    const numbers = value.replace(/\D/g, '')
-    const limitedNumbers = numbers.slice(0, 11)
 
-    if (limitedNumbers.length <= 10) {
-      return limitedNumbers.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3')
-    } else {
-      return limitedNumbers.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3')
-    }
-  }
 
   const nextStep = async () => {
     let fieldsToValidate: (keyof EditAdData)[] = []
@@ -412,6 +441,7 @@ export default function EditAd() {
 
 
       const specifications = {
+        ...(currentAd?.specifications || {}), // Mantém dados existentes incluindo amenities/features/services antigos se não forem sobrescritos
         ...(data.capacity && { capacity: data.capacity }),
         ...(data.area_sqm && { area_sqm: data.area_sqm }),
         ...(data.address?.trim() && { address: data.address.trim() }),
@@ -419,6 +449,19 @@ export default function EditAd() {
         ...(allAmenities.length > 0 && { amenities: allAmenities }),
         ...(allFeatures.length > 0 && { features: allFeatures }),
         ...(allServices.length > 0 && { services: allServices })
+      }
+
+      // Helper to ensure phone has +55
+      const processPhone = (phone: string | undefined | null) => {
+        if (!phone) return undefined
+        const digits = phone.replace(/\D/g, '')
+        if (!digits) return undefined
+        // If it starts with 55 and has length > 12 (55 + 11 digits), usually it's already DDI+DDD+NUM
+        // But user input is usually just DDD+NUM (10 or 11 digits).
+        // If input is 11 digits (e.g. 11999999999), we add +55.
+        // If input is 12 or 13, maybe it already has it.
+        // Safer approach: if we stripped it in UI, let's prepend it if it's not there.
+        return digits.startsWith('55') && digits.length > 11 ? `+${digits}` : `+55${digits}`
       }
 
       const updateData = {
@@ -437,14 +480,22 @@ export default function EditAd() {
         number: data.number,
         complement: data.complement || undefined,
         postal_code: data.postal_code || undefined,
-        contact_phone: data.contactPhone,
-        contact_whatsapp: data.contactWhatsapp || undefined,
-        contact_whatsapp_alternative: data.contactWhatsappAlternative || undefined,
+        contact_phone: processPhone(data.contactPhone),
+        contact_whatsapp: processPhone(data.contactWhatsapp),
+        contact_whatsapp_alternative: processPhone(data.contactWhatsappAlternative),
         contact_email: data.contactEmail?.trim() || undefined,
         contact_instagram: data.contactInstagram || undefined,
         contact_facebook: data.contactFacebook || undefined,
         featured: data.featured || false,
-        specifications: Object.keys(specifications).length > 0 ? specifications : undefined
+        specifications: Object.keys(specifications).length > 0 ? specifications : undefined,
+        comfort: [
+          ...selectedAmenities,
+          ...selectedFeatures,
+          ...selectedServices,
+          ...customAmenities,
+          ...customFeatures,
+          ...customServices
+        ]
       }
 
       loadingToastId = toast.loading('Atualizando anúncio...', 'Salvando suas alterações')
@@ -598,7 +649,7 @@ export default function EditAd() {
               </label>
               <textarea
                 rows={6}
-                placeholder="Descreva a capacidade, infraestrutura, comodidades disponíveis..."
+                placeholder="Exemplo: Chácara Recanto das Flores: Espaço ideal para casamentos e aniversários com 500m². Possuímos piscina aquecida, área de churrasqueira completa, salão de festas coberto para 200 pessoas e estacionamento para 50 carros. Ambiente familiar e aconchegante, perfeito para celebrar momentos especiais..."
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all shadow-sm"
                 {...register('description')}
               />
@@ -1028,11 +1079,11 @@ export default function EditAd() {
                     <div className="flex gap-4">
                       <div>
                         <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Capacidade</p>
-                        <p className="text-sm text-gray-900 font-medium">{watch('capacity') || '--'} pessoas</p>
+                        <p className="text-sm text-gray-900 font-medium">{watch('capacity') ?? '--'} pessoas</p>
                       </div>
                       <div>
                         <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Área</p>
-                        <p className="text-sm text-gray-900 font-medium">{watch('area_sqm') || '--'} m²</p>
+                        <p className="text-sm text-gray-900 font-medium">{watch('area_sqm') ?? '--'} m²</p>
                       </div>
                     </div>
                   </div>
@@ -1089,15 +1140,25 @@ export default function EditAd() {
                     <span className="text-xl">📸</span>
                     <h3 className="text-lg font-bold text-gray-900">Fotos</h3>
                   </div>
-                  <p className="text-sm text-gray-700">
-                    {images.length > 0
-                      ? `Você adicionou ${images.length} novas fotos.`
-                      : 'Nenhuma foto nova adicionada.'
-                    }
-                  </p>
-                  {(currentAd?.listing_images?.length || 0) > 0 && (
-                    <p className="text-xs text-gray-500 mt-2 italic">
-                      As imagens existentes serão mantidas (exceto as removidas).
+                  <div className="space-y-2">
+                    <p className="text-sm text-gray-700">
+                      <span className="font-bold">{(currentAd?.listing_images || []).filter(img => !removedExistingImageIds.includes(img.id)).length}</span> foto(s) já existente(s) mantida(s).
+                    </p>
+                    {images.length > 0 && (
+                      <p className="text-sm text-green-600 font-medium">
+                        + <span className="font-bold">{images.length}</span> nova(s) foto(s) adicionada(s).
+                      </p>
+                    )}
+                    <div className="pt-2 border-t border-gray-100 flex justify-between items-center">
+                      <span className="text-sm font-bold text-gray-900">Total no anúncio:</span>
+                      <span className="text-lg font-bold text-primary-600">
+                        {((currentAd?.listing_images || []).filter(img => !removedExistingImageIds.includes(img.id)).length + images.length)} fotos
+                      </span>
+                    </div>
+                  </div>
+                  {((currentAd?.listing_images || []).filter(img => !removedExistingImageIds.includes(img.id)).length + images.length) === 0 && (
+                    <p className="text-xs text-red-500 mt-2 font-medium">
+                      ⚠️ Atenção: Seu anúncio ficará sem fotos.
                     </p>
                   )}
                 </div>
@@ -1306,7 +1367,7 @@ export default function EditAd() {
           ) : (
             <FormButton
               type="button"
-              onClick={handleSubmit(onSubmit)}
+              onClick={handleSubmit(onSubmit, (errors) => console.error('VALIDATION ERRORS:', errors))}
               loading={isSubmitting}
               size="lg"
               className="px-10 py-4 md:py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 rounded-xl font-semibold shadow-lg hover:shadow-xl transform active:scale-95 md:hover:scale-105 transition-all w-full md:w-auto flex justify-center"

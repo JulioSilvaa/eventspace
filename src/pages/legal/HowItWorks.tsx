@@ -2,73 +2,37 @@ import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
 import { Link } from 'react-router-dom'
 import {
-  Search,
-  MessageCircle,
-  HandHeart,
-  DollarSign,
-  Shield,
-  Users,
-  Building2,
-  CalendarCheck,
-  PartyPopper,
+  UserPlus,
+  ImagePlus,
+  Rocket,
   ChevronRight,
   ArrowRight,
-  CheckCircle,
-  Store as StoreIcon
+  CheckCircle2,
+  HelpCircle
 } from 'lucide-react'
 
 export default function HowItWorks() {
-  const clientSteps = [
+  const steps = [
     {
-      icon: Search,
-      title: "Busque",
-      description: "Use filtros inteligentes para encontrar o espaço perfeito.",
-      color: "bg-blue-100 text-blue-600"
+      icon: UserPlus,
+      title: "1. Crie sua Conta Grátis",
+      description: "Cadastre-se em menos de 1 minuto. É rápido, simples e não exigimos cartão de crédito nesta etapa.",
+      color: "blue",
+      badge: "Passo Inicial"
     },
     {
-      icon: MessageCircle,
-      title: "Converse",
-      description: "Fale direto com o proprietário via WhatsApp.",
-      color: "bg-green-100 text-green-600"
+      icon: ImagePlus,
+      title: "2. Monte seu Anúncio",
+      description: "Adicione fotos incríveis, descreva seu espaço e liste os diferenciais. Você pode deixar tudo pronto antes de pagar.",
+      color: "purple",
+      badge: "Prepare Tudo"
     },
     {
-      icon: HandHeart,
-      title: "Negocie",
-      description: "Combine valores e detalhes sem taxas extras.",
-      color: "bg-purple-100 text-purple-600"
-    },
-    {
-      icon: PartyPopper,
-      title: "Celebre",
-      description: "Tudo pronto! Aproveite seu evento.",
-      color: "bg-orange-100 text-orange-600"
-    }
-  ]
-
-  const supplierSteps = [
-    {
-      icon: Users,
-      title: "Crie Conta",
-      description: "Cadastro gratuito em menos de 2 minutos.",
-      color: "bg-indigo-100 text-indigo-600"
-    },
-    {
-      icon: Building2,
-      title: "Anuncie",
-      description: "Publique fotos e detalhes do seu espaço.",
-      color: "bg-pink-100 text-pink-600"
-    },
-    {
-      icon: CalendarCheck,
-      title: "Receba",
-      description: "Clientes interessados chamam você direto.",
-      color: "bg-teal-100 text-teal-600"
-    },
-    {
-      icon: DollarSign,
-      title: "Fature 100%",
-      description: "O valor é todo seu. Sem comissões.",
-      color: "bg-emerald-100 text-emerald-600"
+      icon: Rocket,
+      title: "3. Ative e Receba Clientes",
+      description: "Tudo pronto? Realize o pagamento único de ativação e seu anúncio vai para o ar imediatamente para milhares de pessoas.",
+      color: "green",
+      badge: "Comece a Faturar"
     }
   ]
 
@@ -77,160 +41,119 @@ export default function HowItWorks() {
       <Header />
 
       {/* Hero Section */}
-      <section className="pt-32 pb-20 bg-gradient-to-b from-gray-50 to-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="flex items-center justify-center gap-2 text-sm text-gray-500 mb-8 font-medium tracking-wide uppercase">
-            <Link to="/" className="hover:text-blue-600 transition-colors">Início</Link>
+      <section className="pt-32 pb-20 bg-gray-900 text-white relative overflow-hidden">
+        {/* Background Gradients */}
+        <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-blue-900/20 to-transparent"></div>
+        <div className="absolute bottom-0 left-0 w-1/2 h-full bg-gradient-to-t from-gray-900 to-transparent"></div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+          <div className="flex items-center justify-center gap-2 text-sm text-gray-400 mb-8 font-medium tracking-wide uppercase">
+            <Link to="/" className="hover:text-white transition-colors">Início</Link>
             <ChevronRight className="w-4 h-4" />
-            <span className="text-blue-600">Como funciona</span>
+            <span className="text-blue-400">Como funciona</span>
           </div>
 
-          <h1 className="text-4xl md:text-6xl font-extrabold text-gray-900 mb-6 tracking-tight">
-            Simples. Direto. <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
-              Sem taxas escondidas.
+          <h1 className="text-4xl md:text-6xl font-extrabold mb-6 tracking-tight leading-tight">
+            Do cadastro ao primeiro cliente <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-green-400">
+              em 3 passos simples
             </span>
           </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed mb-12">
-            O EventSpace conecta quem precisa com quem oferece, eliminando intermediários
-            para garantir o melhor negócio para todos.
+          <p className="text-xl text-gray-300 max-w-2xl mx-auto leading-relaxed mb-12">
+            Eliminamos a burocracia. Aqui você tem controle total sobre seu anúncio e negociações.
           </p>
-
-          {/* Main Stats in Hero - Clean Look */}
-          <div className="inline-flex flex-wrap justify-center gap-4 bg-white p-3 rounded-2xl shadow-xl shadow-gray-100 border border-gray-100">
-            <div className="px-8 py-4 text-center border-r border-gray-100 last:border-0">
-              <div className="text-3xl font-black text-gray-900">0%</div>
-              <div className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Comissão</div>
-            </div>
-            <div className="px-8 py-4 text-center border-r border-gray-100 last:border-0">
-              <div className="text-3xl font-black text-gray-900">100%</div>
-              <div className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Garantido</div>
-            </div>
-            <div className="px-8 py-4 text-center">
-              <div className="text-3xl font-black text-gray-900">24h</div>
-              <div className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Online</div>
-            </div>
-          </div>
         </div>
       </section>
 
-      {/* Steps Section - Clients */}
+      {/* Steps Section */}
       <section className="py-24 bg-white relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <span className="bg-blue-100 text-blue-700 px-4 py-1.5 rounded-full text-sm font-bold uppercase tracking-wider mb-4 inline-block">
-              Para Clientes
-            </span>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900">Encontre o lugar ideal</h2>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 relative">
-            {/* Connection Line Background (Desktop) */}
-            <div className="hidden md:block absolute top-12 left-0 w-full h-0.5 bg-gray-100 -z-10"></div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+            {/* Connecting Line (Desktop) */}
+            <div className="hidden md:block absolute top-[60px] left-[16%] right-[16%] h-1 bg-gray-100 rounded-full"></div>
 
-            {clientSteps.map((step, index) => (
-              <div key={index} className="relative group">
-                {/* Step Marker */}
-                <div className="w-24 h-24 mx-auto bg-white rounded-full flex items-center justify-center border-4 border-gray-50 mb-6 relative z-10 group-hover:border-blue-50 transition-colors">
-                  <div className={`w-14 h-14 ${step.color} rounded-2xl flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300`}>
-                    <step.icon className="w-7 h-7" />
+            {steps.map((step, index) => {
+              const Icon = step.icon
+              const colors = {
+                blue: "text-blue-600 bg-blue-100 border-blue-200",
+                purple: "text-purple-600 bg-purple-100 border-purple-200",
+                green: "text-green-600 bg-green-100 border-green-200"
+              }
+              const colorClass = colors[step.color as keyof typeof colors]
+
+              return (
+                <div key={index} className="relative flex flex-col items-center text-center group">
+                  {/* Icon Circle */}
+                  <div className={`w-32 h-32 rounded-full ${colorClass.split(' ')[1]} flex items-center justify-center mb-8 relative z-10 border-4 border-white shadow-xl shadow-gray-100 transition-transform duration-300 group-hover:scale-110`}>
+                    <Icon className={`w-12 h-12 ${colorClass.split(' ')[0]}`} />
+                    <div className={`absolute -bottom-3 px-3 py-1 bg-white rounded-full text-xs font-bold uppercase tracking-wider shadow-sm border ${colorClass.split(' ')[2]} ${colorClass.split(' ')[0]}`}>
+                      {step.badge}
+                    </div>
                   </div>
-                </div>
 
-                <div className="text-center px-4">
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">{step.title}</h3>
-                  <p className="text-gray-500 leading-relaxed">{step.description}</p>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-4">{step.title}</h3>
+                  <p className="text-gray-500 leading-relaxed max-w-sm px-4">
+                    {step.description}
+                  </p>
                 </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Steps Section - Suppliers */}
-      <section className="py-24 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <span className="bg-indigo-100 text-indigo-700 px-4 py-1.5 rounded-full text-sm font-bold uppercase tracking-wider mb-4 inline-block">
-              Para Fornecedores
-            </span>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900">Receba mais pedidos</h2>
+              )
+            })}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {supplierSteps.map((step, index) => (
-              <div key={index} className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow border border-gray-100">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className={`w-12 h-12 ${step.color} rounded-xl flex items-center justify-center shrink-0`}>
-                    <step.icon className="w-6 h-6" />
-                  </div>
-                </div>
-                <h3 className="text-lg font-bold text-gray-900 mb-2">{step.title}</h3>
-                <p className="text-sm text-gray-600">{step.description}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-12 text-center">
+          <div className="mt-20 text-center">
             <Link
               to="/cadastro"
-              className="inline-flex items-center gap-2 bg-indigo-600 text-white px-8 py-3 rounded-lg font-bold hover:bg-indigo-700 transition-all shadow-lg hover:shadow-indigo-500/30"
+              className="inline-flex items-center gap-3 bg-blue-600 text-white px-10 py-4 rounded-xl font-bold text-lg hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-500/30 transform hover:-translate-y-1"
             >
-              Começar a Anunciar Grátis
+              Começar Agora
               <ArrowRight className="w-5 h-5" />
             </Link>
+            <p className="mt-4 text-sm text-gray-500">
+              Não precisa de cartão de crédito para se cadastrar
+            </p>
           </div>
         </div>
       </section>
 
-      {/* FAQ Grid */}
-      <section className="py-24 bg-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">Dúvidas Comuns</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="bg-gray-50 p-8 rounded-2xl border border-gray-100">
-              <h3 className="font-bold text-gray-900 mb-2 flex items-center">
-                <DollarSign className="w-5 h-5 text-green-600 mr-2" />
-                É realmente gratuito?
-              </h3>
-              <p className="text-gray-600 text-sm">Sim! Tanto para clientes quanto para anunciantes. Mantemos a plataforma gratuita para fomentar o mercado.</p>
-            </div>
-            <div className="bg-gray-50 p-8 rounded-2xl border border-gray-100">
-              <h3 className="font-bold text-gray-900 mb-2 flex items-center">
-                <Shield className="w-5 h-5 text-blue-600 mr-2" />
-                É seguro negociar?
-              </h3>
-              <p className="text-gray-600 text-sm">Sim, mas recomendamos sempre visitar o local e fazer contratos formais. Nós apenas conectamos as partes.</p>
-            </div>
-            <div className="bg-gray-50 p-8 rounded-2xl border border-gray-100">
-              <h3 className="font-bold text-gray-900 mb-2 flex items-center">
-                <Users className="w-5 h-5 text-purple-600 mr-2" />
-                Quem pode anunciar?
-              </h3>
-              <p className="text-gray-600 text-sm">Qualquer pessoa que tenha um espaço para eventos, equipamentos ou ofereça serviços relacionados.</p>
-            </div>
-            <div className="bg-gray-50 p-8 rounded-2xl border border-gray-100">
-              <h3 className="font-bold text-gray-900 mb-2 flex items-center">
-                <MessageCircle className="w-5 h-5 text-orange-600 mr-2" />
-                Como entro em contato?
-              </h3>
-              <p className="text-gray-600 text-sm">Em cada anúncio existe um botão de WhatsApp que abre uma conversa direta com o fornecedor.</p>
-            </div>
+      {/* FAQ Simplified */}
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-center gap-3 mb-10">
+            <HelpCircle className="w-6 h-6 text-gray-400" />
+            <h2 className="text-2xl font-bold text-gray-900">Perguntas Frequentes</h2>
           </div>
-        </div>
-      </section>
 
-      {/* Modern footer CTA */}
-      <section className="bg-gray-900 text-white py-20">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6">Pronto para transformar seu evento?</h2>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/cadastro" className="bg-blue-600 text-white px-8 py-3 rounded-lg font-bold hover:bg-blue-700 transition-colors">
-              Criar Conta Agora
-            </Link>
-            <Link to="/espacos" className="bg-transparent border border-gray-700 text-white px-8 py-3 rounded-lg font-bold hover:bg-gray-800 transition-colors">
-              Ver Espaços Disponíveis
-            </Link>
+          <div className="space-y-6">
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+              <h3 className="font-bold text-gray-900 mb-2 flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-green-500" />
+                Quando eu pago?
+              </h3>
+              <p className="text-gray-600">
+                Você só paga quando seu anúncio estiver pronto e você quiser publicá-lo. O cadastro e a criação do rascunho são gratuitos.
+              </p>
+            </div>
+
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+              <h3 className="font-bold text-gray-900 mb-2 flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-green-500" />
+                É uma mensalidade?
+              </h3>
+              <p className="text-gray-600">
+                O Plano Fundador é um <strong>pagamento único</strong>. Você paga uma vez e seu anúncio fica ativo para sempre nesta modalidade.
+              </p>
+            </div>
+
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+              <h3 className="font-bold text-gray-900 mb-2 flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-green-500" />
+                Preciso pagar comissão?
+              </h3>
+              <p className="text-gray-600">
+                Não! Diferente de outros sites, nós não cobramos comissão sobre os seus contratos. O valor negociado com o cliente é 100% seu.
+              </p>
+            </div>
           </div>
         </div>
       </section>

@@ -158,7 +158,7 @@ export default function AdCard({
           </div>
 
           {/* Price Badge */}
-          <div className="absolute top-3 right-3 bg-black bg-opacity-75 text-white px-3 py-1 rounded-full">
+          <div className="absolute bottom-3 left-3 bg-black bg-opacity-75 text-white px-3 py-1 rounded-full">
             <span className="font-bold text-sm">{formatPrice(ad.price, ad.price_type)}</span>
           </div>
 

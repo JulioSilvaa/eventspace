@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { useAdsStore } from '@/stores/adsStore'
-import subscriptionService from '@/services/subscriptionService'
+import subscriptionService, { Subscription } from '@/services/subscriptionService'
 import AlertModal from '@/components/ui/AlertModal'
 import ConfirmModal from '@/components/ui/ConfirmModal'
 
@@ -61,12 +61,16 @@ export default function MyAds() {
 
 
 
+  const [userSubscriptions, setUserSubscriptions] = useState<Subscription[]>([])
+
   useEffect(() => {
     if (user) {
       fetchUserAds(user.id)
+      subscriptionService.getUserSubscriptions(user.id).then(subs => {
+        setUserSubscriptions(subs)
+      })
     }
   }, [user, fetchUserAds])
-
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -88,14 +92,48 @@ export default function MyAds() {
     }
   }
 
+  const [redirecting, setRedirecting] = useState(false)
 
   const handleToggleStatus = async (adId: string, currentStatus: string) => {
     if (currentStatus === 'inactive' || currentStatus === 'suspended') {
-      const checkoutUrl = await subscriptionService.createCheckoutSession(adId);
-      if (checkoutUrl) {
-        window.location.href = checkoutUrl;
-      } else {
-        showAlert('error', 'Erro', 'Não foi possível configurar o pagamento para este anúncio.');
+      setRedirecting(true)
+
+      // Check if this ad already has an active subscription
+      const activeSub = userSubscriptions.find(
+        sub => sub.space_id === adId && sub.status === 'active'
+      )
+
+      if (activeSub) {
+        // Just reactivate the ad locally
+        await updateAd(adId, { status: 'active' })
+        setRedirecting(false)
+        showAlert('success', 'Anúncio Ativado', 'Seu anúncio foi reativado com sucesso.')
+        return
+      }
+
+      try {
+        const pricing = await subscriptionService.getCurrentPricing()
+
+        // Logic: 'activation' for Founder Plan (creates one-time charge), 'month' for Standard Plan (subscription)
+        let interval: 'activation' | 'month' = 'month';
+
+        if (pricing?.plan_type === 'founder' && pricing?.spots_remaining > 0) {
+          interval = 'activation';
+        }
+
+        const checkoutUrl = await subscriptionService.createCheckoutSession(adId, interval);
+
+        if (checkoutUrl) {
+          window.location.href = checkoutUrl;
+        } else {
+          showAlert('error', 'Erro', 'Não foi possível configurar o pagamento.');
+          setRedirecting(false)
+        }
+
+      } catch (error) {
+        console.error("Error creating checkout session", error);
+        showAlert('error', 'Erro', 'Ocorreu um erro ao processar sua solicitação.');
+        setRedirecting(false)
       }
       return;
     }
@@ -104,8 +142,6 @@ export default function MyAds() {
     const newStatus = 'inactive';
     await updateAd(adId, { status: newStatus as any });
   }
-
-
 
   const handleDeleteAd = (adId: string) => {
     const performDelete = async () => {
@@ -268,13 +304,15 @@ export default function MyAds() {
                         <Star className="w-10 h-10 text-gray-300" />
                       </div>
                     )}
-                    <div className="absolute top-4 left-4">
-                      <span className={`text-[10px] uppercase tracking-wider px-3 py-1.5 rounded-lg font-bold shadow-sm backdrop-blur-md bg-white/90 ${ad.status === 'active' ? 'text-green-700' :
-                        ad.status === 'inactive' ? 'text-yellow-700' : 'text-gray-700'
-                        }`}>
-                        {getStatusText(ad.status)}
-                      </span>
-                    </div>
+                    {ad.status && (
+                      <div className="absolute top-4 left-4">
+                        <span className={`text-[10px] uppercase tracking-wider px-3 py-1.5 rounded-lg font-bold shadow-sm backdrop-blur-md bg-white/90 ${ad.status === 'active' ? 'text-green-700' :
+                          ad.status === 'inactive' ? 'text-yellow-700' : 'text-gray-700'
+                          }`}>
+                          {getStatusText(ad.status)}
+                        </span>
+                      </div>
+                    )}
                     {/* Mobile Overlay Gradient for text readability if needed, but text is outside */}
                   </div>
 
@@ -334,7 +372,31 @@ export default function MyAds() {
                           </Link>
                         </Tooltip>
 
-                        {/* Pause/Resume button removed as requested */}
+                        {/* Activate Button for Inactive/Suspended Ads */}
+                        {(ad.status === 'inactive' || ad.status === 'suspended') && (
+                          <Tooltip content="Ativar Anúncio">
+                            <button
+                              onClick={() => handleToggleStatus(ad.id, ad.status)}
+                              className="flex-1 sm:flex-none flex items-center justify-center h-11 px-6 text-white bg-green-600 hover:bg-green-700 shadow-lg shadow-green-500/20 rounded-xl transition-all font-bold hover:-translate-y-0.5"
+                            >
+                              <span className="mr-2 text-sm">Ativar</span>
+                              <Play className="w-4 h-4 fill-current" />
+                            </button>
+                          </Tooltip>
+                        )}
+
+                        {/* Pause Button for Active Ads */}
+                        {ad.status === 'active' && (
+                          <Tooltip content="Pausar Anúncio">
+                            <button
+                              onClick={() => handleToggleStatus(ad.id, ad.status)}
+                              className="flex-1 sm:flex-none flex items-center justify-center h-11 px-4 text-gray-500 hover:text-yellow-600 hover:bg-yellow-50 border border-gray-200 hover:border-yellow-200 rounded-xl transition-all"
+                            >
+                              <span className="sm:hidden mr-2 text-sm">Pausar</span>
+                              <Pause className="w-4 h-4" />
+                            </button>
+                          </Tooltip>
+                        )}
 
                         <Tooltip content="Ver anúncio público">
                           <Link
