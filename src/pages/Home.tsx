@@ -27,7 +27,7 @@ export default function Home() {
   // Carregar dados reais do banco
   useEffect(() => {
     fetchFeaturedAds(4)
-    fetchPopularSpaces(6)
+    fetchPopularSpaces(8)
   }, [fetchFeaturedAds, fetchPopularSpaces])
 
   // Filtrar apenas anúncios de espaços
