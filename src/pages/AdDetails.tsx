@@ -752,6 +752,32 @@ export default function AdDetails() {
                     </div>
                   )}
 
+                  {ad.street && (
+                    <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                      <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <MapPin className="w-3 h-3 text-purple-600" />
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-700">Endereço:</span>
+                        <span className="ml-2 text-gray-600">
+                          {ad.street}{ad.number ? `, ${ad.number}` : ''}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {ad.complement && (
+                    <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                      <div className="w-6 h-6 bg-teal-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <Home className="w-3 h-3 text-teal-600" />
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-700">Complemento:</span>
+                        <span className="ml-2 text-gray-600">{ad.complement}</span>
+                      </div>
+                    </div>
+                  )}
+
                   {typeof ad.specifications?.address === 'string' && (
                     <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors">
                       <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">

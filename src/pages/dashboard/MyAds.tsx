@@ -412,9 +412,26 @@ export default function MyAds() {
                     </div>
 
                     <div className="mt-6 pt-5 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
-                      <div className="flex items-center gap-2 text-xs font-semibold text-gray-400 order-2 sm:order-1 w-full sm:w-auto justify-center sm:justify-start">
-                        <Calendar className="w-3.5 h-3.5" />
-                        Publicado em {ad.created_at ? new Date(ad.created_at).toLocaleDateString('pt-BR') : 'Recente'}
+                      <div className="flex flex-col gap-1 order-2 sm:order-1 w-full sm:w-auto items-center sm:items-start">
+                        <div className="flex items-center gap-2 text-xs font-semibold text-gray-400 justify-center sm:justify-start">
+                          <Calendar className="w-3.5 h-3.5" />
+                          Publicado em {ad.created_at ? new Date(ad.created_at).toLocaleDateString('pt-BR') : 'Recente'}
+                        </div>
+                        {(() => {
+                          const activeSub = userSubscriptions.find(s => s.space_id === ad.id && s.status === 'active');
+                          if (activeSub?.cancel_at_period_end) {
+                            const dateToUse = activeSub.next_billing_date || activeSub.current_period_end;
+                            const dateObj = new Date(dateToUse);
+                            const isValidDate = !isNaN(dateObj.getTime());
+                            const endDate = isValidDate ? dateObj.toLocaleDateString('pt-BR') : '';
+                            return (
+                              <div className="text-xs text-red-600 font-medium bg-red-50 text-center px-2 py-0.5 rounded border border-red-100 dark:bg-red-900/10 mb-1">
+                                Cancelado. Ativo até {endDate}
+                              </div>
+                            )
+                          }
+                          return null;
+                        })()}
                       </div>
 
                       <div className="flex items-center gap-2 w-full sm:w-auto order-1 sm:order-2">
