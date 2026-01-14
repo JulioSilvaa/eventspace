@@ -61,13 +61,11 @@ class ActivityService {
         if (error.status === 404) {
           return { data: [] }
         }
-        console.error('Error fetching user activities:', error)
         return { data: [], error: error.message }
       }
 
       return { data: data?.activities || [] }
     } catch (error) {
-      console.error('Error in getUserActivities:', error)
       return { data: [], error: 'Failed to fetch activities' }
     }
   }

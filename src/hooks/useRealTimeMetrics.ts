@@ -102,7 +102,7 @@ export function useRealTimeMetrics(
       if (apiError) {
         // If endpoint doesn't exist, use fallback with empty metrics
         if (apiError.status === 404) {
-          console.log('Metrics endpoint not available, using defaults')
+          // console.log('Metrics endpoint not available, using defaults')
           return
         }
         throw new Error(apiError.message)
