@@ -10,7 +10,6 @@ import {
   Plus,
   Eye,
   MessageCircle,
-  MoreVertical,
   Edit,
   Pause,
   Play,
@@ -18,7 +17,6 @@ import {
   Star,
   MapPin,
   Calendar,
-  TrendingUp,
   ArrowLeft
 } from 'lucide-react'
 import Tooltip from '@/components/ui/Tooltip'

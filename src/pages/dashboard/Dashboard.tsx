@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
-import { Plus, TrendingUp, LogOut, Home } from 'lucide-react'
+import { TrendingUp, LogOut, Home } from 'lucide-react'
 import DashboardStats from '@/components/dashboard/DashboardStats'
 import QuickActions from '@/components/dashboard/QuickActions'
 import RecentActivity from '@/components/dashboard/RecentActivity'
