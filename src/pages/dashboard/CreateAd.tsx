@@ -1067,6 +1067,24 @@ export default function CreateAd() {
                     <p className="text-sm text-gray-900">{watch('contactEmail')}</p>
                   </div>
                 )}
+                {watch('contactWhatsappAlternative') && (
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase font-semibold">WhatsApp Alternativo</p>
+                    <p className="text-sm text-gray-900">{watch('contactWhatsappAlternative')}</p>
+                  </div>
+                )}
+                {watch('contactInstagram') && (
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase font-semibold">Instagram</p>
+                    <p className="text-sm text-gray-900">{watch('contactInstagram')}</p>
+                  </div>
+                )}
+                {watch('contactFacebook') && (
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase font-semibold">Facebook</p>
+                    <p className="text-sm text-gray-900">{watch('contactFacebook')}</p>
+                  </div>
+                )}
               </div>
             </div>
 

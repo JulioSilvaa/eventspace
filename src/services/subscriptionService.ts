@@ -14,6 +14,7 @@ export interface Subscription {
   currency: string
   current_period_start: string
   current_period_end: string
+  next_billing_date?: string
   cancel_at_period_end: boolean
   canceled_at?: string
   created_at: string
