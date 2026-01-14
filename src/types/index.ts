@@ -57,7 +57,7 @@ export interface Ad {
   delivery_fee?: number
   delivery_radius_km?: number
   comfort?: string[]
-  status: 'active' | 'inactive' | 'pending' | 'rejected'
+  status: 'active' | 'inactive' | 'pending' | 'rejected' | 'suspended'
   featured: boolean
   views_count: number
   contacts_count: number

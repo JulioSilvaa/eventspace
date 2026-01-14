@@ -22,7 +22,7 @@ interface DashboardData {
     id: string
     title: string
     category: string
-    status: 'active' | 'inactive' | 'pending' | 'rejected'
+    status: 'active' | 'inactive' | 'pending' | 'rejected' | 'suspended'
     views: number
     contacts: number
     createdAt: string
