@@ -113,13 +113,13 @@ export async function saveImageRecords(
 ): Promise<void> {
   // The API handles saving image records automatically during space creation/update
   // This function is kept for API compatibility but does nothing
-  console.log('Image records are saved automatically by the API')
+  // console.log('Image records are saved automatically by the API')
 }
 
 export async function deleteAdImages(adId: string): Promise<void> {
   // Delete all images for an ad
   // The API handles this during space deletion
-  console.log(`Deleting images for ad ${adId} - handled by API`)
+  // console.log(`Deleting images for ad ${adId} - handled by API`)
 }
 
 export async function deleteSpecificAdImages(imageIds: string[]): Promise<void> {

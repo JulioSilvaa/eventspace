@@ -139,7 +139,6 @@ class RealTimeService {
         dailyMetrics: data?.dailyMetrics || []
       }
     } catch (error) {
-      console.error('Error fetching listing metrics:', error)
       return {
         totalViews: 0,
         totalContacts: 0,
@@ -184,7 +183,6 @@ class RealTimeService {
         recentEvents: data?.recentEvents || []
       }
     } catch (error) {
-      console.error('Error fetching user metrics:', error)
       return {
         totalViews: 0,
         totalContacts: 0,

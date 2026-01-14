@@ -282,11 +282,11 @@ export default function CreateAd() {
   // Log validation errors for debugging
   useEffect(() => {
     if (Object.keys(errors).length > 0) {
-      console.log('📝 FORM VALIDATION ERRORS:', errors)
+      // console.log('📝 FORM VALIDATION ERRORS:', errors)
     }
   }, [errors])
 
-  console.log('🔄 CreateAd Render - isValid:', isValid, 'errors count:', Object.keys(errors).length)
+  // console.log('🔄 CreateAd Render - isValid:', isValid, 'errors count:', Object.keys(errors).length)
 
   const watchedCategoryType = watch('categoryType')
   const allValues = watch()
@@ -388,7 +388,7 @@ export default function CreateAd() {
   }
 
   const onSubmit = async (data: CreateListingData) => {
-    console.log('🚀 SUBMITTING FORM START', data)
+    // console.log('🚀 SUBMITTING FORM START', data)
     setIsSubmitting(true)
     setError(null)
 

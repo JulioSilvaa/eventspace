@@ -1,11 +1,11 @@
-import { 
-  Wifi, 
-  Car, 
-  Utensils, 
-  Bath, 
-  Snowflake, 
-  Wind, 
-  Waves, 
+import {
+  Wifi,
+  Car,
+  Utensils,
+  Bath,
+  Snowflake,
+  Wind,
+  Waves,
   Flame,
   TreePine,
   Music,
@@ -111,14 +111,10 @@ export default function AmenitiesSelector({
   onCustomFeaturesChange,
   onCustomServicesChange
 }: AmenitiesSelectorProps) {
-  console.log('AmenitiesSelector props:', {
-    customAmenities,
-    hasOnCustomAmenitiesChange: !!onCustomAmenitiesChange
-  })
   const [newAmenity, setNewAmenity] = useState('')
   const [newFeature, setNewFeature] = useState('')
   const [newService, setNewService] = useState('')
-  
+
   const handleAmenityToggle = (amenityId: string) => {
     const newAmenities = selectedAmenities.includes(amenityId)
       ? selectedAmenities.filter(id => id !== amenityId)
@@ -143,14 +139,7 @@ export default function AmenitiesSelector({
   // Custom amenities handlers
   const addCustomAmenity = () => {
     const trimmedValue = newAmenity.trim()
-    console.log('Adding custom amenity:', {
-      trimmedValue,
-      hasValue: !!trimmedValue,
-      isDuplicate: customAmenities.includes(trimmedValue),
-      hasCallback: !!onCustomAmenitiesChange,
-      currentCustomAmenities: customAmenities
-    })
-    
+
     if (trimmedValue && !customAmenities.includes(trimmedValue)) {
       if (onCustomAmenitiesChange) {
         onCustomAmenitiesChange([...customAmenities, trimmedValue])
@@ -169,14 +158,7 @@ export default function AmenitiesSelector({
 
   const addCustomFeature = () => {
     const trimmedValue = newFeature.trim()
-    console.log('Adding custom feature:', {
-      trimmedValue,
-      hasValue: !!trimmedValue,
-      isDuplicate: customFeatures.includes(trimmedValue),
-      hasCallback: !!onCustomFeaturesChange,
-      currentCustomFeatures: customFeatures
-    })
-    
+
     if (trimmedValue && !customFeatures.includes(trimmedValue)) {
       if (onCustomFeaturesChange) {
         onCustomFeaturesChange([...customFeatures, trimmedValue])
@@ -195,14 +177,7 @@ export default function AmenitiesSelector({
 
   const addCustomService = () => {
     const trimmedValue = newService.trim()
-    console.log('Adding custom service:', {
-      trimmedValue,
-      hasValue: !!trimmedValue,
-      isDuplicate: customServices.includes(trimmedValue),
-      hasCallback: !!onCustomServicesChange,
-      currentCustomServices: customServices
-    })
-    
+
     if (trimmedValue && !customServices.includes(trimmedValue)) {
       if (onCustomServicesChange) {
         onCustomServicesChange([...customServices, trimmedValue])
@@ -232,7 +207,7 @@ export default function AmenitiesSelector({
           {AMENITIES.map((amenity) => {
             const Icon = amenity.icon
             const isSelected = selectedAmenities.includes(amenity.id)
-            
+
             return (
               <button
                 key={amenity.id}
@@ -240,8 +215,8 @@ export default function AmenitiesSelector({
                 onClick={() => handleAmenityToggle(amenity.id)}
                 className={`
                   flex items-center gap-3 p-3 rounded-lg border-2 transition-all text-left relative
-                  ${isSelected 
-                    ? 'border-green-500 bg-green-50 text-green-700' 
+                  ${isSelected
+                    ? 'border-green-500 bg-green-50 text-green-700'
                     : 'border-gray-200 hover:border-gray-300 text-gray-700'
                   }
                 `}
@@ -255,7 +230,7 @@ export default function AmenitiesSelector({
             )
           })}
         </div>
-        
+
         {/* Custom Amenities */}
         {customAmenities.length > 0 && (
           <div className="mt-4">
@@ -279,7 +254,7 @@ export default function AmenitiesSelector({
             </div>
           </div>
         )}
-        
+
         {/* Add Custom Amenity - Only show if callback is available */}
         {onCustomAmenitiesChange && (
           <div className="mt-4 p-4 bg-gray-50 rounded-lg">
@@ -322,7 +297,7 @@ export default function AmenitiesSelector({
           {features.map((feature) => {
             const Icon = feature.icon
             const isSelected = selectedFeatures.includes(feature.id)
-            
+
             return (
               <button
                 key={feature.id}
@@ -330,8 +305,8 @@ export default function AmenitiesSelector({
                 onClick={() => handleFeatureToggle(feature.id)}
                 className={`
                   flex items-center gap-3 p-3 rounded-lg border-2 transition-all text-left
-                  ${isSelected 
-                    ? 'border-green-500 bg-green-50 text-green-700' 
+                  ${isSelected
+                    ? 'border-green-500 bg-green-50 text-green-700'
                     : 'border-gray-200 hover:border-gray-300 text-gray-700'
                   }
                 `}
@@ -342,7 +317,7 @@ export default function AmenitiesSelector({
             )
           })}
         </div>
-        
+
         {/* Custom Features */}
         {customFeatures.length > 0 && (
           <div className="mt-4">
@@ -366,7 +341,7 @@ export default function AmenitiesSelector({
             </div>
           </div>
         )}
-        
+
         {/* Add Custom Feature - Only show if callback is available */}
         {onCustomFeaturesChange && (
           <div className="mt-4 p-4 bg-gray-50 rounded-lg">
@@ -378,8 +353,8 @@ export default function AmenitiesSelector({
                 type="text"
                 value={newFeature}
                 onChange={(e) => setNewFeature(e.target.value)}
-                placeholder={categoryType === 'space' 
-                  ? "Ex: Palco com piano, Deck com vista, Espaço para foodtrucks..." 
+                placeholder={categoryType === 'space'
+                  ? "Ex: Palco com piano, Deck com vista, Espaço para foodtrucks..."
                   : "Ex: Equipamento profissional, Serviço especializado..."
                 }
                 maxLength={50}
@@ -412,7 +387,7 @@ export default function AmenitiesSelector({
           {SERVICES.map((service) => {
             const Icon = service.icon
             const isSelected = selectedServices.includes(service.id)
-            
+
             return (
               <button
                 key={service.id}
@@ -420,8 +395,8 @@ export default function AmenitiesSelector({
                 onClick={() => handleServiceToggle(service.id)}
                 className={`
                   flex items-center gap-3 p-3 rounded-lg border-2 transition-all text-left
-                  ${isSelected 
-                    ? 'border-blue-500 bg-blue-50 text-blue-700' 
+                  ${isSelected
+                    ? 'border-blue-500 bg-blue-50 text-blue-700'
                     : 'border-gray-200 hover:border-gray-300 text-gray-700'
                   }
                 `}
@@ -432,7 +407,7 @@ export default function AmenitiesSelector({
             )
           })}
         </div>
-        
+
         {/* Custom Services */}
         {customServices.length > 0 && (
           <div className="mt-4">
@@ -456,7 +431,7 @@ export default function AmenitiesSelector({
             </div>
           </div>
         )}
-        
+
         {/* Add Custom Service - Only show if callback is available */}
         {onCustomServicesChange && (
           <div className="mt-4 p-4 bg-gray-50 rounded-lg">
@@ -494,11 +469,11 @@ export default function AmenitiesSelector({
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <h4 className="font-medium text-blue-900 mb-2">💡 Dica importante</h4>
         <p className="text-sm text-blue-700 mb-2">
-          Selecione apenas as comodidades e serviços que estão realmente disponíveis. 
+          Selecione apenas as comodidades e serviços que estão realmente disponíveis.
           Isso ajuda os interessados a encontrar exatamente o que procuram e evita mal-entendidos.
         </p>
         <p className="text-sm text-blue-700">
-          <strong>Use os campos personalizados</strong> para adicionar comodidades, recursos ou serviços únicos 
+          <strong>Use os campos personalizados</strong> para adicionar comodidades, recursos ou serviços únicos
           que não estão nas listas padrão. Isso torna seu anúncio mais completo e atrativo!
         </p>
       </div>

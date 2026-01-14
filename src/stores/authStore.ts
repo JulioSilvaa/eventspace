@@ -61,7 +61,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
   signIn: async (email: string, password: string) => {
     set({ isLoading: true })
 
-    console.log('🔐 Attempting login with email:', email)
+    // console.log('🔐 Attempting login with email:', email)
 
     const { data, error } = await apiClient.post<LoginResponse>('/auth/login', {
       email,
