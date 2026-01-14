@@ -91,6 +91,7 @@ function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
 }
 
 import { AdminAuthProvider } from './contexts/admin/AdminAuthContext'
+import ScrollToTop from './components/ScrollToTop'
 
 function App() {
   return (
@@ -98,6 +99,7 @@ function App() {
       <AdminAuthProvider>
 
         <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <ScrollToTop />
           <Suspense fallback={
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
               <LoadingSpinner message="Carregando..." />
