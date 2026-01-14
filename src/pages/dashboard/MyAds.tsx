@@ -119,13 +119,21 @@ export default function MyAds() {
           interval = 'activation';
         }
 
-        const checkoutUrl = await subscriptionService.createCheckoutSession(adId, interval);
+        const result = await subscriptionService.createCheckoutSession(adId, interval);
 
-        if (checkoutUrl) {
-          window.location.href = checkoutUrl;
-        } else {
+        if (!result) {
           showAlert('error', 'Erro', 'Não foi possível configurar o pagamento.');
           setRedirecting(false)
+          return;
+        }
+
+        if (result.url) {
+          window.location.href = result.url;
+        } else {
+          // Success but no URL means it was just reactivated (already had active subscription)
+          setRedirecting(false)
+          showAlert('success', 'Anúncio Ativado', 'Seu anúncio possui uma assinatura ativa e foi reativado com sucesso.')
+          await fetchUserAds(user!.id)
         }
 
       } catch (error) {
