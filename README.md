@@ -98,6 +98,7 @@ npm run dev
 ### Experiência de Usuário (UX)
 - Máscaras automáticas para campos sensíveis (Telefone, CEP).
 - Validações de formulário em tempo real com feedback visual.
+- **Detalhamento de Endereço**: Suporte a rua, número e complemento na exibição do anúncio.
 
 ### Sistema de Busca Aprimorado
 - Busca robusta por nome, descrição e bairro.
