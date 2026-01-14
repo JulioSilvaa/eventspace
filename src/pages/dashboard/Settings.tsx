@@ -11,12 +11,16 @@ import {
   Phone,
   Save,
   Loader2,
-  Settings as SettingsIcon
+  Settings as SettingsIcon,
+  XCircle
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useUserRealTimeMetrics, useEventTracking } from '@/hooks/useRealTimeMetrics'
 import { apiClient } from '@/lib/api-client'
+import subscriptionService, { Subscription } from '@/services/subscriptionService'
 import { maskPhone, maskCEP, unmask } from '@/utils/masks'
+import AlertModal from '@/components/ui/AlertModal'
+import ConfirmModal from '@/components/ui/ConfirmModal'
 import { Instagram, Facebook } from 'lucide-react'
 
 type SettingsTab = 'personal' | 'security' | 'property' | 'account'
@@ -24,6 +28,41 @@ type SettingsTab = 'personal' | 'security' | 'property' | 'account'
 export default function Settings() {
   const { profile } = useAuth()
   const [activeTab, setActiveTab] = useState<SettingsTab>('personal')
+
+  // Modal states
+  const [alertModal, setAlertModal] = useState<{
+    isOpen: boolean
+    type: 'success' | 'error' | 'warning' | 'info'
+    title: string
+    message: string
+  }>({
+    isOpen: false,
+    type: 'info',
+    title: '',
+    message: ''
+  })
+
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean
+    title: string
+    message: string
+    onConfirm: () => void
+    type?: 'danger' | 'warning' | 'default'
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => { },
+    type: 'default'
+  })
+
+  const showAlert = (type: 'success' | 'error' | 'warning' | 'info', title: string, message: string) => {
+    setAlertModal({ isOpen: true, type, title, message })
+  }
+
+  const showConfirm = (title: string, message: string, onConfirm: () => void, type: 'danger' | 'warning' | 'default' = 'default') => {
+    setConfirmModal({ isOpen: true, title, message, onConfirm, type })
+  }
 
   const tabs = [
     {
@@ -147,12 +186,31 @@ export default function Settings() {
               <div className="md:p-2">
                 {activeTab === 'personal' && <PersonalInformationSection />}
                 {activeTab === 'security' && <SecuritySection />}
-                {activeTab === 'property' && <PropertySection />}
+                {activeTab === 'property' && <PropertySection showAlert={showAlert} showConfirm={showConfirm} />}
                 {activeTab === 'account' && <AccountManagementSection />}
               </div>
             </div>
           </div>
         </div>
+
+        <AlertModal
+          isOpen={alertModal.isOpen}
+          onClose={() => setAlertModal(prev => ({ ...prev, isOpen: false }))}
+          type={alertModal.type}
+          title={alertModal.title}
+          message={alertModal.message}
+        />
+
+        <ConfirmModal
+          isOpen={confirmModal.isOpen}
+          onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+          onConfirm={confirmModal.onConfirm}
+          title={confirmModal.title}
+          message={confirmModal.message}
+          type={confirmModal.type}
+          confirmText="Confirmar"
+          cancelText="Cancelar"
+        />
       </div>
     </div>
   )
@@ -469,13 +527,67 @@ function SecuritySection() {
 
 
 // Property Section (Meu Anúncio)
-function PropertySection() {
+function PropertySection({ showAlert, showConfirm }: {
+  showAlert: (type: 'success' | 'error' | 'warning' | 'info', title: string, message: string) => void,
+  showConfirm: (title: string, message: string, onConfirm: () => void, type?: 'danger' | 'warning' | 'default') => void
+}) {
   const { user, profile } = useAuth()
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [spaces, setSpaces] = useState<any[]>([])
   const [selectedSpaceId, setSelectedSpaceId] = useState<string | null>(null)
+  const [userSubscriptions, setUserSubscriptions] = useState<Subscription[]>([])
+
+  // Fetch subscriptions
+  useEffect(() => {
+    if (user) {
+      subscriptionService.getUserSubscriptions(user.id).then(subs => {
+        setUserSubscriptions(subs)
+      })
+    }
+  }, [user])
+
+  const handleCancelSubscription = () => {
+    if (!selectedSpaceId) return;
+
+    const sub = userSubscriptions.find(s => s.space_id === selectedSpaceId && s.status === 'active');
+
+    if (!sub) {
+      showAlert('error', 'Erro', 'Nenhuma assinatura ativa encontrada para este anúncio.');
+      return;
+    }
+
+    if (sub.cancel_at_period_end) {
+      showAlert('info', 'Já Cancelado', 'A assinatura deste anúncio já foi cancelada e não será renovada.');
+      return;
+    }
+
+    const performCancel = async () => {
+      const success = await subscriptionService.cancelSubscription(sub.id)
+      if (success) {
+        // Optimistic update
+        setUserSubscriptions(prev => prev.map(s =>
+          s.id === sub.id ? { ...s, cancel_at_period_end: true } : s
+        ));
+        showAlert('success', 'Sucesso', 'Assinatura cancelada com sucesso. Ela não será renovada.')
+        // Refresh subscriptions
+        if (user) {
+          const updatedSubs = await subscriptionService.getUserSubscriptions(user.id)
+          setUserSubscriptions(updatedSubs)
+        }
+      } else {
+        showAlert('error', 'Erro', 'Erro ao cancelar assinatura. Tente novamente.')
+      }
+    }
+
+    showConfirm(
+      'Cancelar Renovação',
+      'Tem certeza que deseja cancelar a renovação automática da assinatura? O anúncio continuará ativo até o fim do período pago.',
+      performCancel,
+      'warning'
+    );
+  }
 
   const { trackListingUpdated } = useEventTracking(selectedSpaceId || undefined)
   const [formData, setFormData] = useState({
@@ -574,17 +686,17 @@ function PropertySection() {
       })
 
       if (error) {
-        alert('Erro ao atualizar anúncio: ' + error.message)
+        showAlert('error', 'Erro', 'Erro ao atualizar anúncio: ' + error.message)
       } else {
         await trackListingUpdated(['settings_update'], { source: 'settings_page' })
 
         // Update local state
         setSpaces(prev => prev.map(s => s.id === selectedSpaceId ? { ...s, ...formData } : s))
-        alert('Anúncio atualizado com sucesso!')
+        showAlert('success', 'Sucesso', 'Anúncio atualizado com sucesso!')
       }
     } catch (err: any) {
       console.error('Error updating space:', err)
-      alert('Erro ao atualizar anúncio: ' + err.message)
+      showAlert('error', 'Erro', 'Erro ao atualizar anúncio: ' + err.message)
     } finally {
       setIsSaving(false)
     }
@@ -593,35 +705,45 @@ function PropertySection() {
   const handleDeleteSpace = async () => {
     if (!selectedSpaceId) return
 
-    if (!window.confirm('Tem certeza que deseja excluir este anúncio? Esta ação não pode ser desfeita.')) {
-      return
+    // Check for active recurring subscription
+    const activeSub = userSubscriptions.find(s => s.space_id === selectedSpaceId && s.status === 'active' && !s.cancel_at_period_end);
+    if (activeSub) {
+      showAlert('error', 'Ação Bloqueada', 'Este anúncio possui uma assinatura ativa. Você deve cancelar a assinatura antes de excluir o anúncio para evitar cobranças indevidas.');
+      return;
     }
 
-    setIsDeleting(true)
-    try {
-      const { error } = await apiClient.delete(`/api/spaces/${selectedSpaceId}`)
+    showConfirm(
+      'Excluir Anúncio',
+      'Tem certeza que deseja excluir este anúncio? Esta ação não pode ser desfeita.',
+      async () => {
+        setIsDeleting(true)
+        try {
+          const { error } = await apiClient.delete(`/api/spaces/${selectedSpaceId}`)
 
-      if (error) {
-        alert('Erro ao excluir anúncio: ' + error.message)
-      } else {
-        alert('Anúncio excluído com sucesso!')
+          if (error) {
+            showAlert('error', 'Erro', 'Erro ao excluir anúncio: ' + error.message)
+          } else {
+            showAlert('success', 'Sucesso', 'Anúncio excluído com sucesso!')
 
-        // Remove from local state
-        const remainingSpaces = spaces.filter(s => s.id !== selectedSpaceId)
-        setSpaces(remainingSpaces)
+            // Remove from local state
+            const remainingSpaces = spaces.filter(s => s.id !== selectedSpaceId)
+            setSpaces(remainingSpaces)
 
-        if (remainingSpaces.length > 0) {
-          setSelectedSpaceId(remainingSpaces[0].id)
-        } else {
-          setSelectedSpaceId(null)
+            if (remainingSpaces.length > 0) {
+              setSelectedSpaceId(remainingSpaces[0].id)
+            } else {
+              setSelectedSpaceId(null)
+            }
+          }
+        } catch (err: any) {
+          console.error('Error deleting space:', err)
+          showAlert('error', 'Erro', 'Erro ao excluir anúncio: ' + err.message)
+        } finally {
+          setIsDeleting(false)
         }
-      }
-    } catch (err: any) {
-      console.error('Error deleting space:', err)
-      alert('Erro ao excluir anúncio: ' + err.message)
-    } finally {
-      setIsDeleting(false)
-    }
+      },
+      'danger'
+    );
   }
 
   if (isLoading) {
@@ -680,15 +802,34 @@ function PropertySection() {
           <div></div> // Spacer
         )}
 
-        <button
-          type="button"
-          onClick={handleDeleteSpace}
-          disabled={isDeleting}
-          className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 text-red-600 font-bold hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
-        >
-          {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-          Excluir Anúncio
-        </button>
+        <div className="flex gap-2 w-full sm:w-auto">
+          {(() => {
+            const activeSub = userSubscriptions.find(s => s.space_id === selectedSpaceId && s.status === 'active' && !s.cancel_at_period_end);
+            if (activeSub) {
+              return (
+                <button
+                  type="button"
+                  onClick={handleCancelSubscription}
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 text-orange-600 font-bold hover:bg-orange-50 rounded-lg transition-colors"
+                >
+                  <XCircle className="w-4 h-4" />
+                  Cancelar Assinatura
+                </button>
+              )
+            }
+            return null;
+          })()}
+
+          <button
+            type="button"
+            onClick={handleDeleteSpace}
+            disabled={isDeleting}
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 text-red-600 font-bold hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+          >
+            {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+            Excluir Anúncio
+          </button>
+        </div>
       </div>
 
       {/* Basic Info Card */}

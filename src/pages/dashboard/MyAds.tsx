@@ -17,7 +17,8 @@ import {
   Star,
   MapPin,
   Calendar,
-  ArrowLeft
+  ArrowLeft,
+  XCircle
 } from 'lucide-react'
 import Tooltip from '@/components/ui/Tooltip'
 import { useUserRealTimeMetrics } from '@/hooks/useRealTimeMetrics'
@@ -92,6 +93,47 @@ export default function MyAds() {
 
   const [redirecting, setRedirecting] = useState(false)
 
+  const handleCancelSubscription = (adId: string) => {
+    const sub = userSubscriptions.find(s => s.space_id === adId && s.status === 'active');
+
+    if (!sub) {
+      showAlert('error', 'Erro', 'Nenhuma assinatura ativa encontrada para este anúncio.');
+      return;
+    }
+
+    const performCancel = async () => {
+      const success = await subscriptionService.cancelSubscription(sub.id)
+      if (success) {
+        // Optimistic update to hide button immediately
+        setUserSubscriptions(prev => prev.map(s =>
+          s.id === sub.id ? { ...s, cancel_at_period_end: true } : s
+        ));
+
+        showAlert('success', 'Assinatura Cancelada', 'Sua assinatura foi cancelada e não será renovada. Seu anúncio continuará ativo até o fim do período pago.')
+
+        // Background refresh
+        if (user) {
+          const updatedSubs = await subscriptionService.getUserSubscriptions(user.id)
+          setUserSubscriptions(updatedSubs)
+        }
+      } else {
+        showAlert('error', 'Erro', 'Não foi possível cancelar a assinatura. Tente novamente.')
+      }
+    }
+
+    if (sub.cancel_at_period_end) {
+      showAlert('info', 'Já Cancelado', 'A assinatura deste anúncio já foi cancelada e não será renovada.');
+      return;
+    }
+
+    showConfirm(
+      'Cancelar Assinatura',
+      'Tem certeza que deseja cancelar a renovação automática? Seu anúncio continuará ativo até o final do período atual.',
+      performCancel,
+      'warning'
+    )
+  }
+
   const handleToggleStatus = async (adId: string, currentStatus: string) => {
     if (currentStatus === 'inactive' || currentStatus === 'suspended') {
       setRedirecting(true)
@@ -150,6 +192,14 @@ export default function MyAds() {
   }
 
   const handleDeleteAd = (adId: string) => {
+    // Check for active recurring subscription
+    const activeSub = userSubscriptions.find(s => s.space_id === adId && s.status === 'active' && !s.cancel_at_period_end);
+
+    if (activeSub) {
+      showAlert('error', 'Ação Bloqueada', 'Este anúncio possui uma assinatura ativa. Você deve cancelar a assinatura antes de excluir o anúncio para evitar cobranças indevidas.');
+      return;
+    }
+
     const performDelete = async () => {
       const result = await deleteAd(adId)
       if (result.error) {
@@ -403,6 +453,25 @@ export default function MyAds() {
                             </button>
                           </Tooltip>
                         )}
+
+                        {/* Cancel Subscription Button */}
+                        {(() => {
+                          const activeSub = userSubscriptions.find(s => s.space_id === ad.id && s.status === 'active');
+                          if (activeSub && !activeSub.cancel_at_period_end) {
+                            return (
+                              <Tooltip content="Cancelar Assinatura Mensal">
+                                <button
+                                  onClick={() => handleCancelSubscription(ad.id)}
+                                  className="flex-1 sm:flex-none flex items-center justify-center h-11 px-4 text-gray-400 hover:text-red-500 hover:bg-red-50 border border-gray-200 hover:border-red-100 rounded-xl transition-all"
+                                >
+                                  <span className="sm:hidden mr-2 text-sm font-bold">Cancelar Assinatura</span>
+                                  <XCircle className="w-4 h-4" />
+                                </button>
+                              </Tooltip>
+                            )
+                          }
+                          return null;
+                        })()}
 
                         <Tooltip content="Ver anúncio público">
                           <Link
