@@ -1,9 +1,13 @@
-import { Eye, MessageCircle, Star, Package } from 'lucide-react'
+import { Eye, MessageCircle, Star, Package, Ban, Trash2, XCircle, AlertCircle } from 'lucide-react'
 import DashboardCard from './DashboardCard'
 
 interface DashboardStatsData {
   totalAds: number
   activeAds: number
+  inactiveAds: number
+  canceledAds: number
+  deletedAds: number
+  canceledPlans: number
   totalViews: number
   totalContacts: number
   averageRating?: number
@@ -35,10 +39,18 @@ export default function DashboardStats({
     thisMonthViews: isNaN(data.thisMonthViews) ? 0 : data.thisMonthViews,
     lastMonthViews: isNaN(data.lastMonthViews) ? 0 : data.lastMonthViews,
     thisMonthContacts: isNaN(data.thisMonthContacts) ? 0 : data.thisMonthContacts,
-    lastMonthContacts: isNaN(data.lastMonthContacts) ? 0 : data.lastMonthContacts
+    lastMonthContacts: isNaN(data.lastMonthContacts) ? 0 : data.lastMonthContacts,
+    inactiveAds: data.inactiveAds || 0,
+    canceledAds: data.canceledAds || 0,
+    deletedAds: data.deletedAds || 0,
+    canceledPlans: data.canceledPlans || 0
   } : {
     totalAds: 0,
     activeAds: 0,
+    inactiveAds: 0,
+    canceledAds: 0,
+    deletedAds: 0,
+    canceledPlans: 0,
     totalViews: 0,
     totalContacts: 0,
     averageRating: 0,
@@ -87,6 +99,34 @@ export default function DashboardStats({
       icon: MessageCircle,
       iconColor: 'text-purple-600',
       trend: contactsTrend
+    },
+    {
+      title: 'Anúncios Inativos',
+      value: statsData.inactiveAds,
+      description: 'Criados mas não pagos',
+      icon: AlertCircle,
+      iconColor: 'text-yellow-600'
+    },
+    {
+      title: 'Anúncios Cancelados',
+      value: statsData.canceledAds,
+      description: 'Assinatura cancelada',
+      icon: Ban,
+      iconColor: 'text-orange-600'
+    },
+    {
+      title: 'Anúncios Excluídos',
+      value: statsData.deletedAds,
+      description: 'Removidos permanentemente',
+      icon: Trash2,
+      iconColor: 'text-red-600'
+    },
+    {
+      title: 'Planos Cancelados',
+      value: statsData.canceledPlans,
+      description: 'Total de cancelamentos',
+      icon: XCircle,
+      iconColor: 'text-red-500'
     },
     ...(statsData.averageRating ? [{
       title: 'Avaliação Média',

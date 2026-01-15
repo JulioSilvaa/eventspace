@@ -7,6 +7,10 @@ import { useNavigate } from 'react-router-dom';
 interface DashboardStats {
   totalUsers: number;
   activeAds: number;
+  inactiveAds: number;
+  canceledAds: number;
+  deletedAds: number;
+  canceledPlans: number;
   totalViews: number;
   revenue: number;
   mmr: number;
@@ -151,7 +155,7 @@ const AdminDashboard: React.FC = () => {
           value={(stats?.churnRate || 0) + '%'}
           icon={Activity}
           trend={0}
-          color="emerald" // Red might be better if high, but let's stick to palette
+          color="emerald"
         />
         <StatsCard
           title="MMR Mensal"
@@ -159,6 +163,36 @@ const AdminDashboard: React.FC = () => {
           icon={DollarSign}
           trend={stats?.growth.revenue || 0}
           color="amber"
+        />
+
+        {/* New Stats Row */}
+        <StatsCard
+          title="Anúncios Inativos"
+          value={stats?.inactiveAds || 0}
+          icon={LayoutGrid} // Or AlertCircle if imported, sticking to existing imports for safety first, but ideally updated
+          trend={0}
+          color="amber" // Yellow/Amber for inactive
+        />
+        <StatsCard
+          title="Anúncios Cancelados"
+          value={stats?.canceledAds || 0}
+          icon={TrendingDown} // Using generic icon
+          trend={0}
+          color="purple" // Reusing palette
+        />
+        <StatsCard
+          title="Anúncios Excluídos"
+          value={stats?.deletedAds || 0}
+          icon={TrendingDown}
+          trend={0}
+          color="blue" // Reusing palette
+        />
+        <StatsCard
+          title="Planos Cancelados"
+          value={stats?.canceledPlans || 0}
+          icon={DollarSign}
+          trend={0}
+          color="emerald" // Reusing palette
         />
       </div>
 
