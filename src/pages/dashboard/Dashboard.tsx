@@ -11,6 +11,10 @@ import { useUserRealTimeMetrics } from '@/hooks/useRealTimeMetrics'
 interface DashboardData {
   totalAds: number
   activeAds: number
+  inactiveAds: number
+  canceledAds: number
+  deletedAds: number
+  canceledPlans: number
   totalViews: number
   totalContacts: number
   averageRating?: number
@@ -80,6 +84,8 @@ export default function Dashboard() {
   useEffect(() => {
     if (userAds.length > 0) {
       const activeAds = userAds.filter(ad => ad.status === 'active')
+      const inactiveAds = userAds.filter(ad => ad.status === 'inactive' || ad.status === 'pending')
+      const canceledAds = userAds.filter(ad => ad.status === 'suspended') // Assuming suspended maps to canceled logic for now
 
       // Usar métricas real-time se disponíveis, senão fallback para dados existentes
       let totalViews = 0
@@ -115,6 +121,10 @@ export default function Dashboard() {
       setData({
         totalAds: userAds.length,
         activeAds: activeAds.length,
+        inactiveAds: inactiveAds.length,
+        canceledAds: canceledAds.length,
+        deletedAds: 0,
+        canceledPlans: 0,
         totalViews: safeTotalViews,
         totalContacts: safeTotalContacts,
         averageRating: 4.8, // Mock por enquanto
@@ -134,6 +144,10 @@ export default function Dashboard() {
       setData({
         totalAds: 0,
         activeAds: 0,
+        inactiveAds: 0,
+        canceledAds: 0,
+        deletedAds: 0,
+        canceledPlans: 0,
         totalViews: 0,
         totalContacts: 0,
         averageRating: 0,
