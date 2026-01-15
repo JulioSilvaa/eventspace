@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import { Icon } from 'leaflet'
 import { MapPin, ExternalLink } from 'lucide-react'
@@ -69,6 +69,18 @@ export default function LocationMap({
   height = "300px"
 }: LocationMapProps) {
   const mapRef = useRef<any>(null)
+  const [isMobile, setIsMobile] = useState(false)
+
+  // Detect mobile device
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   // Fix for default markers not showing
   useEffect(() => {
@@ -102,6 +114,9 @@ export default function LocationMap({
           center={[latitude, longitude]}
           zoom={15}
           scrollWheelZoom={false}
+          dragging={!isMobile}
+          touchZoom={!isMobile}
+          doubleClickZoom={!isMobile}
           style={{ height: '100%', width: '100%' }}
           ref={mapRef}
         >
