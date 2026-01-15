@@ -123,15 +123,15 @@ export default function AdCard({
   }
 
   const imageClasses = {
-    small: 'w-full h-48 object-cover',
-    medium: 'w-full h-56 object-cover',
-    large: 'w-full h-64 object-cover'
+    small: 'w-full h-40 md:h-48 object-cover',
+    medium: 'w-full h-48 md:h-56 object-cover',
+    large: 'w-full h-56 md:h-64 object-cover'
   }
 
   const paddingClasses = {
-    small: 'p-4 flex flex-col flex-grow',
-    medium: 'p-5 flex flex-col flex-grow',
-    large: 'p-6 flex flex-col flex-grow'
+    small: 'p-3 md:p-4 flex flex-col flex-grow',
+    medium: 'p-4 md:p-5 flex flex-col flex-grow',
+    large: 'p-5 md:p-6 flex flex-col flex-grow'
   }
 
   return (
@@ -192,7 +192,7 @@ export default function AdCard({
         {/* Content */}
         <div className={paddingClasses[size]}>
           {/* Title */}
-          <h3 className={`font-bold text-gray-900 mb-2 group-hover:text-primary-600 transition-colors line-clamp-2 ${size === 'small' ? 'text-base' : size === 'medium' ? 'text-lg' : 'text-xl'
+          <h3 className={`font-bold text-gray-900 mb-2 group-hover:text-primary-600 transition-colors line-clamp-2 ${size === 'small' ? 'text-sm md:text-base' : size === 'medium' ? 'text-base md:text-lg' : 'text-lg md:text-xl'
             }`}>
             {ad.title}
           </h3>

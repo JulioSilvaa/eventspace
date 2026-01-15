@@ -105,7 +105,7 @@ export default defineConfig({
     },
   },
   server: {
-    https: process.env.HTTPS === 'true',
+
     host: true,
     port: 5173,
   },
