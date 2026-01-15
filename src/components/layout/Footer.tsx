@@ -3,11 +3,11 @@ import { Link } from 'react-router-dom'
 export default function Footer() {
   return (
     <footer className="bg-gray-900 text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           {/* Logo and description */}
-          <div className="col-span-1 md:col-span-2">
-            <div className="flex items-center space-x-2 mb-4">
+          <div className="col-span-2">
+            <div className="flex items-center justify-center md:justify-start space-x-2 mb-4">
               <span className="text-2xl font-bold text-primary-400">
                 EventSpace
               </span>
@@ -15,24 +15,16 @@ export default function Footer() {
                 0% Comissão
               </span>
             </div>
-            <p className="text-gray-300 mb-4">
-              Conectamos você diretamente com fornecedores de espaços e equipamentos
+            <p className="text-gray-300 mb-4 text-center md:text-left max-w-md mx-auto md:mx-0">
+              Conectamos você diretamente com fornecedores de espaços
               para eventos. Sem taxas extras, sem intermediação.
-            </p>
-            <p className="text-sm text-gray-400">
-              © 2024 EventSpace. Todos os direitos reservados.
             </p>
           </div>
 
           {/* Links - Plataforma */}
-          <div>
-            <h3 className="font-semibold mb-4">Plataforma</h3>
+          <div className="text-center md:text-left">
+            <h3 className="font-semibold mb-4 text-white">Plataforma</h3>
             <ul className="space-y-2 text-sm">
-              <li>
-                <Link to="/equipamentos" className="text-gray-300 hover:text-white transition-colors">
-                  Equipamentos
-                </Link>
-              </li>
               <li>
                 <Link to="/espacos" className="text-gray-300 hover:text-white transition-colors">
                   Espaços
@@ -52,8 +44,8 @@ export default function Footer() {
           </div>
 
           {/* Links - Suporte */}
-          <div>
-            <h3 className="font-semibold mb-4">Suporte</h3>
+          <div className="text-center md:text-left">
+            <h3 className="font-semibold mb-4 text-white">Suporte</h3>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link to="/termos" className="text-gray-300 hover:text-white transition-colors">
@@ -66,7 +58,7 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <a href="mailto:contato@eventspace.com.br" className="text-gray-300 hover:text-white transition-colors">
+                <a href="mailto:juliocesar.amancio@yahoo.com.br" className="text-gray-300 hover:text-white transition-colors">
                   Contato
                 </a>
               </li>
@@ -75,15 +67,20 @@ export default function Footer() {
         </div>
 
         <div className="mt-8 pt-8 border-t border-gray-800">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="text-sm text-gray-400">
-              EventSpace é uma plataforma de conexão. Não intermediamos pagamentos ou garantimos transações.
-            </p>
-            <div className="flex space-x-6 mt-4 md:mt-0">
-              <span className="text-sm text-success-400 font-medium">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <div className="text-center md:text-left">
+              <p className="text-sm text-gray-400 mb-2">
+                EventSpace é uma plataforma de conexão. Não intermediamos pagamentos ou garantimos transações.
+              </p>
+              <p className="text-sm text-gray-500">
+                © 2024 EventSpace. Todos os direitos reservados.
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-6">
+              <span className="text-sm text-success-400 font-medium whitespace-nowrap">
                 ✓ 100% do valor fica com você
               </span>
-              <span className="text-sm text-primary-400 font-medium">
+              <span className="text-sm text-primary-400 font-medium whitespace-nowrap">
                 ✓ Negociação direta
               </span>
             </div>

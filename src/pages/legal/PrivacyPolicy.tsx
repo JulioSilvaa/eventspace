@@ -82,8 +82,9 @@ export default function PrivacyPolicy() {
 
         <h3>3.3 Dados de Pagamento</h3>
         <p>
-          A plataforma é atualmente gratuita. Caso venhamos a processar pagamentos no futuro,
-          estes serão realizados por processadores seguros e certificados (como Stripe).
+          Utilizamos a Stripe como processadora de pagamentos. A plataforma EventSpace não armazena
+          dados completos de cartão de crédito em seus servidores. Armazenamos apenas identificadores
+          (referências) fornecidos pela processadora para gestão de assinaturas e cobranças.
         </p>
       </section>
 
@@ -186,8 +187,8 @@ export default function PrivacyPolicy() {
         <ul>
           <li><strong>Dados de conta ativa:</strong> Durante a vigência da conta</li>
           <li><strong>Dados de conta encerrada:</strong> Até 5 anos para questões legais</li>
-          <li><strong>Dados de pagamento:</strong> Conforme exigências fiscais (5-10 anos)</li>
-          <li><strong>Logs de acesso:</strong> Até 6 meses para segurança</li>
+          <li><strong>Dados de pagamento:</strong> Conforme exigências fiscais e contratuais (5-10 anos)</li>
+          <li><strong>Logs de acesso e auditoria:</strong> Mantidos para segurança, monitoramento de atividades suspeitas e conformidade legal.</li>
         </ul>
       </section>
 

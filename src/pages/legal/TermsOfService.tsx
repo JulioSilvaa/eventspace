@@ -89,6 +89,10 @@ export default function TermsOfService() {
           Você é responsável por todas as atividades realizadas em sua conta e deve
           notificar imediatamente o EventSpace sobre qualquer uso não autorizado.
         </p>
+        <p className="mt-2">
+          Para sua segurança e integridade da plataforma, ações críticas (como login, alterações de dados e criações de anúncios)
+          são registradas em nossos logs de auditoria.
+        </p>
       </section>
 
       <section className="mb-8">

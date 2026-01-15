@@ -107,27 +107,7 @@ export default function DashboardStats({
       icon: AlertCircle,
       iconColor: 'text-yellow-600'
     },
-    {
-      title: 'Anúncios Cancelados',
-      value: statsData.canceledAds,
-      description: 'Assinatura cancelada',
-      icon: Ban,
-      iconColor: 'text-orange-600'
-    },
-    {
-      title: 'Anúncios Excluídos',
-      value: statsData.deletedAds,
-      description: 'Removidos permanentemente',
-      icon: Trash2,
-      iconColor: 'text-red-600'
-    },
-    {
-      title: 'Planos Cancelados',
-      value: statsData.canceledPlans,
-      description: 'Total de cancelamentos',
-      icon: XCircle,
-      iconColor: 'text-red-500'
-    },
+
     ...(statsData.averageRating ? [{
       title: 'Avaliação Média',
       value: statsData.averageRating.toFixed(1),

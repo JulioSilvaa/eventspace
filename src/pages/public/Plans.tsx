@@ -30,12 +30,12 @@ export default function Plans() {
   }, [])
 
   const founderBenefits = [
-    "Destaque exclusivo de Fundador",
-    "Suporte priorizado via WhatsApp",
-    "Acesso antecipado a novas features",
-    "Selos especiais no perfil",
-    "0% de comissão para sempre",
-    "Dashboard completo de métricas"
+    "Anúncios na plataforma",
+    "Recebimento de contatos",
+    "Dashboard de métricas",
+    "0% de comissão",
+    "Selo de Parceiro Fundador",
+    "Preço promocional garantido"
   ]
 
   const standardBenefits = [
@@ -60,17 +60,35 @@ export default function Plans() {
         </div>
 
         <div className="max-w-4xl mx-auto px-4 relative z-10">
-          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm text-blue-200 px-4 py-1.5 rounded-full text-sm font-bold mb-6 tracking-wide uppercase border border-white/10">
-            <Crown className="w-4 h-4 text-yellow-500" />
-            Oferta de Lançamento
-          </div>
-          <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-6 tracking-tight">
-            Faça parte do grupo de <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-600">Fundadores</span>
-          </h1>
-          <p className="text-xl text-gray-400 mb-8 max-w-2xl mx-auto leading-relaxed">
-            Garanta condições especiais vitalícias e ajude a construir o futuro do mercado de eventos.
-          </p>
+          {isFounderActive ? (
+            <>
+              <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm text-blue-200 px-4 py-1.5 rounded-full text-sm font-bold mb-6 tracking-wide uppercase border border-white/10">
+                <Crown className="w-4 h-4 text-yellow-500" />
+                Oferta de Lançamento
+              </div>
+              <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-6 tracking-tight">
+                Faça parte do grupo de <br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-600">Fundadores</span>
+              </h1>
+              <p className="text-xl text-gray-400 mb-8 max-w-2xl mx-auto leading-relaxed">
+                Garanta condições especiais exclusivas e ajude a construir o futuro do mercado de eventos.
+              </p>
+            </>
+          ) : (
+            <>
+              <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm text-blue-200 px-4 py-1.5 rounded-full text-sm font-bold mb-6 tracking-wide uppercase border border-white/10">
+                <Rocket className="w-4 h-4 text-blue-400" />
+                Comece Agora
+              </div>
+              <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-6 tracking-tight">
+                Destaque seu negócio no <br />
+                <span className="text-white">EventSpace</span>
+              </h1>
+              <p className="text-xl text-gray-400 mb-8 max-w-2xl mx-auto leading-relaxed">
+                A plataforma simples e direta para conectar seus espaços e serviços aos melhores clientes.
+              </p>
+            </>
+          )}
         </div>
       </section>
 
