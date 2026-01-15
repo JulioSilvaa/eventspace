@@ -93,6 +93,30 @@ export default function LocationMap({
     })
   }, [])
 
+  // Handle map interactions based on device type
+  useEffect(() => {
+    if (mapRef.current) {
+      const map = mapRef.current
+      if (isMobile) {
+        map.dragging.disable()
+        map.touchZoom.disable()
+        map.doubleClickZoom.disable()
+        map.scrollWheelZoom.disable()
+        map.boxZoom.disable()
+        map.keyboard.disable()
+        if (map.tap) map.tap.disable()
+      } else {
+        map.dragging.enable()
+        map.touchZoom.enable()
+        map.doubleClickZoom.enable()
+        map.scrollWheelZoom.enable()
+        map.boxZoom.enable()
+        map.keyboard.enable()
+        if (map.tap) map.tap.enable()
+      }
+    }
+  }, [isMobile])
+
   const openGoogleMaps = () => {
     const url = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`
     window.open(url, '_blank', 'noopener,noreferrer')
@@ -114,9 +138,6 @@ export default function LocationMap({
           center={[latitude, longitude]}
           zoom={15}
           scrollWheelZoom={false}
-          dragging={!isMobile}
-          touchZoom={!isMobile}
-          doubleClickZoom={!isMobile}
           style={{ height: '100%', width: '100%' }}
           ref={mapRef}
         >
