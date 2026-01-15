@@ -217,12 +217,14 @@ export default function RecentActivity({
     userAds.forEach((ad, index) => {
       const views = ad.views_count || 0
 
-      // Atividade de criação de anúncio (sempre mostrar a data real de publicação)
+      // Atividade de criação/publicação de anúncio
+      const isPublished = ad.status === 'active'
+
       activities.push({
         id: `ad-created-${ad.id}`,
         type: 'listing_created',
-        title: '🎉 Anúncio Publicado',
-        description: `"${ad.title}" foi publicado em ${ad.city}`,
+        title: isPublished ? '🎉 Anúncio Publicado' : '📝 Anúncio Criado',
+        description: `"${ad.title}" foi ${isPublished ? 'publicado' : 'criado'} em ${ad.city}${isPublished ? '' : '. Aguardando ativação.'}`,
         timestamp: new Date(ad.created_at || Date.now()),
         metadata: {
           adTitle: ad.title,
