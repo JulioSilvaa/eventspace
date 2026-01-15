@@ -80,6 +80,11 @@ export interface Ad {
     phone?: string
 
   }
+  subscription?: {
+    plan: string
+    status: string
+    price?: number
+  }
 }
 
 export interface ListingImage {

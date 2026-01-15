@@ -59,7 +59,8 @@ import {
   Refrigerator,
   WashingMachine,
   Speaker,
-  Armchair
+  Armchair,
+  Crown
 } from 'lucide-react'
 
 const AMENITIES_ICONS = {
@@ -652,6 +653,12 @@ export default function AdDetails() {
                 {ad.featured && (
                   <span className="flex-shrink-0 bg-yellow-100 text-yellow-800 text-[10px] uppercase font-bold px-2 py-1 rounded-full tracking-wide">
                     Destaque
+                  </span>
+                )}
+                {ad.subscription?.plan === 'founder' && ad.subscription?.status === 'active' && (
+                  <span className="flex-shrink-0 bg-gradient-to-r from-yellow-500 to-amber-600 text-white text-[10px] uppercase font-bold px-2 py-1 rounded-full tracking-wide flex items-center gap-1 shadow-sm">
+                    <Crown size={12} className="text-yellow-100" />
+                    Parceiro Fundador
                   </span>
                 )}
               </div>

@@ -17,7 +17,8 @@ import {
   Flame,
   TreePine,
   Music,
-  Lightbulb
+  Lightbulb,
+  Crown
 } from 'lucide-react'
 import StarRating from '@/components/reviews/StarRating'
 import FavoriteButton from '@/components/favorites/FavoriteButton'
@@ -49,6 +50,11 @@ interface AdCardProps {
     created_at: string
     listing_images?: Array<{ image_url: string }>
     user_plan_type?: string
+    subscription?: {
+      plan: string
+      status: string
+      price?: number
+    }
   }
   size?: 'small' | 'medium' | 'large'
   showViewCount?: boolean
@@ -145,16 +151,26 @@ export default function AdCard({
           />
 
           {/* Badges */}
-          <div className="absolute top-3 left-3 flex gap-2">
-            <span className={`px-2 py-1 rounded-full text-xs font-medium text-white ${isSpace ? 'bg-green-500' : 'bg-blue-500'
-              }`}>
-              {isSpace ? (
-                <Building2 className="w-3 h-3 inline mr-1" />
-              ) : (
-                <Wrench className="w-3 h-3 inline mr-1" />
-              )}
-              {isSpace ? 'Espaço' : 'Equipamento'}
-            </span>
+          <div className="absolute top-3 left-3 flex flex-col gap-2">
+
+
+            {/* Founder Badge or Category Badge */}
+            {ad.subscription?.plan === 'founder' && ad.subscription?.status === 'active' ? (
+              <span className="px-2 py-1 rounded-full text-xs font-bold text-white bg-gradient-to-r from-yellow-500 to-amber-600 shadow-sm w-fit flex items-center gap-1 border border-white/20">
+                <Crown size={12} className="text-yellow-100" />
+                Parceiro Fundador
+              </span>
+            ) : (
+              <span className={`px-2 py-1 rounded-full text-xs font-medium text-white w-fit ${isSpace ? 'bg-green-500' : 'bg-blue-500'
+                }`}>
+                {isSpace ? (
+                  <Building2 className="w-3 h-3 inline mr-1" />
+                ) : (
+                  <Wrench className="w-3 h-3 inline mr-1" />
+                )}
+                {ad.categories?.name || (isSpace ? 'Espaço' : 'Equipamento')}
+              </span>
+            )}
           </div>
 
           {/* Price Badge */}
