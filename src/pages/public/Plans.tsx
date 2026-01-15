@@ -114,17 +114,17 @@ export default function Plans() {
                       Restam apenas {pricing?.spots_remaining} vagas
                     </div>
 
-                    <div className="p-8 text-center flex-1 bg-gradient-to-b from-yellow-50/50 to-white">
-                      <h3 className="text-xl font-black text-gray-900 uppercase tracking-widest mb-2">
+                    <div className="p-4 sm:p-6 md:p-8 text-center flex-1 bg-gradient-to-b from-yellow-50/50 to-white">
+                      <h3 className="text-lg sm:text-xl font-black text-gray-900 uppercase tracking-widest mb-2">
                         Plano Fundador
                       </h3>
                       <p className="text-sm text-yellow-700 font-medium mb-6">Preço especial para os primeiros 20</p>
 
                       <div className="flex justify-center items-baseline mb-2 relative">
                         {/* Original Price Strike */}
-                        <span className="text-lg text-gray-400 line-through decoration-red-400 decoration-2 mr-2">R$ 50</span>
-                        <span className="text-6xl font-black text-gray-900 tracking-tighter">R$ 30</span>
-                        <span className="text-xl text-gray-500 ml-1 font-medium">,00 /mês</span>
+                        <span className="text-base sm:text-lg text-gray-400 line-through decoration-red-400 decoration-2 mr-2">R$ 50</span>
+                        <span className="text-4xl sm:text-5xl md:text-6xl font-black text-gray-900 tracking-tighter">R$ 30</span>
+                        <span className="text-base sm:text-xl text-gray-500 ml-1 font-medium">,00 /mês</span>
                       </div>
                       <p className="text-gray-500 text-sm mb-8">
                         Assinatura mensal com desconto
@@ -139,7 +139,7 @@ export default function Plans() {
                       </Link>
                     </div>
 
-                    <div className="p-8 border-t border-gray-100 bg-gray-50/50">
+                    <div className="p-4 sm:p-6 md:p-8 border-t border-gray-100 bg-gray-50/50">
                       <ul className="space-y-4">
                         {founderBenefits.map((benefit, index) => (
                           <li key={index} className="flex items-start gap-3">
@@ -162,18 +162,18 @@ export default function Plans() {
                     Preço Padrão
                   </div>
 
-                  <div className="p-8 text-center flex-1">
-                    <h3 className={`text-lg font-bold uppercase tracking-widest mb-4 ${!isFounderActive ? 'text-blue-600' : 'text-gray-600'}`}>
+                  <div className="p-4 sm:p-6 md:p-8 text-center flex-1">
+                    <h3 className={`text-base sm:text-lg font-bold uppercase tracking-widest mb-4 ${!isFounderActive ? 'text-blue-600' : 'text-gray-600'}`}>
                       Anunciante Padrão
                     </h3>
 
 
 
                     <div className="flex justify-center items-baseline mb-2">
-                      <span className={`text-5xl font-black ${!isFounderActive ? 'text-gray-900' : 'text-gray-400'}`}>
+                      <span className={`text-3xl sm:text-4xl md:text-5xl font-black ${!isFounderActive ? 'text-gray-900' : 'text-gray-400'}`}>
                         R$ 50
                       </span>
-                      <span className={`text-lg ml-1 ${!isFounderActive ? 'text-gray-500' : 'text-gray-400'}`}>
+                      <span className={`text-base sm:text-lg ml-1 ${!isFounderActive ? 'text-gray-500' : 'text-gray-400'}`}>
                         ,00 <span className="text-sm font-normal">/mês</span>
                       </span>
                     </div>
@@ -198,7 +198,7 @@ export default function Plans() {
                     )}
                   </div>
 
-                  <div className="p-8 border-t border-gray-100 bg-gray-50/50 flex-1">
+                  <div className="p-4 sm:p-6 md:p-8 border-t border-gray-100 bg-gray-50/50 flex-1">
                     <ul className="space-y-4">
                       {standardBenefits.map((benefit, index) => (
                         <li key={index} className="flex items-start gap-3">

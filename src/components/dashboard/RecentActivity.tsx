@@ -499,7 +499,7 @@ export default function RecentActivity({
           {activities.map((activity) => (
             <div
               key={activity.id}
-              className={`flex items-start gap-4 p-4 rounded-2xl border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all bg-white group`}
+              className={`flex items-start gap-4 p-3 md:p-4 rounded-2xl border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all bg-white group`}
             >
               <div className={`flex-shrink-0 p-2.5 rounded-xl ${getActivityColor(activity.type)} group-hover:scale-110 transition-transform duration-300`}>
                 {getActivityIcon(activity.type)}

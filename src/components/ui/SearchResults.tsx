@@ -105,7 +105,7 @@ export default function SearchResults({
 
   if (loading) {
     return (
-      <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "flex flex-col gap-6"}>
+      <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6" : "flex flex-col gap-4 md:gap-6"}>
         {Array.from({ length: 6 }).map((_, index) => (
           <div key={index} className={`bg-white rounded-lg shadow animate-pulse ${viewMode === 'list' ? 'flex flex-col md:flex-row h-auto md:h-48' : ''}`}>
             <div className={`${viewMode === 'list' ? 'w-full md:w-64 h-48 md:h-full rounded-t-lg md:rounded-l-lg md:rounded-tr-none' : 'h-48 rounded-t-lg'} bg-gray-200`} />
@@ -155,11 +155,11 @@ export default function SearchResults({
       </div>
 
       {/* Grid/Lista de Resultados */}
-      <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8" : "flex flex-col gap-6 mb-8"}>
+      <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-8" : "flex flex-col gap-4 md:gap-6 mb-8"}>
         {results.map((result) => (
           <div key={result.id} className={`group bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ${viewMode === 'list' ? 'flex flex-col md:flex-row h-auto md:h-64' : 'flex flex-col h-full'}`}>
             {/* Imagem do Anúncio */}
-            <div className={`relative bg-gray-100 overflow-hidden group shrink-0 ${viewMode === 'list' ? 'w-full md:w-80 h-56 md:h-full' : 'h-56 w-full'}`}>
+            <div className={`relative bg-gray-100 overflow-hidden group shrink-0 ${viewMode === 'list' ? 'w-full md:w-80 h-56 md:h-full' : 'h-48 md:h-56 w-full'}`}>
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10" />
               {result.listing_images && result.listing_images.length > 0 && result.listing_images[0].image_url ? (
                 <img
@@ -209,9 +209,9 @@ export default function SearchResults({
             </div>
 
             {/* Conteúdo do Card */}
-            <div className="p-5 flex-1 flex flex-col">
+            <div className="p-4 md:p-5 flex-1 flex flex-col">
               {/* Título */}
-              <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-1 group-hover:text-primary-600 transition-colors">
+              <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2 line-clamp-1 group-hover:text-primary-600 transition-colors">
                 {result.title}
               </h3>
 
