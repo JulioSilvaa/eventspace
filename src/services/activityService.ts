@@ -80,7 +80,6 @@ class ActivityService {
       if (error) {
         // Activity tracking may not be implemented in API
         if (error.status === 404) {
-          console.log('Activity tracking not available in API')
           return { success: true }
         }
         console.error('Error creating activity:', error)

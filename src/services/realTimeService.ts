@@ -104,9 +104,8 @@ class RealTimeService {
     try {
       // Send events to API
       await apiClient.post('/api/events/batch', { events: eventsToProcess })
-    } catch (error) {
-      // Events tracking may not be implemented, just log and continue
-      console.log('Event tracking not available:', error)
+    } catch {
+      // Events tracking may not be implemented, silently continue
     } finally {
       this.isProcessingQueue = false
     }

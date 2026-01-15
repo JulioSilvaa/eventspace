@@ -106,7 +106,7 @@ class ApiClient {
     }
 
     try {
-      let response = await fetch(url, {
+      const response = await fetch(url, {
         ...options,
         headers,
         credentials: 'include', // Always include cookies

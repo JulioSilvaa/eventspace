@@ -222,18 +222,14 @@ class SubscriptionService {
   }
   async createCheckoutSession(spaceId: string, interval?: 'month' | 'year' | 'activation'): Promise<{ url: string | null } | null> {
     try {
-      console.log(`📡 [SubscriptionService] Creating checkout session for space: ${spaceId}, interval: ${interval}`);
       const { data, error } = await apiClient.post<{ url: string | null }>(
         '/api/subscription/checkout', { spaceId, interval }
       );
       if (error) {
-        console.error('❌ [SubscriptionService] Error creating checkout session:', error);
         return null;
       }
-      console.log('✅ [SubscriptionService] Checkout session created successfully:', data?.url ? 'URL present' : 'No URL (Reactivated)');
       return { url: data?.url || null };
-    } catch (error) {
-      console.error('❌ [SubscriptionService] Exception in createCheckoutSession:', error);
+    } catch {
       return null;
     }
   }
