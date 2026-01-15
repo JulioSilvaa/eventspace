@@ -19,7 +19,7 @@ interface ActivityDisplayProps {
   'priority_lead' | 'auto_boost' | 'market_alert' | 'listing_created' |
   'review_received' | 'listing_milestone' | 'performance_insight' |
   'listing_updated' | 'price_updated' | 'photos_updated' |
-  'description_updated' | 'contact_updated'
+  'description_updated' | 'contact_updated' | 'subscription_updated' | 'payment_succeeded'
   title: string
   description: string
   timestamp: Date
@@ -182,6 +182,35 @@ export default function RecentActivity({
           title = '📞 Contato Atualizado'
           const contactFields = (event.metadata?.updatedContactFields as string[]) || []
           description = `Informações de contato de "${adTitle}" foram atualizadas${contactFields.length > 0 ? ` (${contactFields.join(', ')})` : ''}`
+          break
+        }
+
+        case 'status_change': {
+          activityType = 'status_change'
+          const newStatus = event.metadata?.newStatus
+          const isPaused = newStatus === 'inactive' || newStatus === 'paused'
+          title = isPaused ? '⏸️ Anúncio Pausado' : '▶️ Anúncio Ativado'
+          description = `O status de "${adTitle}" mudou para ${isPaused ? 'Pausado' : 'Ativo'}`
+          break
+        }
+
+        case 'subscription_updated': {
+          activityType = 'subscription_updated'
+          const status = event.metadata?.status
+          const isCanceled = status === 'cancelled' || status === 'canceled'
+          title = isCanceled ? '🚫 Assinatura Cancelada' : '⚠️ Atualização de Assinatura'
+          description = isCanceled
+            ? `A assinatura de "${adTitle}" foi cancelada`
+            : `O status da assinatura de "${adTitle}" mudou para ${status}`
+          break
+        }
+
+        case 'payment_succeeded': {
+          activityType = 'payment_succeeded'
+          title = '💳 Pagamento Confirmado'
+          const amount = event.metadata?.amount as number
+          const formattedAmount = amount ? (amount / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : ''
+          description = `Pagamento de ${formattedAmount} confirmado para "${adTitle}"`
           break
         }
 
@@ -356,6 +385,10 @@ export default function RecentActivity({
         return <Package className={`${iconClass} text-teal-600`} />
       case 'performance_insight':
         return <BarChart3 className={`${iconClass} text-cyan-500`} />
+      case 'subscription_updated':
+        return <Package className={`${iconClass} text-red-500`} />
+      case 'payment_succeeded':
+        return <TrendingUp className={`${iconClass} text-green-600`} />
       default:
         return <Eye className={`${iconClass} text-gray-500`} />
     }
@@ -389,6 +422,10 @@ export default function RecentActivity({
         return 'bg-teal-50 border-teal-100'
       case 'performance_insight':
         return 'bg-cyan-50 border-cyan-100'
+      case 'subscription_updated':
+        return 'bg-red-50 border-red-100'
+      case 'payment_succeeded':
+        return 'bg-green-50 border-green-100'
       default:
         return 'bg-gray-50 border-gray-100'
     }
