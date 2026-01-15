@@ -1,27 +1,14 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
 import { TrendingUp, LogOut, Home } from 'lucide-react'
-import DashboardStats from '@/components/dashboard/DashboardStats'
+import DashboardStats, { DashboardStatsData } from '@/components/dashboard/DashboardStats'
 import QuickActions from '@/components/dashboard/QuickActions'
 import RecentActivity from '@/components/dashboard/RecentActivity'
 import { useAuth } from '@/hooks/useAuth'
 import { useAdsStore } from '@/stores/adsStore'
 import { useUserRealTimeMetrics } from '@/hooks/useRealTimeMetrics'
 
-interface DashboardData {
-  totalAds: number
-  activeAds: number
-  inactiveAds: number
-  canceledAds: number
-  deletedAds: number
-  canceledPlans: number
-  totalViews: number
-  totalContacts: number
-  averageRating?: number
-  thisMonthViews: number
-  lastMonthViews: number
-  thisMonthContacts: number
-  lastMonthContacts: number
+interface DashboardData extends DashboardStatsData {
   recentAds: Array<{
     id: string
     title: string

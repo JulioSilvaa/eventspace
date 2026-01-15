@@ -1,7 +1,7 @@
 import { Eye, MessageCircle, Star, Package, Ban, Trash2, XCircle, AlertCircle } from 'lucide-react'
 import DashboardCard from './DashboardCard'
 
-interface DashboardStatsData {
+export interface DashboardStatsData {
   totalAds: number
   activeAds: number
   inactiveAds: number
