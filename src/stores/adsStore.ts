@@ -47,6 +47,7 @@ interface SpaceResponse {
   images?: (string | SpaceImage)[]
   owner_id: string
   category_id?: number
+  category_name?: string
   average_rating?: number
   reviews_count?: number
   capacity?: number
@@ -59,6 +60,11 @@ interface SpaceResponse {
     email?: string
     facebook_url?: string
     instagram_url?: string
+  }
+  subscription?: {
+    plan: string
+    status: string
+    price?: number
   }
 }
 
@@ -131,7 +137,7 @@ function mapSpaceToAd(space: SpaceResponse): Ad {
     })),
     categories: {
       id: space.category_id || 1,
-      name: 'Espaço',
+      name: space.category_name || 'Espaço',
       type: 'space',
       slug: 'espaco',
     },
@@ -141,6 +147,7 @@ function mapSpaceToAd(space: SpaceResponse): Ad {
     },
     comfort: space.comfort || [],
     owner: space.owner,
+    subscription: space.subscription,
   }
 }
 

@@ -17,6 +17,9 @@ export type ActivityEventType =
   | 'photos_updated'
   | 'description_updated'
   | 'contact_updated'
+  | 'status_change'
+  | 'subscription_updated'
+  | 'payment_succeeded'
 
 export interface ActivityEvent {
   id?: string

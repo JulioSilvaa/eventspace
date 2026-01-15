@@ -16,6 +16,7 @@ interface Space {
     price: number;
     status: string;
     coupon_code?: string;
+    coupon_name?: string;
   };
 }
 
@@ -122,9 +123,9 @@ export default function UserSpacesModal({ isOpen, onClose, userId, userName }: U
                           <span className="px-2 py-0.5 rounded text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20">
                             {space.subscription.plan} (R$ {Number(space.subscription.price).toFixed(2)})
                           </span>
-                          {space.subscription.coupon_code && (
-                            <span className="px-2 py-0.5 rounded text-xs font-medium bg-purple-500/10 text-purple-400 border border-purple-500/20">
-                              CUPOM: {space.subscription.coupon_code}
+                          {(space.subscription.coupon_code || space.subscription.coupon_name) && (
+                            <span className="bg-blue-500/10 text-blue-400 px-2 py-1 rounded text-xs border border-blue-500/20">
+                              {space.subscription.coupon_name || space.subscription.coupon_code}
                             </span>
                           )}
                         </div>
