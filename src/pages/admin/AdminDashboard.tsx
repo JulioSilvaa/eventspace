@@ -416,7 +416,7 @@ const AdminDashboard: React.FC = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 font-mono text-white">{formatCurrency(sub.price)}</td>
-                  <td className="px-6 py-4 font-mono text-slate-400">
+                  <td className="px-6 py-4 text-slate-400">
                     {sub.coupon_code ? (
                       <span className="bg-blue-500/10 text-blue-400 px-2 py-1 rounded text-xs border border-blue-500/20">
                         {sub.coupon_code}
