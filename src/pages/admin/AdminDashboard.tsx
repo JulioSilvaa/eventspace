@@ -14,7 +14,10 @@ interface DashboardStats {
   totalViews: number;
   revenue: number;
   mmr: number;
-  churnRate: number;
+  newMmr: number;
+  churnedMmr: number;
+  churnRate: number; // Customer Churn
+  revenueChurnRate: number; // Revenue Churn
   growth: {
     users: number;
     ads: number;
@@ -151,48 +154,65 @@ const AdminDashboard: React.FC = () => {
           color="purple"
         />
         <StatsCard
-          title="Churn Rate"
-          value={(stats?.churnRate || 0) + '%'}
-          icon={Activity}
-          trend={0}
-          color="emerald"
-        />
-        <StatsCard
           title="MMR Mensal"
           value={formatCurrency(stats?.mmr || 0)}
           icon={DollarSign}
           trend={stats?.growth.revenue || 0}
           color="amber"
+          subtitle="Previsível"
         />
 
-        {/* New Stats Row */}
+        {/* Churn Block */}
+        <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 border border-slate-700/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl group hover:border-red-500/50">
+          <div className="flex items-center justify-between mb-4">
+            <div className={`p-3 rounded-xl transition-colors bg-red-500/10 text-red-500 group-hover:bg-red-500/20`}>
+              <Activity className="w-6 h-6" />
+            </div>
+            <div className={`flex items-center text-sm font-bold px-2 py-1 rounded-full ${stats && stats.churnRate <= 2 ? 'bg-emerald-500/10 text-emerald-400' : stats && stats.churnRate <= 5 ? 'bg-amber-500/10 text-amber-400' : 'bg-red-500/10 text-red-400'}`}>
+              {stats && stats.churnRate <= 5 ? <TrendingDown className="w-3 h-3 mr-1" /> : <TrendingUp className="w-3 h-3 mr-1" />}
+              Taxa de Perda
+            </div>
+          </div>
+          <div>
+            <p className="text-slate-400 text-sm font-medium mb-1">Churn Rate</p>
+            <h3 className="text-3xl font-bold text-white tracking-tight">{(stats?.churnRate || 0) + '%'}</h3>
+            <p className="text-xs text-slate-500 mt-1">
+              Rev Churn: {stats?.revenueChurnRate || 0}%
+            </p>
+          </div>
+        </div>
+
+
+        {/* New Stats Row - Revenue & Health */}
+        <StatsCard
+          title="New MMR"
+          value={formatCurrency(stats?.newMmr || 0)}
+          icon={TrendingUp}
+          trend={0}
+          color="emerald"
+          subtitle="Novos clientes"
+        />
+        <StatsCard
+          title="Churned MMR"
+          value={formatCurrency(stats?.churnedMmr || 0)}
+          icon={TrendingDown}
+          trend={0}
+          color="blue" // Using blue as "neutral/info" for loss if red is too aggressive, or keep red. Let's stick to existing palette.
+          subtitle="Receita perdida"
+        />
         <StatsCard
           title="Anúncios Inativos"
           value={stats?.inactiveAds || 0}
-          icon={LayoutGrid} // Or AlertCircle if imported, sticking to existing imports for safety first, but ideally updated
+          icon={LayoutGrid}
           trend={0}
-          color="amber" // Yellow/Amber for inactive
-        />
-        <StatsCard
-          title="Anúncios Cancelados"
-          value={stats?.canceledAds || 0}
-          icon={TrendingDown} // Using generic icon
-          trend={0}
-          color="purple" // Reusing palette
-        />
-        <StatsCard
-          title="Anúncios Excluídos"
-          value={stats?.deletedAds || 0}
-          icon={TrendingDown}
-          trend={0}
-          color="blue" // Reusing palette
+          color="amber"
         />
         <StatsCard
           title="Planos Cancelados"
           value={stats?.canceledPlans || 0}
           icon={DollarSign}
           trend={0}
-          color="emerald" // Reusing palette
+          color="purple"
         />
       </div>
 
@@ -543,9 +563,10 @@ interface StatsCardProps {
   icon: React.ElementType;
   trend: number;
   color: 'blue' | 'purple' | 'emerald' | 'amber';
+  subtitle?: string;
 }
 
-const StatsCard: React.FC<StatsCardProps> = ({ title, value, icon: Icon, trend, color }) => {
+const StatsCard: React.FC<StatsCardProps> = ({ title, value, icon: Icon, trend, color, subtitle }) => {
   const colors: Record<string, string> = {
     blue: 'bg-blue-500',
     purple: 'bg-purple-500',
@@ -583,6 +604,7 @@ const StatsCard: React.FC<StatsCardProps> = ({ title, value, icon: Icon, trend, 
       <div>
         <p className="text-slate-400 text-sm font-medium mb-1">{title}</p>
         <h3 className="text-3xl font-bold text-white tracking-tight">{value}</h3>
+        {subtitle && <p className="text-xs text-slate-500 mt-1">{subtitle}</p>}
       </div>
     </div>
   );
