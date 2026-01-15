@@ -132,8 +132,8 @@ class PaymentService {
   }
 
   async processPendingPayments(_userId: string): Promise<void> {
-    // This is typically handled by webhooks on the backend
-    console.log('Pending payments are processed by backend webhooks')
+    // Pending payments are processed by backend webhooks
+    return
   }
 
   async getUserActivePayment(userId: string): Promise<PaymentRecord | null> {
