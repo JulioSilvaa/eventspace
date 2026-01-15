@@ -1,6 +1,9 @@
-import { Suspense, lazy } from 'react'
+import { Suspense, lazy, useState } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import './App.css'
+
+// Splash Screen
+import SplashScreen from './components/SplashScreen'
 
 // Public pages
 const Home = lazy(() => import('./pages/Home'))
@@ -94,6 +97,12 @@ import { AdminAuthProvider } from './contexts/admin/AdminAuthContext'
 import ScrollToTop from './components/ScrollToTop'
 
 function App() {
+  const [showSplash, setShowSplash] = useState(true)
+
+  if (showSplash) {
+    return <SplashScreen onFinish={() => setShowSplash(false)} minDuration={2000} />
+  }
+
   return (
     <ToastProvider>
       <AdminAuthProvider>

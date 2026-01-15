@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /api/
+
+# Sitemap
+Sitemap: https://eventspace.com.br/sitemap.xml
+
+# Crawl-delay
+Crawl-delay: 1

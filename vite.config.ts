@@ -4,6 +4,7 @@ import basicSsl from '@vitejs/plugin-basic-ssl'
 import path from 'path'
 import viteImagemin from 'vite-plugin-imagemin'
 import { VitePWA } from 'vite-plugin-pwa'
+import { visualizer } from 'rollup-plugin-visualizer'
 
 // https://vite.dev/config/
 export default defineConfig({
