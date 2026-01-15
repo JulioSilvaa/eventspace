@@ -15,6 +15,7 @@ interface Space {
     plan: string;
     price: number;
     status: string;
+    coupon_code?: string;
   };
 }
 
@@ -117,9 +118,16 @@ export default function UserSpacesModal({ isOpen, onClose, userId, userName }: U
                         {space.status === 'active' ? 'Ativo' : 'Inativo'}
                       </span>
                       {space.subscription && (
-                        <span className="px-2 py-0.5 rounded text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                          {space.subscription.plan} (R$ {Number(space.subscription.price).toFixed(2)})
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-0.5 rounded text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                            {space.subscription.plan} (R$ {Number(space.subscription.price).toFixed(2)})
+                          </span>
+                          {space.subscription.coupon_code && (
+                            <span className="px-2 py-0.5 rounded text-xs font-medium bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                              CUPOM: {space.subscription.coupon_code}
+                            </span>
+                          )}
+                        </div>
                       )}
                     </div>
                     <div className="text-sm text-slate-400 flex flex-wrap gap-x-4 gap-y-1">

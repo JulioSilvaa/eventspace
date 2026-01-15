@@ -19,6 +19,7 @@ export interface Subscription {
   canceled_at?: string
   created_at: string
   updated_at: string
+  coupon_code?: string
 }
 
 interface SubscriptionResponse {

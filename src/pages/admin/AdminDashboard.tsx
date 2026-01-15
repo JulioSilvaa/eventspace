@@ -52,6 +52,7 @@ interface DashboardLists {
     price: number;
     status: string;
     next_billing_date: string;
+    coupon_code?: string;
     users: { name: string; email: string };
   }>;
 }
@@ -343,6 +344,7 @@ const AdminDashboard: React.FC = () => {
                 <th className="px-6 py-4">Plano</th>
                 <th className="px-6 py-4">Status</th>
                 <th className="px-6 py-4">Valor</th>
+                <th className="px-6 py-4">Cupom</th>
                 <th className="px-6 py-4 text-right">Próxima Cobrança</th>
               </tr>
             </thead>
@@ -360,6 +362,15 @@ const AdminDashboard: React.FC = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 font-mono text-white">{formatCurrency(sub.price)}</td>
+                  <td className="px-6 py-4 font-mono text-slate-400">
+                    {sub.coupon_code ? (
+                      <span className="bg-blue-500/10 text-blue-400 px-2 py-1 rounded text-xs border border-blue-500/20">
+                        {sub.coupon_code}
+                      </span>
+                    ) : (
+                      "-"
+                    )}
+                  </td>
                   <td className="px-6 py-4 text-right font-mono text-slate-400">{sub.next_billing_date ? formatDate(sub.next_billing_date) : '-'}</td>
                 </tr>
               ))}
