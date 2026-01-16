@@ -433,6 +433,7 @@ export const useAdsStore = create<AdsState>((set, get) => ({
       contact_email: adData.contact_email,
       contact_instagram: adData.contact_instagram,
       contact_facebook: adData.contact_facebook,
+      category_id: adData.category_id,
     }
 
     // Filter out undefined values

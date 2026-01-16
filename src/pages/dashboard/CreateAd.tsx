@@ -206,18 +206,26 @@ export default function CreateAd() {
   useEffect(() => {
     getBrazilianStates().then(setBrazilianStates)
 
-    // TODO: Fetch categories from API when backend endpoint is ready
-    // For now, using hardcoded categories
-    const staticCategories = [
-      { id: 1, name: 'Salão de Festas', type: 'space' as const, parent_id: undefined },
-      { id: 2, name: 'Chácara', type: 'space' as const, parent_id: undefined },
-      { id: 3, name: 'Área de Lazer', type: 'space' as const, parent_id: undefined },
-      { id: 4, name: 'Buffet', type: 'advertiser' as const, parent_id: undefined },
-      { id: 5, name: 'Decoração', type: 'advertiser' as const, parent_id: undefined },
-      { id: 6, name: 'Fotografia', type: 'advertiser' as const, parent_id: undefined },
-      { id: 7, name: 'Som e Iluminação', type: 'advertiser' as const, parent_id: undefined },
-    ]
-    setCategories(staticCategories)
+    // Fetch categories from API
+    apiClient.get('/api/categories')
+      .then(response => {
+        const dbCategories = response.data.map((cat: any) => {
+          const isAdvertiser = ['Buffet', 'Decoração', 'Fotografia', 'Som e Iluminação'].some(
+            t => cat.name.includes(t)
+          );
+          return {
+            id: cat.id,
+            name: cat.name,
+            type: isAdvertiser ? 'advertiser' : 'space',
+            parent_id: undefined
+          };
+        });
+        setCategories(dbCategories);
+      })
+      .catch(err => {
+        console.error('Error fetching categories:', err);
+        // Fallback or empty
+      });
   }, [])
 
 
@@ -523,6 +531,7 @@ export default function CreateAd() {
       // Criar objeto no formato esperado pelo backend (SpaceEntity)
       const listingData: any = {
         user_id: user.id,
+        category_id: data.category_id,
         title: data.title,
         description: data.description,
 

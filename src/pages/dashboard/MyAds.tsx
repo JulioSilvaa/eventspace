@@ -18,7 +18,8 @@ import {
   MapPin,
   Calendar,
   ArrowLeft,
-  XCircle
+  XCircle,
+  Crown
 } from 'lucide-react'
 import Tooltip from '@/components/ui/Tooltip'
 import { useUserRealTimeMetrics } from '@/hooks/useRealTimeMetrics'
@@ -370,6 +371,21 @@ export default function MyAds() {
                       </div>
                     )}
                     {/* Mobile Overlay Gradient for text readability if needed, but text is outside */}
+
+                    {/* Founder Badge */}
+                    {(() => {
+                      const activeSub = userSubscriptions.find(s => s.space_id === ad.id && s.status === 'active');
+                      if (activeSub?.plan === 'founder') {
+                        return (
+                          <div className="absolute top-4 right-4 z-20">
+                            <div className="bg-yellow-400 text-yellow-900 p-1.5 rounded-full shadow-lg flex items-center justify-center" title="Parceiro Fundador">
+                              <Crown size={14} fill="currentColor" />
+                            </div>
+                          </div>
+                        )
+                      }
+                      return null;
+                    })()}
                   </div>
 
                   {/* Content Section */}
