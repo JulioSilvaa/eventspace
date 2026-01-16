@@ -23,6 +23,54 @@ import AlertModal from '@/components/ui/AlertModal'
 import ConfirmModal from '@/components/ui/ConfirmModal'
 import { Instagram, Facebook } from 'lucide-react'
 
+// Generic handler to apply masks and preserve cursor logic
+const useMaskedInput = (
+  setValue: (val: any) => void,
+  fieldName?: string
+) => {
+  return (e: React.ChangeEvent<HTMLInputElement>, maskFn: (val: string) => string) => {
+    const input = e.target
+    const start = input.selectionStart || 0
+    const value = input.value
+
+    const unmaskedLengthBefore = value.slice(0, start).replace(/\D/g, '').length
+    const masked = maskFn(value)
+
+    // If setValue expects an object update (like in Settings state), we might need custom logic.
+    // But here we have simple setFormData({ ...formData, phone: ... })
+    // So we just return the masked value and let the component handle state update? No, we need to handle cursor.
+    // The component handles state update via onChange.
+    // We can't easily abstract this without ref to input.
+    // Let's implement the handler inside the component for simplicity of access to state setter if needed, 
+    // OR just return the masked value and do the cursor trick in a useEffect or separate helper?
+
+    // Actually, we can just do the cursor trick here if we don't control state directly but just input ref?
+    // But we are in a controlled component.
+
+    // Let's fallback to manual implementation inside PersonalInformationSection and PropertySection.
+    return masked;
+  }
+}
+
+// Helper to handle cursor placement after render
+const preserveCursor = (input: HTMLInputElement, valueBefore: string, start: number, maskedValue: string) => {
+  const unmaskedLengthBefore = valueBefore.slice(0, start).replace(/\D/g, '').length
+
+  setTimeout(() => {
+    let newPos = 0
+    let tempDigits = 0
+    for (let i = 0; i < maskedValue.length; i++) {
+      if (/\d/.test(maskedValue[i])) tempDigits++
+      if (tempDigits === unmaskedLengthBefore) {
+        newPos = i + 1
+        break
+      }
+    }
+    if (unmaskedLengthBefore === 0) newPos = 0;
+    input.setSelectionRange(newPos, newPos)
+  }, 0)
+}
+
 type SettingsTab = 'personal' | 'security' | 'property' | 'account'
 
 export default function Settings() {
@@ -343,7 +391,14 @@ function PersonalInformationSection() {
                   type="tel"
                   id="phone"
                   value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: maskPhone(e.target.value) })}
+                  onChange={(e) => {
+                    const input = e.target
+                    const val = input.value
+                    const start = input.selectionStart || 0
+                    const masked = maskPhone(val)
+                    setFormData({ ...formData, phone: masked })
+                    preserveCursor(input, val, start, masked)
+                  }}
                   placeholder="(00) 00000-0000"
                   className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all outline-none font-medium text-gray-900"
                 />
@@ -999,10 +1054,17 @@ function PropertySection({ showAlert, showConfirm }: {
             <input
               type="text"
               value={formData.address.zipcode}
-              onChange={(e) => setFormData({
-                ...formData,
-                address: { ...formData.address, zipcode: maskCEP(e.target.value) }
-              })}
+              onChange={(e) => {
+                const input = e.target
+                const val = input.value
+                const start = input.selectionStart || 0
+                const masked = maskCEP(val)
+                setFormData({
+                  ...formData,
+                  address: { ...formData.address, zipcode: masked }
+                })
+                preserveCursor(input, val, start, masked)
+              }}
               className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all outline-none"
               placeholder="00000-000"
               required
@@ -1041,7 +1103,14 @@ function PropertySection({ showAlert, showConfirm }: {
                 <input
                   type="tel"
                   value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: maskPhone(e.target.value) })}
+                  onChange={(e) => {
+                    const input = e.target
+                    const val = input.value
+                    const start = input.selectionStart || 0
+                    const masked = maskPhone(val)
+                    setFormData({ ...formData, phone: masked })
+                    preserveCursor(input, val, start, masked)
+                  }}
                   className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all outline-none"
                   placeholder="(00) 00000-0000"
                   required
@@ -1058,7 +1127,14 @@ function PropertySection({ showAlert, showConfirm }: {
                 <input
                   type="tel"
                   value={formData.whatsapp}
-                  onChange={(e) => setFormData({ ...formData, whatsapp: maskPhone(e.target.value) })}
+                  onChange={(e) => {
+                    const input = e.target
+                    const val = input.value
+                    const start = input.selectionStart || 0
+                    const masked = maskPhone(val)
+                    setFormData({ ...formData, whatsapp: masked })
+                    preserveCursor(input, val, start, masked)
+                  }}
                   className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all outline-none"
                   placeholder="(00) 00000-0000"
                   required

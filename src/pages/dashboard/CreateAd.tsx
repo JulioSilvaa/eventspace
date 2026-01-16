@@ -200,7 +200,7 @@ export default function CreateAd() {
   const [customAmenities, setCustomAmenities] = useState<string[]>([])
   const [customFeatures, setCustomFeatures] = useState<string[]>([])
   const [customServices, setCustomServices] = useState<string[]>([])
-  const maxImages = 15
+  const maxImages = 10
   const modalShownRef = useRef(false)
 
   useEffect(() => {
@@ -329,18 +329,75 @@ export default function CreateAd() {
     fieldName: keyof CreateListingData
   ) => {
     const input = e.target
-    const start = input.selectionStart
+    const start = input.selectionStart || 0
     const value = input.value
+    const previousValue = input.defaultValue || '' // Note: defaultValue might not always track previous state perfectly in controlled inputs without ref, using value diff approach
+
+    // Calculate how many non-digit characters are before the cursor
+    const digitPattern = /\d/
+    let digitsBeforeCursor = 0
+    for (let i = 0; i < start; i++) {
+      if (digitPattern.test(value[i])) {
+        digitsBeforeCursor++
+      }
+    }
+
     const masked = maskFn(value)
+
+    // Explicitly update DOM value since we're overriding onChange in an uncontrolled-like setup
+    input.value = masked
 
     setValue(fieldName, masked, { shouldValidate: true })
 
-    // Defer cursor placement to next event loop to ensure React has rendered
-    setTimeout(() => {
-      if (start !== null) {
-        // Simple logic: if characters were added/removed, maintain relative position if possible
-        input.setSelectionRange(start + (masked.length - value.length), start + (masked.length - value.length))
+    // Find new cursor position
+    let newCursorPos = 0
+    let digitsSeen = 0
+    for (let i = 0; i < masked.length; i++) {
+      if (digitPattern.test(masked[i])) {
+        digitsSeen++
       }
+      if (digitsSeen >= digitsBeforeCursor) {
+        // If we found all our digits, looking for the next slot. 
+        // If the very next char is not a digit (separator), skip it?
+        // Simple heuristic: set cursor after the current digit position + potential separators
+        // But we need to handle "just deleted a digit".
+
+        // Let's rely on standard re-positioning:
+        newCursorPos = i + 1
+        break
+      }
+    }
+
+    // Correction for exact match boundaries (e.g. if mask added chars) is tough.
+    // Let's stick to the relative diff method but improved:
+
+    // Actually, the best user experience for phone masks is often just setting it to end if simplified, 
+    // but users hate that.
+    // Let's use the React scheduling trick but with better calculation.
+
+    const unmaskedLengthBefore = value.slice(0, start).replace(/\D/g, '').length
+
+    setTimeout(() => {
+      let newPos = 0
+      let tempDigits = 0
+      // Walk through masked string until we see the same number of digits
+      for (let i = 0; i < masked.length; i++) {
+        if (/\d/.test(masked[i])) {
+          tempDigits++
+        }
+        if (tempDigits === unmaskedLengthBefore) {
+          newPos = i + 1
+          break
+        }
+      }
+      // Improve edge case where cursor was before a separator which got removed?
+      // If we deleted a char, we might want to be at i not i+1?
+      // Let's stick to "cursor after the Nth digit" rule.
+
+      // Edge case: if we have 0 digits (deleted everything)
+      if (unmaskedLengthBefore === 0) newPos = 0;
+
+      input.setSelectionRange(newPos, newPos)
     }, 0)
   }
 
@@ -349,35 +406,45 @@ export default function CreateAd() {
 
     switch (currentStep) {
       case 1:
-        fieldsToValidate = ['categoryType']
-        break
-      case 2:
-        fieldsToValidate = ['title', 'description', 'category_id']
+        fieldsToValidate = ['title', 'description', 'category_id', 'categoryType']
         // Validar capacidade para espaços
         if (watchedCategoryType === 'space') {
           fieldsToValidate.push('capacity')
         }
         break
-      case 3:
-        fieldsToValidate = ['state', 'city']
+      case 2:
+        fieldsToValidate = ['state', 'city', 'neighborhood', 'address', 'number', 'postal_code']
         break
-      case 4:
+      case 3:
         // Step de comodidades - sem validação obrigatória
         break
-      case 5:
+      case 4:
         fieldsToValidate = ['price', 'priceType']
         break
-      case 6:
-        // Step de imagens - validação customizada
+      case 5:
+        // Validate images manually since it's not a simple field
+        if (images.length === 0) {
+          toast.error('Imagens obrigatórias', 'Adicione pelo menos uma foto do seu espaço.')
+          return
+        }
         break
-      case 7:
+      case 6:
         fieldsToValidate = ['contactPhone']
         break
     }
 
     const isStepValid = await trigger(fieldsToValidate)
-    if (isStepValid && currentStep < 8) {
-      setCurrentStep(currentStep + 1)
+
+    if (isStepValid) {
+      if (currentStep < 7) {
+        setCurrentStep(currentStep + 1)
+      }
+    } else {
+      // Show generic error if standard validation fails
+      const errorsList = Object.keys(errors)
+      if (errorsList.length > 0) {
+        toast.error('Verifique os campos', 'Preencha todos os campos obrigatórios corretamente.')
+      }
     }
   }
 

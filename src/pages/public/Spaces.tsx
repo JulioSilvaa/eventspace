@@ -50,12 +50,7 @@ export default function Spaces() {
             Descubra salões, chácaras e sítios incríveis para transformar seu evento em uma experiência inesquecível.
           </p>
 
-          {/* Breadcrumb */}
-          <nav className="inline-flex items-center gap-2 text-sm font-medium text-gray-500 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100">
-            <a href="/" className="hover:text-primary-600 transition-colors">Início</a>
-            <span className="text-gray-300">/</span>
-            <span className="text-gray-900">Espaços</span>
-          </nav>
+
         </div>
 
         {/* Filtros de Busca */}
@@ -90,8 +85,8 @@ export default function Spaces() {
               <button
                 onClick={() => setViewMode('grid')}
                 className={`px-3 py-1.5 text-sm font-semibold rounded-md shadow-sm transition-all ${viewMode === 'grid'
-                    ? 'bg-primary-50 text-primary-700'
-                    : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
+                  ? 'bg-primary-50 text-primary-700'
+                  : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
                   }`}
               >
                 Grade
@@ -99,8 +94,8 @@ export default function Spaces() {
               <button
                 onClick={() => setViewMode('list')}
                 className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${viewMode === 'list'
-                    ? 'bg-primary-50 text-primary-700 font-semibold shadow-sm'
-                    : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
+                  ? 'bg-primary-50 text-primary-700 font-semibold shadow-sm'
+                  : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
                   }`}
               >
                 Lista

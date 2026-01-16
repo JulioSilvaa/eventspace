@@ -186,16 +186,9 @@ const SPACE_CATEGORIES = [
   { id: 7, name: 'Som e Iluminação' },
 ]
 
-const formatPhone = (value: string) => {
-  const numbers = value.replace(/\D/g, '')
-  const limitedNumbers = numbers.slice(0, 11)
+import { maskPhone as utilMaskPhone, maskCEP as utilMaskCEP, unmask } from '@/utils/masks'
+import { apiClient } from '@/lib/api-client'
 
-  if (limitedNumbers.length <= 10) {
-    return limitedNumbers.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3')
-  } else {
-    return limitedNumbers.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3')
-  }
-}
 
 export default function EditAd() {
   const { id } = useParams<{ id: string }>()
@@ -223,7 +216,7 @@ export default function EditAd() {
   const [customFeatures, setCustomFeatures] = useState<string[]>([])
   const [customServices, setCustomServices] = useState<string[]>([])
   const [removedExistingImageIds, setRemovedExistingImageIds] = useState<string[]>([])
-  const maxImages = 15
+  const maxImages = 10
 
   const {
     register,
@@ -244,6 +237,53 @@ export default function EditAd() {
   useEffect(() => {
     getBrazilianStates().then(setBrazilianStates)
   }, [])
+
+  // Generic handler to apply masks and preserve cursor
+  const handleMaskedChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    maskFn: (val: string) => string,
+    fieldName: keyof EditAdData
+  ) => {
+    const input = e.target
+    const start = input.selectionStart || 0
+    const value = input.value
+
+    // Calculate how many non-digit characters are before the cursor
+    const digitPattern = /\d/
+    let digitsBeforeCursor = 0
+    for (let i = 0; i < start; i++) {
+      if (digitPattern.test(value[i])) {
+        digitsBeforeCursor++
+      }
+    }
+
+    const masked = maskFn(value)
+
+    // Explicitly update DOM value since we're overriding onChange in an uncontrolled-like setup
+    input.value = masked
+
+    setValue(fieldName, masked, { shouldValidate: true })
+
+    // Find new cursor position
+    const unmaskedLengthBefore = value.slice(0, start).replace(/\D/g, '').length
+
+    setTimeout(() => {
+      let newPos = 0
+      let tempDigits = 0
+      for (let i = 0; i < masked.length; i++) {
+        if (/\d/.test(masked[i])) {
+          tempDigits++
+        }
+        if (tempDigits === unmaskedLengthBefore) {
+          newPos = i + 1
+          break
+        }
+      }
+      if (unmaskedLengthBefore === 0) newPos = 0;
+      input.setSelectionRange(newPos, newPos)
+    }, 0)
+  }
+
 
   useEffect(() => {
     if (id) {
@@ -273,9 +313,9 @@ export default function EditAd() {
         price: currentAd.price,
         price_per_weekend: currentAd.price_per_weekend || undefined,
         priceType: currentAd.price_type,
-        contactPhone: formatPhone((currentAd.contact_phone || '').replace(/^(\+?55|55)\s?/, '').replace(/^\+55/, '')),
-        contactWhatsapp: formatPhone((currentAd.contact_whatsapp || '').replace(/^(\+?55|55)\s?/, '').replace(/^\+55/, '')),
-        contactWhatsappAlternative: formatPhone((currentAd.contact_whatsapp_alternative || '').replace(/^(\+?55|55)\s?/, '').replace(/^\+55/, '')),
+        contactPhone: utilMaskPhone((currentAd.contact_phone || '').replace(/^(\+?55|55)\s?/, '').replace(/^\+55/, '')),
+        contactWhatsapp: utilMaskPhone((currentAd.contact_whatsapp || '').replace(/^(\+?55|55)\s?/, '').replace(/^\+55/, '')),
+        contactWhatsappAlternative: utilMaskPhone((currentAd.contact_whatsapp_alternative || '').replace(/^(\+?55|55)\s?/, '').replace(/^\+55/, '')),
         contactEmail: currentAd.contact_email || '',
         contactInstagram: currentAd.contact_instagram || '',
         contactFacebook: currentAd.contact_facebook || '',
@@ -399,7 +439,7 @@ export default function EditAd() {
         fieldsToValidate = ['title', 'description', 'category_id', 'capacity']
         break
       case 2:
-        fieldsToValidate = ['state', 'city', 'address', 'number']
+        fieldsToValidate = ['state', 'city', 'address', 'number', 'neighborhood', 'postal_code']
         break
       case 3:
         break
@@ -414,8 +454,12 @@ export default function EditAd() {
     }
 
     const isStepValid = await trigger(fieldsToValidate)
-    if (isStepValid && currentStep < 7) {
-      setCurrentStep(currentStep + 1)
+    if (isStepValid) {
+      if (currentStep < 7) {
+        setCurrentStep(currentStep + 1)
+      }
+    } else {
+      toast.error('Verifique os campos', 'Preencha todos os campos obrigatórios corretamente.')
     }
   }
 
@@ -972,11 +1016,8 @@ export default function EditAd() {
               error={errors.contactPhone}
               required
               hint="Será usado para contato direto dos interessados"
-              {...register('contactPhone', {
-                onChange: (e) => {
-                  e.target.value = formatPhone(e.target.value)
-                }
-              })}
+              {...register('contactPhone')}
+              onChange={(e) => handleMaskedChange(e, utilMaskPhone, 'contactPhone')}
             />
 
             <FormField
@@ -985,11 +1026,8 @@ export default function EditAd() {
               placeholder="(11) 99999-9999 (opcional)"
               error={errors.contactWhatsapp}
               hint="Número principal para mensagens WhatsApp"
-              {...register('contactWhatsapp', {
-                onChange: (e) => {
-                  e.target.value = formatPhone(e.target.value)
-                }
-              })}
+              {...register('contactWhatsapp')}
+              onChange={(e) => handleMaskedChange(e, utilMaskPhone, 'contactWhatsapp')}
             />
 
             <FormField
@@ -998,11 +1036,8 @@ export default function EditAd() {
               placeholder="(11) 99999-9999 (opcional)"
               error={errors.contactWhatsappAlternative}
               hint="Número secundário para WhatsApp"
-              {...register('contactWhatsappAlternative', {
-                onChange: (e) => {
-                  e.target.value = formatPhone(e.target.value)
-                }
-              })}
+              {...register('contactWhatsappAlternative')}
+              onChange={(e) => handleMaskedChange(e, utilMaskPhone, 'contactWhatsappAlternative')}
             />
 
             <FormField

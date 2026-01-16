@@ -35,7 +35,7 @@ export default function Plans() {
     "Dashboard de métricas",
     "0% de comissão",
     "Selo de Parceiro Fundador",
-    "Preço promocional garantido"
+    "Preço de R$ 30 fixo para sempre"
   ]
 
   const standardBenefits = [
@@ -126,8 +126,8 @@ export default function Plans() {
                         <span className="text-4xl sm:text-5xl md:text-6xl font-black text-gray-900 tracking-tighter">R$ 30</span>
                         <span className="text-base sm:text-xl text-gray-500 ml-1 font-medium">,00 /mês</span>
                       </div>
-                      <p className="text-gray-500 text-sm mb-8">
-                        Assinatura mensal com desconto
+                      <p className="text-yellow-700/90 text-sm mb-8 font-medium">
+                        Você pagará R$ 30 fixo para sempre enquanto for assinante
                       </p>
 
                       <Link

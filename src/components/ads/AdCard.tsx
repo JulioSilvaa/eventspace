@@ -152,23 +152,11 @@ export default function AdCard({
 
           {/* Badges */}
           <div className="absolute top-3 left-3 flex flex-col gap-2">
-
-
-            {/* Founder Badge or Category Badge */}
-            {ad.subscription?.plan === 'founder' && ad.subscription?.status === 'active' ? (
+            {/* Founder Badge */}
+            {ad.subscription?.plan === 'founder' && ad.subscription?.status === 'active' && (
               <span className="px-2 py-1 rounded-full text-xs font-bold text-white bg-gradient-to-r from-yellow-500 to-amber-600 shadow-sm w-fit flex items-center gap-1 border border-white/20">
                 <Crown size={12} className="text-yellow-100" />
                 Parceiro Fundador
-              </span>
-            ) : (
-              <span className={`px-2 py-1 rounded-full text-xs font-medium text-white w-fit ${isSpace ? 'bg-green-500' : 'bg-blue-500'
-                }`}>
-                {isSpace ? (
-                  <Building2 className="w-3 h-3 inline mr-1" />
-                ) : (
-                  <Wrench className="w-3 h-3 inline mr-1" />
-                )}
-                {ad.categories?.name || (isSpace ? 'Espaço' : 'Equipamento')}
               </span>
             )}
           </div>
@@ -197,11 +185,6 @@ export default function AdCard({
             {ad.title}
           </h3>
 
-          {/* Category */}
-          {ad.categories && (
-            <p className="text-sm text-gray-600 mb-2">{ad.categories.name}</p>
-          )}
-
           {/* Location */}
           <div className="flex items-center text-gray-600 mb-3">
             <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
@@ -215,8 +198,6 @@ export default function AdCard({
               <span className="text-sm">Até {ad.specifications.capacity} pessoas</span>
             </div>
           )}
-
-
 
           {/* Top amenities */}
           {topAmenities.length > 0 && (

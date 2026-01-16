@@ -38,6 +38,12 @@ function Header() {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
             <Link
+              to="/"
+              className="text-gray-700 hover:text-primary-600 transition-colors"
+            >
+              Início
+            </Link>
+            <Link
               to="/espacos"
               className="text-gray-700 hover:text-primary-600 transition-colors"
             >
@@ -113,6 +119,13 @@ function Header() {
         {isMenuOpen && (
           <div className="md:hidden py-4 border-t">
             <div className="flex flex-col space-y-4">
+              <Link
+                to="/"
+                className="text-gray-700 hover:text-primary-600 transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Início
+              </Link>
               <Link
                 to="/espacos"
                 className="text-gray-700 hover:text-primary-600 transition-colors"
