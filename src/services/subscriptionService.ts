@@ -7,7 +7,7 @@ export interface Subscription {
   stripe_subscription_id: string
   stripe_customer_id: string
   stripe_price_id: string
-  plan_type: string
+  plan: string
   billing_cycle: 'monthly' | 'yearly'
   status: 'active' | 'canceled' | 'past_due' | 'unpaid' | 'incomplete'
   amount: number

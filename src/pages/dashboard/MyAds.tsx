@@ -18,14 +18,15 @@ import {
   MapPin,
   Calendar,
   ArrowLeft,
-  XCircle
+  XCircle,
+  Crown
 } from 'lucide-react'
 import Tooltip from '@/components/ui/Tooltip'
 import { useUserRealTimeMetrics } from '@/hooks/useRealTimeMetrics'
 import { formatPrice } from '@/lib/utils'
 
 export default function MyAds() {
-  const { user, profile } = useAuth()
+  const { user } = useAuth()
   const { userAds, fetchUserAds, isLoading: adsLoading, updateAd, deleteAd } = useAdsStore()
   const { metrics, isLoading: metricsLoading } = useUserRealTimeMetrics(user?.id)
 
@@ -71,16 +72,6 @@ export default function MyAds() {
     }
   }, [user, fetchUserAds])
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return 'bg-green-100 text-green-800'
-      case 'inactive': return 'bg-yellow-100 text-yellow-800'
-      case 'pending': return 'bg-blue-100 text-blue-800'
-      case 'rejected': return 'bg-red-100 text-red-800'
-      default: return 'bg-gray-100 text-gray-800'
-    }
-  }
-
   const getStatusText = (status: string) => {
     switch (status) {
       case 'active': return 'Ativo'
@@ -90,8 +81,6 @@ export default function MyAds() {
       default: return status
     }
   }
-
-  const [redirecting, setRedirecting] = useState(false)
 
   const handleCancelSubscription = (adId: string) => {
     const sub = userSubscriptions.find(s => s.space_id === adId && s.status === 'active');
@@ -136,7 +125,7 @@ export default function MyAds() {
 
   const handleToggleStatus = async (adId: string, currentStatus: string) => {
     if (currentStatus === 'inactive' || currentStatus === 'suspended') {
-      setRedirecting(true)
+
 
       // Check if this ad already has an active subscription
       const activeSub = userSubscriptions.find(
@@ -146,7 +135,7 @@ export default function MyAds() {
       if (activeSub) {
         // Just reactivate the ad locally
         await updateAd(adId, { status: 'active' })
-        setRedirecting(false)
+
         showAlert('success', 'Anúncio Ativado', 'Seu anúncio foi reativado com sucesso.')
         return
       }
@@ -165,7 +154,7 @@ export default function MyAds() {
 
         if (!result) {
           showAlert('error', 'Erro', 'Não foi possível configurar o pagamento.');
-          setRedirecting(false)
+
           return;
         }
 
@@ -173,7 +162,7 @@ export default function MyAds() {
           window.location.href = result.url;
         } else {
           // Success but no URL means it was just reactivated (already had active subscription)
-          setRedirecting(false)
+
           showAlert('success', 'Anúncio Ativado', 'Seu anúncio possui uma assinatura ativa e foi reativado com sucesso.')
           await fetchUserAds(user!.id)
         }
@@ -181,14 +170,14 @@ export default function MyAds() {
       } catch (error) {
         console.error("Error creating checkout session", error);
         showAlert('error', 'Erro', 'Ocorreu um erro ao processar sua solicitação.');
-        setRedirecting(false)
+
       }
       return;
     }
 
     // Toggle from active to inactive
     const newStatus = 'inactive';
-    await updateAd(adId, { status: newStatus as any });
+    await updateAd(adId, { status: newStatus as 'inactive' });
   }
 
   const handleDeleteAd = (adId: string) => {
@@ -370,6 +359,21 @@ export default function MyAds() {
                       </div>
                     )}
                     {/* Mobile Overlay Gradient for text readability if needed, but text is outside */}
+
+                    {/* Founder Badge */}
+                    {(() => {
+                      const activeSub = userSubscriptions.find(s => s.space_id === ad.id && s.status === 'active');
+                      if (activeSub?.plan === 'founder') {
+                        return (
+                          <div className="absolute top-4 right-4 z-20">
+                            <div className="bg-yellow-400 text-yellow-900 p-1.5 rounded-full shadow-lg flex items-center justify-center" title="Parceiro Fundador">
+                              <Crown size={14} fill="currentColor" />
+                            </div>
+                          </div>
+                        )
+                      }
+                      return null;
+                    })()}
                   </div>
 
                   {/* Content Section */}
