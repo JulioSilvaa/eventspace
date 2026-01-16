@@ -284,7 +284,7 @@ export default function Home() {
                               <div className="flex items-center mb-4">
                                 <div className="flex items-center">
                                   <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                                  <span className="font-medium ml-1.5 text-sm">{ad.rating || 4.8}</span>
+                                  <span className="font-medium ml-1.5 text-sm">{(ad.rating || 4.8).toFixed(1)}</span>
                                 </div>
                                 <span className="mx-2 text-gray-300">|</span>
                                 <span className="text-sm text-gray-500">{ad.reviews_count || 0} avaliações</span>

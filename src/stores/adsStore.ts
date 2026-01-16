@@ -270,7 +270,7 @@ export const useAdsStore = create<AdsState>((set, get) => ({
       featured: true,
       limit,
       status: 'active',
-      sort: 'average_rating',
+      sort: 'created_at',
       order: 'desc',
     })
 
