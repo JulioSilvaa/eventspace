@@ -209,20 +209,20 @@ export default function CreateAd() {
     // Fetch categories from API
     apiClient.get('/api/categories')
       .then(response => {
-        const dbCategories = response.data.map((cat: any) => {
+        const dbCategories = (response.data as any[]).map((cat: any) => {
           const isAdvertiser = ['Buffet', 'Decoração', 'Fotografia', 'Som e Iluminação'].some(
             t => cat.name.includes(t)
           );
           return {
             id: cat.id,
             name: cat.name,
-            type: isAdvertiser ? 'advertiser' : 'space',
+            type: (isAdvertiser ? 'advertiser' : 'space') as 'space' | 'advertiser',
             parent_id: undefined
           };
         });
         setCategories(dbCategories);
       })
-      .catch(err => {
+      .catch((err: any) => {
         console.error('Error fetching categories:', err);
         // Fallback or empty
       });
