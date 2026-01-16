@@ -152,16 +152,21 @@ export default function AdCard({
             }}
           />
 
-          {/* Badges */}
-          <div className="absolute top-3 left-3 flex flex-col gap-2">
-            {/* Founder Badge Only */}
-            {ad.subscription?.plan === 'founder' && ad.subscription?.status === 'active' && (
-              <span className="px-2 py-1 rounded-full text-xs font-bold text-white bg-gradient-to-r from-yellow-500 to-amber-600 shadow-sm w-fit flex items-center gap-1 border border-white/20">
-                <Crown size={12} className="text-yellow-100" />
-                {/* Parceiro Fundador */}
-              </span>
-            )}
+          {/* Badges: Category (Top Left) */}
+          <div className="absolute top-3 left-3 z-10">
+            <span className="bg-white/90 backdrop-blur-sm text-gray-900 text-xs px-2.5 py-1 rounded-lg font-semibold shadow-sm border border-white/20">
+              {ad.categories?.name || (isSpace ? 'Espaço' : 'Equipamento')}
+            </span>
           </div>
+
+          {/* Badges: Founder (Top Right) */}
+          {ad.subscription?.plan === 'founder' && ad.subscription?.status === 'active' && (
+            <div className="absolute top-3 right-3 z-10">
+              <div className="p-1.5 rounded-full bg-gradient-to-r from-yellow-500 to-amber-600 shadow-md border border-white/20 flex items-center justify-center">
+                <Crown size={14} className="text-white fill-current" />
+              </div>
+            </div>
+          )}
 
           {/* Price Badge */}
           <div className="absolute bottom-3 left-3 bg-black bg-opacity-75 text-white px-3 py-1 rounded-full">
