@@ -111,6 +111,8 @@ export default function AdCard({
   const topAmenities = getTopAmenities()
   const totalAmenitiesCount = (ad.comfort?.length || 0) || ((ad.specifications?.amenities || []).length + (ad.specifications?.features || []).length)
 
+  /* Debug logs removed */
+
   const isSpace = ad.categories?.type === 'space'
   const defaultImage = isSpace
     ? 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&h=300&fit=crop'
@@ -152,11 +154,11 @@ export default function AdCard({
 
           {/* Badges */}
           <div className="absolute top-3 left-3 flex flex-col gap-2">
-            {/* Founder Badge */}
+            {/* Founder Badge Only */}
             {ad.subscription?.plan === 'founder' && ad.subscription?.status === 'active' && (
               <span className="px-2 py-1 rounded-full text-xs font-bold text-white bg-gradient-to-r from-yellow-500 to-amber-600 shadow-sm w-fit flex items-center gap-1 border border-white/20">
                 <Crown size={12} className="text-yellow-100" />
-                Parceiro Fundador
+                {/* Parceiro Fundador */}
               </span>
             )}
           </div>
@@ -262,6 +264,6 @@ export default function AdCard({
           </div>
         </div>
       </div>
-    </Link>
+    </Link >
   )
 }

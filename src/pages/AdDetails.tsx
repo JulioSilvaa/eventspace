@@ -658,7 +658,6 @@ export default function AdDetails() {
                 {ad.subscription?.plan === 'founder' && ad.subscription?.status === 'active' && (
                   <span className="flex-shrink-0 bg-gradient-to-r from-yellow-500 to-amber-600 text-white text-[10px] uppercase font-bold px-2 py-1 rounded-full tracking-wide flex items-center gap-1 shadow-sm">
                     <Crown size={12} className="text-yellow-100" />
-                    Parceiro Fundador
                   </span>
                 )}
               </div>
