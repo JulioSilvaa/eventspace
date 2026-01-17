@@ -58,7 +58,7 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <a href="mailto:juliocesar.amancio@yahoo.com.br" className="text-gray-300 hover:text-white transition-colors">
+                <a href="mailto:eventspace.suporte@gmail.com" className="text-gray-300 hover:text-white transition-colors">
                   Contato
                 </a>
               </li>
