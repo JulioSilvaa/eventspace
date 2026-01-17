@@ -15,42 +15,12 @@ import {
   XCircle
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
-import { useUserRealTimeMetrics, useEventTracking } from '@/hooks/useRealTimeMetrics'
+import { useEventTracking } from '@/hooks/useRealTimeMetrics'
 import { apiClient } from '@/lib/api-client'
 import subscriptionService, { Subscription } from '@/services/subscriptionService'
 import { maskPhone, maskCEP, unmask } from '@/utils/masks'
 import AlertModal from '@/components/ui/AlertModal'
 import ConfirmModal from '@/components/ui/ConfirmModal'
-import { Instagram, Facebook } from 'lucide-react'
-
-// Generic handler to apply masks and preserve cursor logic
-const useMaskedInput = (
-  setValue: (val: any) => void,
-  fieldName?: string
-) => {
-  return (e: React.ChangeEvent<HTMLInputElement>, maskFn: (val: string) => string) => {
-    const input = e.target
-    const start = input.selectionStart || 0
-    const value = input.value
-
-    const unmaskedLengthBefore = value.slice(0, start).replace(/\D/g, '').length
-    const masked = maskFn(value)
-
-    // If setValue expects an object update (like in Settings state), we might need custom logic.
-    // But here we have simple setFormData({ ...formData, phone: ... })
-    // So we just return the masked value and let the component handle state update? No, we need to handle cursor.
-    // The component handles state update via onChange.
-    // We can't easily abstract this without ref to input.
-    // Let's implement the handler inside the component for simplicity of access to state setter if needed, 
-    // OR just return the masked value and do the cursor trick in a useEffect or separate helper?
-
-    // Actually, we can just do the cursor trick here if we don't control state directly but just input ref?
-    // But we are in a controlled component.
-
-    // Let's fallback to manual implementation inside PersonalInformationSection and PropertySection.
-    return masked;
-  }
-}
 
 // Helper to handle cursor placement after render
 const preserveCursor = (input: HTMLInputElement, valueBefore: string, start: number, maskedValue: string) => {
@@ -266,7 +236,7 @@ export default function Settings() {
 
 // Personal Information Section
 function PersonalInformationSection() {
-  const { profile, updateProfile, user } = useAuth()
+  const { updateProfile, user } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [isFetching, setIsFetching] = useState(false)
   const [formData, setFormData] = useState({

@@ -59,14 +59,14 @@ export const maskCurrency = (value: string) => {
   }
 
   // Remove everything that is not digit or comma
-  let cleanValue = value.replace(/[^\d,]/g, "");
+  const cleanValue = value.replace(/[^\d,]/g, "");
 
   // Ensure only one comma exists (handled above but good to be safe)
   // Split into integer and decimal parts
   const parts = cleanValue.split(",");
 
   let integerPart = parts[0];
-  let decimalPart = parts[1];
+  const decimalPart = parts[1];
 
   // Remove leading zeros from integer part unless it's just "0"
   if (integerPart.length > 1 && integerPart.startsWith("0")) {
