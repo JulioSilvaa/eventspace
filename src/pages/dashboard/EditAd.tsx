@@ -175,7 +175,7 @@ const SPACE_CATEGORIES = [
   { id: 6, name: 'Fotografia' },
   { id: 7, name: 'Som e Iluminação' },
 ]
-import { maskPhone as utilMaskPhone, maskCurrency as utilMaskCurrency } from '@/utils/masks'
+import { maskPhone as utilMaskPhone, maskMoney as utilMaskMoney } from '@/utils/masks'
 
 const parseCurrency = (value: string | number) => {
   if (typeof value === 'number') return value
@@ -883,7 +883,7 @@ export default function EditAd() {
                     placeholder="0,00"
                     className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     {...register('price')}
-                    onChange={(e) => handleMaskedChange(e, utilMaskCurrency, 'price')}
+                    onChange={(e) => handleMaskedChange(e, utilMaskMoney, 'price')}
                   />
                 </div>
                 <p className="mt-1 text-xs text-gray-500">Informe o valor (Ex: 600 ou 600,00)</p>

@@ -52,7 +52,7 @@ export const maskCEP = (value: string) => {
   return formatted;
 };
 
-export const maskCurrency = (value: string) => {
+export const maskMoney = (value: string) => {
   // Prevent multiple commas
   if ((value.match(/,/g) || []).length > 1) {
     return value.slice(0, -1);
@@ -77,7 +77,7 @@ export const maskCurrency = (value: string) => {
   // Format integer part with thousands separator
   const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 
-  let formatted = `R$ ${formattedInteger}`;
+  let formatted = formattedInteger;
 
   // If there is a comma, add it and the decimal part (max 2 digits)
   if (decimalPart !== undefined) {
@@ -85,6 +85,10 @@ export const maskCurrency = (value: string) => {
   }
 
   return formatted;
+};
+
+export const maskCurrency = (value: string) => {
+  return `R$ ${maskMoney(value)}`;
 };
 
 // Simple Integer Mask: 1234 -> 1.234
