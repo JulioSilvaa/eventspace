@@ -175,7 +175,7 @@ const SPACE_CATEGORIES = [
   { id: 6, name: 'Fotografia' },
   { id: 7, name: 'Som e Iluminação' },
 ]
-import { maskPhone as utilMaskPhone, maskMoney as utilMaskMoney } from '@/utils/masks'
+import { maskPhone as utilMaskPhone, maskMoneyFlexible as utilMaskMoney } from '@/utils/masks'
 
 const parseCurrency = (value: string | number) => {
   if (typeof value === 'number') return value
