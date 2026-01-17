@@ -41,7 +41,7 @@ export interface Ad {
   price: number
   price_per_day?: number
   price_per_weekend?: number
-  price_type: 'daily' | 'hourly' | 'event'
+  price_type: 'daily' | 'hourly' | 'event' | 'weekend'
   capacity?: number
   state: string
   city: string
