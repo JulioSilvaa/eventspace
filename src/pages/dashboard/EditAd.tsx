@@ -6,15 +6,13 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { useAdsStore } from '@/stores/adsStore'
 import { useEventTracking } from '@/hooks/useRealTimeMetrics'
-import { uploadAdImages, saveImageRecords, deleteSpecificAdImages } from '@/services/imageService'
+import { uploadAdImages, deleteSpecificAdImages } from '@/services/imageService'
 import { useToast } from '@/contexts/ToastContext'
 import {
   ArrowLeft,
   ArrowRight,
   CheckCircle,
   Building2,
-  Wrench,
-  DollarSign,
   Star,
   Loader2,
   AlertCircle
@@ -117,14 +115,17 @@ const editAdSchema = z.object({
   features: z.array(z.string()).optional(),
   services: z.array(z.string()).optional(),
 
-  price: z.number()
-    .min(1, 'Preço deve ser maior que zero')
-    .max(100000, 'Preço deve ser menor que R$ 100.000'),
-  price_per_weekend: z.preprocess(
-    (val) => (val === '' || val === null || Number.isNaN(Number(val))) ? undefined : Number(val),
-    z.number().optional()
-  ),
-  priceType: z.enum(['daily', 'hourly', 'event'], {
+  price: z.any()
+    .refine((val) => {
+      if (typeof val === 'number') return val > 0
+      if (typeof val === 'string') {
+        const num = parseFloat(val.replace(/[^\d,]/g, '').replace(',', '.'))
+        return num > 0
+      }
+      return false
+    }, 'Preço deve ser maior que zero'),
+  price_per_weekend: z.any().optional(),
+  priceType: z.enum(['daily', 'hourly', 'event', 'weekend'], {
     required_error: 'Selecione o tipo de preço'
   }),
 
@@ -163,18 +164,7 @@ const STEPS = [
   { id: 7, title: 'Revisão', description: 'Confirmar alterações' }
 ]
 
-const EQUIPMENT_CATEGORIES = [
-  { name: 'Som e Áudio', id: 1 },
-  { name: 'Iluminação', id: 2 },
-  { name: 'Decoração', id: 3 },
-  { name: 'Mesa e Cadeira', id: 4 },
-  { name: 'Buffet e Catering', id: 5 },
-  { name: 'Fotografia e Filmagem', id: 6 },
-  { name: 'Entretenimento', id: 7 },
-  { name: 'Tendas e Coberturas', id: 8 },
-  { name: 'Limpeza', id: 9 },
-  { name: 'Segurança', id: 10 }
-]
+
 
 const SPACE_CATEGORIES = [
   { id: 1, name: 'Salão de Festas' },
@@ -185,10 +175,13 @@ const SPACE_CATEGORIES = [
   { id: 6, name: 'Fotografia' },
   { id: 7, name: 'Som e Iluminação' },
 ]
+import { maskPhone as utilMaskPhone, maskCurrency as utilMaskCurrency } from '@/utils/masks'
 
-import { maskPhone as utilMaskPhone, maskCEP as utilMaskCEP, unmask } from '@/utils/masks'
-import { apiClient } from '@/lib/api-client'
-
+const parseCurrency = (value: string | number) => {
+  if (typeof value === 'number') return value
+  if (!value) return 0
+  return parseFloat(value.replace(/\./g, '').replace(',', '.').replace(/[^0-9.]/g, ''))
+}
 
 export default function EditAd() {
   const { id } = useParams<{ id: string }>()
@@ -196,7 +189,7 @@ export default function EditAd() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const navigate = useNavigate()
-  const { user, profile } = useAuth()
+  const { user } = useAuth()
   const { currentAd, fetchAdById, updateAd } = useAdsStore()
   const toast = useToast()
   const {
@@ -231,9 +224,6 @@ export default function EditAd() {
     mode: 'onChange'
   })
 
-  const watchedCategoryType = watch('categoryType')
-  const allValues = watch()
-
   useEffect(() => {
     getBrazilianStates().then(setBrazilianStates)
   }, [])
@@ -247,15 +237,6 @@ export default function EditAd() {
     const input = e.target
     const start = input.selectionStart || 0
     const value = input.value
-
-    // Calculate how many non-digit characters are before the cursor
-    const digitPattern = /\d/
-    let digitsBeforeCursor = 0
-    for (let i = 0; i < start; i++) {
-      if (digitPattern.test(value[i])) {
-        digitsBeforeCursor++
-      }
-    }
 
     const masked = maskFn(value)
 
@@ -310,8 +291,12 @@ export default function EditAd() {
         complement: currentAd.complement || '',
         postal_code: currentAd.postal_code || '',
         reference_point: (currentAd.specifications?.reference_point as string) || '',
-        price: currentAd.price,
-        price_per_weekend: currentAd.price_per_weekend || undefined,
+        price: currentAd.price
+          ? Math.floor(Number(currentAd.price)).toLocaleString('pt-BR')
+          : '',
+        price_per_weekend: currentAd.price_per_weekend
+          ? Math.floor(Number(currentAd.price_per_weekend)).toLocaleString('pt-BR')
+          : undefined,
         priceType: currentAd.price_type,
         contactPhone: utilMaskPhone((currentAd.contact_phone || '').replace(/^(\+?55|55)\s?/, '').replace(/^\+55/, '')),
         contactWhatsapp: utilMaskPhone((currentAd.contact_whatsapp || '').replace(/^(\+?55|55)\s?/, '').replace(/^\+55/, '')),
@@ -508,19 +493,53 @@ export default function EditAd() {
         return digits.startsWith('55') && digits.length > 11 ? `+${digits}` : `+55${digits}`
       }
 
+      loadingToastId = toast.loading('Processando alterações...', 'Preparando o anúncio')
+
+      let finalImages: string[] = []
+
+      // 1. Filter out deleted existing images
+      // We use currentAd.listing_images (fetched from backend) and filter out IDs that were marked for deletion
+      const existingListingImages = currentAd?.listing_images || []
+      const keptImageUrls = existingListingImages
+        .filter((img: any) => !removedExistingImageIds.includes(img.id))
+        .map((img: any) => img.image_url)
+
+      finalImages = [...keptImageUrls]
+
+      try {
+        // 2. Upload new images if any
+        if (images.length > 0) {
+          toast.updateToast(String(loadingToastId), { title: 'Enviando novas imagens...', message: `Carregando ${images.length} nova${images.length > 1 ? 's' : ''} imagem${images.length > 1 ? 's' : ''}` })
+          const uploadedImages = await uploadAdImages(id, images)
+          const newUrls = uploadedImages.map(img => img.url)
+          finalImages = [...finalImages, ...newUrls]
+        }
+
+        // 3. Delete removed images from storage (optional but good practice)
+        if (removedExistingImageIds.length > 0) {
+          await deleteSpecificAdImages(removedExistingImageIds)
+        }
+
+      } catch (error: any) {
+        toast.removeToast(String(loadingToastId))
+        toast.error('Erro no upload', 'Falha ao processar imagens. Tente novamente.')
+        console.error(error)
+        return
+      }
+
       const updateData = {
         category_id: data.category_id,
         title: data.title,
         description: data.description,
-        price: data.price,
+        price: parseCurrency(data.price),
         // Send separate fields for clarity, though price_type helps backend decide
-        price_per_day: data.priceType === 'daily' ? data.price : undefined,
-        price_per_weekend: data.price_per_weekend && data.price_per_weekend > 0 ? data.price_per_weekend : undefined,
+        price_per_day: data.priceType === 'daily' ? parseCurrency(data.price) : undefined,
+        price_per_weekend: data.priceType === 'weekend' ? parseCurrency(data.price) : undefined,
         price_type: data.priceType,
         state: data.state,
         city: data.city,
         neighborhood: data.neighborhood || undefined,
-        street: data.address, // Mapping address form field to street
+        street: data.address, // mapping address form field to street
         number: data.number,
         complement: data.complement || undefined,
         postal_code: data.postal_code || undefined,
@@ -539,10 +558,11 @@ export default function EditAd() {
           ...customAmenities,
           ...customFeatures,
           ...customServices
-        ]
+        ],
+        images: finalImages // Include the complete list of images
       }
 
-      loadingToastId = toast.loading('Atualizando anúncio...', 'Salvando suas alterações')
+      toast.updateToast(String(loadingToastId), { title: 'Salvando anúncio...', message: 'Finalizando atualizações' })
 
       const result = await updateAd(id, updateData)
 
@@ -553,27 +573,7 @@ export default function EditAd() {
         return
       }
 
-      // Handle image changes
-      try {
-        // Delete removed existing images
-        if (removedExistingImageIds.length > 0) {
-          toast.updateToast(String(loadingToastId), { title: 'Atualizando imagens...', message: 'Processando alterações de imagens' })
-          await deleteSpecificAdImages(removedExistingImageIds)
-        }
 
-        // Upload new images if any
-        if (images.length > 0) {
-          toast.updateToast(String(loadingToastId), { title: 'Enviando novas imagens...', message: `Carregando ${images.length} nova${images.length > 1 ? 's' : ''} imagem${images.length > 1 ? 's' : ''}` })
-          const uploadedImages = await uploadAdImages(id, images)
-          await saveImageRecords(id, uploadedImages)
-        }
-      } catch {
-        toast.removeToast(String(loadingToastId))
-        toast.warning('Anúncio atualizado com limitações', 'Anúncio atualizado com sucesso, mas houve erro no processamento das imagens.')
-        setError('Anúncio atualizado com sucesso, mas houve erro no processamento das imagens.')
-        setTimeout(() => navigate('/dashboard/meus-anuncios'), 3000)
-        return
-      }
 
       // Rastrear eventos de atualização
       try {
@@ -587,7 +587,7 @@ export default function EditAd() {
         }
         if (currentAd?.price !== data.price) {
           changedFields.push('preço')
-          await trackPriceUpdated(Number(currentAd?.price || 0), Number(data.price))
+          await trackPriceUpdated(Number(currentAd?.price || 0), parseCurrency(data.price))
         }
 
         // Detectar mudanças nos contatos
@@ -869,83 +869,40 @@ export default function EditAd() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Tipo de Cobrança Predominante</label>
-                < div className="flex gap-4 mb-4">
-                  <label className="flex items-center gap-2 cursor-pointer bg-white px-4 py-2 rounded-lg border border-gray-200 hover:border-primary-500 transition-colors">
-                    <input
-                      type="radio"
-                      className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300"
-                      checked={watch('priceType') === 'daily'}
-                      onChange={() => {
-                        setValue('priceType', 'daily')
-                        // Clear weekend price if switching to daily ONLY? No, keep it potential.
-                      }}
-                    />
-                    <span className="text-gray-700">Por Dia</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer bg-white px-4 py-2 rounded-lg border border-gray-200 hover:border-primary-500 transition-colors">
-                    <input
-                      type="radio"
-                      className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300"
-                      checked={watch('price_per_weekend') !== undefined && watch('price_per_weekend')! > 0}
-                      onChange={() => {
-                        // logic to enable weekend pricing
-                        setValue('priceType', 'daily') // It's still daily basis, just with a weekend option usually?
-                        // actually backend distinguishes 'weekend' price type?
-                        // Let's stick to the Settings.tsx logic: if weekend price > 0, it prioritizes weekend.
-                        if (!watch('price_per_weekend')) setValue('price_per_weekend', watch('price'))
-                      }}
-                    />
-                    <span className="text-gray-700">Com Preço de Final de Semana</span>
-                  </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Preço (R$) <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span className="text-gray-500">R$</span>
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="0,00"
+                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    {...register('price')}
+                    onChange={(e) => handleMaskedChange(e, utilMaskCurrency, 'price')}
+                  />
                 </div>
+                <p className="mt-1 text-xs text-gray-500">Informe o valor (Ex: 600 ou 600,00)</p>
+                {errors.price && (
+                  <p className="mt-1 text-sm text-red-600">{String(errors.price.message || '')}</p>
+                )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Preço por Dia (R$) <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <DollarSign className="h-4 w-4 text-gray-400" />
-                    </div>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      placeholder="0,00"
-                      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                      {...register('price', { valueAsNumber: true })}
-                    />
-                  </div>
-                  {errors.price && (
-                    <p className="mt-1 text-sm text-red-600">{errors.price.message}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Preço por Final de Semana (R$)
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <DollarSign className="h-4 w-4 text-gray-400" />
-                    </div>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      placeholder="0,00"
-                      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                      {...register('price_per_weekend', { valueAsNumber: true })}
-                    />
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">Opcional. Se preenchido, será exibido prioritariamente.</p>
-                </div>
-              </div>
+              <FormSelect
+                label="Período"
+                options={[
+                  { value: 'daily', label: 'Por dia' },
+                  { value: 'weekend', label: 'Por final de semana' }
+                ]}
+                error={errors.priceType}
+                required
+                placeholder="Selecione o período"
+                {...register('priceType')}
+              />
             </div>
 
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
