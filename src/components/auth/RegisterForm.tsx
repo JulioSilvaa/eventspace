@@ -7,6 +7,7 @@ import { FormField, FormButton } from '@/components/forms'
 import { useAuthStore } from '@/stores/authStore'
 import { useToast } from '@/contexts/ToastContext'
 import { DOCUMENT_VERSIONS } from '@/types'
+import { maskPhone } from '@/utils/masks'
 
 // Schema para dados de cadastro
 const registerSchema = z.object({
@@ -47,17 +48,11 @@ export default function RegisterForm() {
 
   const form = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
-    mode: 'onChange'
+    mode: 'onTouched'
   })
 
-  const formatPhone = (value: string) => {
-    const numbers = value.replace(/\D/g, '')
-    if (numbers.length <= 10) {
-      return numbers.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3')
-    } else {
-      return numbers.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3')
-    }
-  }
+  // Formata o telefone conforme o usuário digita
+  // function removed
 
   const handleSubmit = async (data: RegisterForm) => {
     if (isLoading) return
@@ -168,7 +163,7 @@ export default function RegisterForm() {
             required
             {...form.register('phone', {
               onChange: (e) => {
-                e.target.value = formatPhone(e.target.value)
+                e.target.value = maskPhone(e.target.value)
               }
             })}
           />

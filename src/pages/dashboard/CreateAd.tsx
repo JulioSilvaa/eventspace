@@ -26,7 +26,8 @@ import AmenitiesSelector from '@/components/forms/AmenitiesSelector'
 import { AMENITY_LABELS } from '@/constants/amenities'
 import { getBrazilianStates } from '@/lib/api/search'
 import Tooltip from '@/components/ui/Tooltip'
-import { maskPhone as utilMaskPhone, maskCEP as utilMaskCEP, unmask } from '@/utils/masks'
+import { maskPhone as utilMaskPhone, maskCEP as utilMaskCEP, maskMoneyFlexible } from '@/utils/masks'
+import { handleMaskedChange, parseCurrency } from '@/utils/formUtils'
 
 // Import apiClient for fetching categories
 import { apiClient } from '@/lib/api-client'
@@ -318,96 +319,7 @@ export default function CreateAd() {
   }, []) // Empty dependency array means this runs once on mount and cleanup runs only on unmount
 
 
-  // Refined currency mask for better typing experience
-  const maskCurrency = (value: string) => {
-    const cleanValue = value.replace(/\D/g, '')
-    if (!cleanValue) return ''
-    const numberValue = parseInt(cleanValue)
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-      minimumFractionDigits: 2
-    }).format(numberValue / 100)
-  }
-
-  // Generic handler to apply masks and preserve cursor
-  const handleMaskedChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    maskFn: (val: string) => string,
-    fieldName: keyof CreateListingData
-  ) => {
-    const input = e.target
-    const start = input.selectionStart || 0
-    const value = input.value
-    const previousValue = input.defaultValue || '' // Note: defaultValue might not always track previous state perfectly in controlled inputs without ref, using value diff approach
-
-    // Calculate how many non-digit characters are before the cursor
-    const digitPattern = /\d/
-    let digitsBeforeCursor = 0
-    for (let i = 0; i < start; i++) {
-      if (digitPattern.test(value[i])) {
-        digitsBeforeCursor++
-      }
-    }
-
-    const masked = maskFn(value)
-
-    // Explicitly update DOM value since we're overriding onChange in an uncontrolled-like setup
-    input.value = masked
-
-    setValue(fieldName, masked, { shouldValidate: true })
-
-    // Find new cursor position
-    let newCursorPos = 0
-    let digitsSeen = 0
-    for (let i = 0; i < masked.length; i++) {
-      if (digitPattern.test(masked[i])) {
-        digitsSeen++
-      }
-      if (digitsSeen >= digitsBeforeCursor) {
-        // If we found all our digits, looking for the next slot. 
-        // If the very next char is not a digit (separator), skip it?
-        // Simple heuristic: set cursor after the current digit position + potential separators
-        // But we need to handle "just deleted a digit".
-
-        // Let's rely on standard re-positioning:
-        newCursorPos = i + 1
-        break
-      }
-    }
-
-    // Correction for exact match boundaries (e.g. if mask added chars) is tough.
-    // Let's stick to the relative diff method but improved:
-
-    // Actually, the best user experience for phone masks is often just setting it to end if simplified, 
-    // but users hate that.
-    // Let's use the React scheduling trick but with better calculation.
-
-    const unmaskedLengthBefore = value.slice(0, start).replace(/\D/g, '').length
-
-    setTimeout(() => {
-      let newPos = 0
-      let tempDigits = 0
-      // Walk through masked string until we see the same number of digits
-      for (let i = 0; i < masked.length; i++) {
-        if (/\d/.test(masked[i])) {
-          tempDigits++
-        }
-        if (tempDigits === unmaskedLengthBefore) {
-          newPos = i + 1
-          break
-        }
-      }
-      // Improve edge case where cursor was before a separator which got removed?
-      // If we deleted a char, we might want to be at i not i+1?
-      // Let's stick to "cursor after the Nth digit" rule.
-
-      // Edge case: if we have 0 digits (deleted everything)
-      if (unmaskedLengthBefore === 0) newPos = 0;
-
-      input.setSelectionRange(newPos, newPos)
-    }, 0)
-  }
+  // function removed
 
   const nextStep = async () => {
     let fieldsToValidate: (keyof CreateListingData)[] = []
@@ -496,13 +408,7 @@ export default function CreateAd() {
         return phone.startsWith('+55') || digits.startsWith('55') ? phone : `+55 ${phone}`
       }
 
-      // Preço: converter de string formatada (R$ 1.234,56) para número (1234.56)
-      const parseCurrency = (value: any) => {
-        if (typeof value === 'number') return value
-        if (typeof value !== 'string') return 0
-        const cleanValue = value.replace(/[^\d,]/g, '').replace(',', '.')
-        return parseFloat(cleanValue) || 0
-      }
+      // parseCurrency function removed locally
 
       const finalPrice = parseCurrency(data.price)
 
@@ -755,7 +661,7 @@ export default function CreateAd() {
                 required
                 hint="CEP para facilitar a localização"
                 {...register('postal_code')}
-                onChange={(e) => handleMaskedChange(e, utilMaskCEP, 'postal_code')}
+                onChange={(e) => handleMaskedChange(e, utilMaskCEP, 'postal_code', setValue)}
               />
 
               <FormField
@@ -828,18 +734,19 @@ export default function CreateAd() {
                   Preço (R$) <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <DollarSign className="h-4 w-4 text-gray-400" />
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <span className="text-gray-500 font-medium">R$</span>
                   </div>
                   <input
                     key="price-input"
                     type="text"
-                    placeholder="R$ 0,00"
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all shadow-sm"
+                    placeholder="0,00"
+                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all shadow-sm"
                     {...register('price')}
-                    onChange={(e) => handleMaskedChange(e, maskCurrency, 'price')}
+                    onChange={(e) => handleMaskedChange(e, maskMoneyFlexible, 'price', setValue)}
                   />
                 </div>
+                <p className="mt-1 text-xs text-gray-500">Informe o valor (Ex: 600 ou 600,00)</p>
                 {errors.price && (
                   <p className="mt-1 text-sm text-red-600">{String(errors.price.message || '')}</p>
                 )}
@@ -916,7 +823,7 @@ export default function CreateAd() {
               error={errors.contactPhone}
               required
               {...register('contactPhone')}
-              onChange={(e) => handleMaskedChange(e, utilMaskPhone, 'contactPhone')}
+              onChange={(e) => handleMaskedChange(e, utilMaskPhone, 'contactPhone', setValue)}
             />
 
             <FormField
@@ -926,7 +833,7 @@ export default function CreateAd() {
               placeholder="(11) 99999-9999 (opcional)"
               error={errors.contactWhatsapp}
               {...register('contactWhatsapp')}
-              onChange={(e) => handleMaskedChange(e, utilMaskPhone, 'contactWhatsapp')}
+              onChange={(e) => handleMaskedChange(e, utilMaskPhone, 'contactWhatsapp', setValue)}
             />
 
             <FormField
@@ -936,7 +843,7 @@ export default function CreateAd() {
               placeholder="(11) 99999-9999 (opcional)"
               error={errors.contactWhatsappAlternative}
               {...register('contactWhatsappAlternative')}
-              onChange={(e) => handleMaskedChange(e, utilMaskPhone, 'contactWhatsappAlternative')}
+              onChange={(e) => handleMaskedChange(e, utilMaskPhone, 'contactWhatsappAlternative', setValue)}
             />
 
             <FormField
