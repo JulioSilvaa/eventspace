@@ -98,7 +98,7 @@ export default function Home() {
     { question: "Vocês cobram comissão dos aluguéis?", answer: "Não! Você negocia direto com o fornecedor e o valor acertado fica 100% com ele. Não cobramos nenhuma taxa sobre as locações." },
     { question: "Como funciona o pagamento dos aluguéis?", answer: "O pagamento é feito diretamente entre cliente e fornecedor. O EventSpace não processa pagamentos e não se envolve na transação financeira." },
     { question: "O EventSpace garante os pagamentos?", answer: "Somos um facilitador de conexões. A negociação, o pagamento e a prestação do serviço são de responsabilidade direta entre as partes." },
-    { question: "É gratuito para usar a plataforma?", answer: "Sim! Atualmente, a plataforma é 100% gratuita tanto para quem busca quanto para quem deseja anunciar seus espaços." },
+    { question: "É gratuito para usar a plataforma?", answer: "Para quem busca espaços, o uso é totalmente gratuito. Para proprietários, oferecemos planos flexíveis para anunciar seus espaços, garantindo visibilidade e contato direto com clientes, sempre com 0% de comissão sobre as locações." },
     { question: "Como posso anunciar meu espaço?", answer: "Basta clicar em 'Anunciar Agora', criar sua conta gratuitamente e cadastrar as fotos e informações do seu anúncio." },
     { question: "O EventSpace atua em todo o Brasil?", answer: "Sim! Nossa plataforma conecta fornecedores e clientes em todo o território nacional, facilitando encontrar serviços em qualquer região." }
   ]

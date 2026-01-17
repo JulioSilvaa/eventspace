@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { ShieldCheck } from 'lucide-react'
 
 export default function Footer() {
   return (
@@ -77,6 +78,10 @@ export default function Footer() {
               </p>
             </div>
             <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-6">
+              <span className="text-sm text-gray-400 font-medium whitespace-nowrap flex items-center gap-1">
+                <ShieldCheck className="w-4 h-4 text-green-500" />
+                Pagamento 100% Seguro
+              </span>
               <span className="text-sm text-success-400 font-medium whitespace-nowrap">
                 ✓ 100% do valor fica com você
               </span>
