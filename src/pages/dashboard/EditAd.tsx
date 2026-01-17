@@ -6,15 +6,13 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { useAdsStore } from '@/stores/adsStore'
 import { useEventTracking } from '@/hooks/useRealTimeMetrics'
-import { uploadAdImages, saveImageRecords, deleteSpecificAdImages } from '@/services/imageService'
+import { uploadAdImages, deleteSpecificAdImages } from '@/services/imageService'
 import { useToast } from '@/contexts/ToastContext'
 import {
   ArrowLeft,
   ArrowRight,
   CheckCircle,
   Building2,
-  Wrench,
-  DollarSign,
   Star,
   Loader2,
   AlertCircle
@@ -166,18 +164,7 @@ const STEPS = [
   { id: 7, title: 'Revisão', description: 'Confirmar alterações' }
 ]
 
-const EQUIPMENT_CATEGORIES = [
-  { name: 'Som e Áudio', id: 1 },
-  { name: 'Iluminação', id: 2 },
-  { name: 'Decoração', id: 3 },
-  { name: 'Mesa e Cadeira', id: 4 },
-  { name: 'Buffet e Catering', id: 5 },
-  { name: 'Fotografia e Filmagem', id: 6 },
-  { name: 'Entretenimento', id: 7 },
-  { name: 'Tendas e Coberturas', id: 8 },
-  { name: 'Limpeza', id: 9 },
-  { name: 'Segurança', id: 10 }
-]
+
 
 const SPACE_CATEGORIES = [
   { id: 1, name: 'Salão de Festas' },
@@ -188,11 +175,13 @@ const SPACE_CATEGORIES = [
   { id: 6, name: 'Fotografia' },
   { id: 7, name: 'Som e Iluminação' },
 ]
+import { maskPhone as utilMaskPhone, maskCurrency as utilMaskCurrency } from '@/utils/masks'
 
-import { maskPhone as utilMaskPhone, maskCEP as utilMaskCEP, maskMoneyFlexible, unmask } from '@/utils/masks'
-import { handleMaskedChange, parseCurrency } from '@/utils/formUtils'
-import { apiClient } from '@/lib/api-client'
-
+const parseCurrency = (value: string | number) => {
+  if (typeof value === 'number') return value
+  if (!value) return 0
+  return parseFloat(value.replace(/\./g, '').replace(',', '.').replace(/[^0-9.]/g, ''))
+}
 
 export default function EditAd() {
   const { id } = useParams<{ id: string }>()
@@ -200,7 +189,7 @@ export default function EditAd() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const navigate = useNavigate()
-  const { user, profile } = useAuth()
+  const { user } = useAuth()
   const { currentAd, fetchAdById, updateAd } = useAdsStore()
   const toast = useToast()
   const {
@@ -235,9 +224,6 @@ export default function EditAd() {
     mode: 'onChange'
   })
 
-  const watchedCategoryType = watch('categoryType')
-  const allValues = watch()
-
   useEffect(() => {
     getBrazilianStates().then(setBrazilianStates)
   }, [])
@@ -251,15 +237,6 @@ export default function EditAd() {
     const input = e.target
     const start = input.selectionStart || 0
     const value = input.value
-
-    // Calculate how many non-digit characters are before the cursor
-    const digitPattern = /\d/
-    let digitsBeforeCursor = 0
-    for (let i = 0; i < start; i++) {
-      if (digitPattern.test(value[i])) {
-        digitsBeforeCursor++
-      }
-    }
 
     const masked = maskFn(value)
 
@@ -906,7 +883,7 @@ export default function EditAd() {
                     placeholder="0,00"
                     className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     {...register('price')}
-                    onChange={(e) => handleMaskedChange(e, maskMoneyFlexible, 'price', setValue)}
+                    onChange={(e) => handleMaskedChange(e, utilMaskCurrency, 'price')}
                   />
                 </div>
                 <p className="mt-1 text-xs text-gray-500">Informe o valor (Ex: 600 ou 600,00)</p>
@@ -997,7 +974,7 @@ export default function EditAd() {
               required
               hint="Será usado para contato direto dos interessados"
               {...register('contactPhone')}
-              onChange={(e) => handleMaskedChange(e, utilMaskPhone, 'contactPhone', setValue)}
+              onChange={(e) => handleMaskedChange(e, utilMaskPhone, 'contactPhone')}
             />
 
             <FormField
@@ -1007,7 +984,7 @@ export default function EditAd() {
               error={errors.contactWhatsapp}
               hint="Número principal para mensagens WhatsApp"
               {...register('contactWhatsapp')}
-              onChange={(e) => handleMaskedChange(e, utilMaskPhone, 'contactWhatsapp', setValue)}
+              onChange={(e) => handleMaskedChange(e, utilMaskPhone, 'contactWhatsapp')}
             />
 
             <FormField
@@ -1017,7 +994,7 @@ export default function EditAd() {
               error={errors.contactWhatsappAlternative}
               hint="Número secundário para WhatsApp"
               {...register('contactWhatsappAlternative')}
-              onChange={(e) => handleMaskedChange(e, utilMaskPhone, 'contactWhatsappAlternative', setValue)}
+              onChange={(e) => handleMaskedChange(e, utilMaskPhone, 'contactWhatsappAlternative')}
             />
 
             <FormField
