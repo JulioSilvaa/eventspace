@@ -425,8 +425,18 @@ export default function CreateAd() {
       const formattedWhatsapp = processPhone(data.contactWhatsapp)
       const formattedWhatsappAlternative = processPhone(data.contactWhatsappAlternative)
 
-      // Extrair arquivos de imagem
-      const imageFiles = images.map(img => img.file)
+      // Extrair arquivos de imagem (priorizando versões otimizadas)
+      const imageFiles: File[] = images.map(img => {
+        // Se tiver versão otimizada 'large' (que agora é nosso padrão WebP), usa ela
+        if ((img as any).optimized?.large) {
+          const opt = (img as any).optimized.large
+          // Se for File, usa direto. Se for Blob, converte.
+          if (opt instanceof File) return opt
+          return new File([opt], `image_${img.id}.webp`, { type: 'image/webp' })
+        }
+        // Fallback para arquivo original
+        return img.file
+      })
 
       if (imageFiles.length === 0) {
         toast.error('Erro de validação', 'É necessário fornecer pelo menos uma imagem.')

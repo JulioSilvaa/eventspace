@@ -73,10 +73,14 @@ export async function uploadOptimizedAdImages(
   const files: File[] = []
 
   for (const { optimized } of optimizedImages) {
-    if (optimized.original) {
+    // Always use the optimized large version (WebP) as the main file
+    if (optimized.large) {
+      // Rename to ensure extension is correct if it was lost (though optimization service handles it)
+      const blob = optimized.large.slice(0, optimized.large.size, 'image/webp')
+      files.push(new File([blob], optimized.large.name, { type: 'image/webp' }))
+    } else if (optimized.original) {
+      // Fallback only if large is missing (should not happen with new logic)
       files.push(optimized.original)
-    } else if (optimized.large instanceof Blob) {
-      files.push(new File([optimized.large], 'image.webp', { type: 'image/webp' }))
     }
   }
 
