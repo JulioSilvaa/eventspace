@@ -200,15 +200,16 @@ export default function ImageUpload({
       )}
 
       {/* Image Preview Grid */}
+      {/* Image Preview Grid */}
       {(activeExistingImages.length > 0 || images.length > 0) && (
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
           {/* Existing Images */}
           {activeExistingImages
             .sort((a, b) => a.display_order - b.display_order)
             .map((image, index) => (
               <div
                 key={`existing-${image.id}`}
-                className="relative group bg-gray-100 rounded-lg overflow-hidden aspect-square"
+                className="relative group bg-gray-50 rounded-xl overflow-hidden aspect-square border border-gray-100 shadow-sm hover:shadow-md transition-all"
               >
                 <img
                   src={image.image_url}
@@ -216,32 +217,35 @@ export default function ImageUpload({
                   className="w-full h-full object-cover"
                 />
 
-                {/* Order Badge */}
-                <div className="absolute top-2 left-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded">
-                  {index + 1}
-                </div>
-
-                {/* Remove Button */}
+                {/* Remove Button - Top Right */}
                 {!disabled && (
                   <button
                     onClick={() => removeExistingImage(image.id)}
-                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                    className="absolute top-1.5 right-1.5 bg-white/90 text-red-500 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-all hover:bg-red-50 hover:scale-110 shadow-sm backdrop-blur-sm"
                   >
-                    <X className="w-3 h-3" />
+                    <X className="w-3.5 h-3.5" />
                   </button>
                 )}
 
-                {/* Main Image Badge */}
+                {/* Badges Container - Bottom */}
+                <div className="absolute inset-x-0 bottom-0 p-1.5 flex justify-between items-end bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                  {/* Order Badge */}
+                  <span className="text-[10px] font-medium text-white bg-black/40 px-1.5 py-0.5 rounded backdrop-blur-sm">
+                    #{index + 1}
+                  </span>
+
+                  {/* Status Badge */}
+                  <span className="text-[10px] font-bold text-emerald-300 bg-emerald-900/40 px-1.5 py-0.5 rounded backdrop-blur-sm border border-emerald-500/30">
+                    Salva
+                  </span>
+                </div>
+
+                {/* Main Image Star - Always Visible */}
                 {index === 0 && activeExistingImages.length > 0 && images.length === 0 && (
-                  <div className="absolute bottom-2 left-2 bg-primary-500 text-white text-xs px-2 py-1 rounded">
-                    Principal
+                  <div className="absolute top-1.5 left-1.5 bg-primary-500 text-white p-1 rounded-lg shadow-sm">
+                    <div className="text-[10px] font-bold px-1">CAPA</div>
                   </div>
                 )}
-
-                {/* Existing Badge */}
-                <div className="absolute bottom-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded">
-                  Atual
-                </div>
               </div>
             ))}
 
@@ -249,7 +253,7 @@ export default function ImageUpload({
           {images.map((image, index) => (
             <div
               key={`new-${image.id}`}
-              className="relative group bg-gray-100 rounded-lg overflow-hidden aspect-square"
+              className="relative group bg-gray-50 rounded-xl overflow-hidden aspect-square border border-gray-100 shadow-sm hover:shadow-md transition-all"
             >
               <img
                 src={image.preview}
@@ -257,44 +261,41 @@ export default function ImageUpload({
                 className="w-full h-full object-cover"
               />
 
-              {/* Order Badge */}
-              <div className="absolute top-2 left-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded">
-                {activeExistingImages.length + index + 1}
-              </div>
-
-              {/* Remove Button */}
+              {/* Remove Button - Top Right */}
               {!disabled && (
                 <button
                   onClick={() => removeImage(image.id)}
-                  className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                  className="absolute top-1.5 right-1.5 bg-white/90 text-red-500 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-all hover:bg-red-50 hover:scale-110 shadow-sm backdrop-blur-sm"
                 >
-                  <X className="w-3 h-3" />
+                  <X className="w-3.5 h-3.5" />
                 </button>
               )}
 
+              {/* Status Badge */}
+              <div className="absolute inset-x-0 bottom-0 p-1.5 flex justify-end items-end bg-gradient-to-t from-black/50 to-transparent">
+                <span className="text-[10px] font-bold text-blue-300 bg-blue-900/40 px-1.5 py-0.5 rounded backdrop-blur-sm border border-blue-500/30">
+                  Nova
+                </span>
+              </div>
+
               {/* Main Image Badge */}
               {index === 0 && activeExistingImages.length === 0 && (
-                <div className="absolute bottom-2 left-2 bg-primary-500 text-white text-xs px-2 py-1 rounded">
-                  Principal
+                <div className="absolute top-1.5 left-1.5 bg-primary-500 text-white p-1 rounded-lg shadow-sm">
+                  <div className="text-[10px] font-bold px-1">CAPA</div>
                 </div>
               )}
 
-              {/* New Badge */}
-              <div className="absolute bottom-2 right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded">
-                Nova
-              </div>
-
               {/* Uploading State */}
               {image.uploading && (
-                <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                  <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-[1px]">
+                  <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 </div>
               )}
 
               {/* Error State */}
               {image.error && (
-                <div className="absolute inset-0 bg-red-500 bg-opacity-80 flex items-center justify-center">
-                  <AlertCircle className="w-6 h-6 text-white" />
+                <div className="absolute inset-0 bg-red-500/80 flex items-center justify-center backdrop-blur-[1px]">
+                  <AlertCircle className="w-8 h-8 text-white" />
                 </div>
               )}
             </div>
