@@ -9,25 +9,25 @@ export interface OptimizedImageVersions {
 
 export interface CompressionOptions {
   thumbnail: {
-    maxSizeMB: 0.05 // 50KB
+    maxSizeMB: 0.03 // 30KB
     maxWidthOrHeight: 200
     useWebWorker: true
     fileType: 'webp'
     quality: 0.85
   }
   medium: {
-    maxSizeMB: 0.5 // 500KB - Increased from 80KB for better preview quality
-    maxWidthOrHeight: 800 // Increased from 600
+    maxSizeMB: 0.15 // 150KB - Balanced for previews
+    maxWidthOrHeight: 800
     useWebWorker: true
     fileType: 'webp'
-    quality: 0.85 // Increased from 0.75
+    quality: 0.80
   }
   large: {
-    maxSizeMB: 1.5 // 1.5MB - Increased from 100KB for high quality details
-    maxWidthOrHeight: 1920 // Full HD+
+    maxSizeMB: 0.4 // 400KB - Balanced for full screen (Sharp enough without being huge)
+    maxWidthOrHeight: 1600 // Full HDish
     useWebWorker: true
     fileType: 'webp'
-    quality: 0.90 // Increased from 0.70
+    quality: 0.85
   }
 }
 
@@ -50,25 +50,25 @@ export async function optimizeImage(
 
   const options: CompressionOptions = {
     thumbnail: {
-      maxSizeMB: 0.05,
+      maxSizeMB: 0.03,
       maxWidthOrHeight: 200,
       useWebWorker: true,
       fileType: 'webp',
       quality: 0.85
     },
     medium: {
-      maxSizeMB: 0.5,
+      maxSizeMB: 0.15,
       maxWidthOrHeight: 800,
       useWebWorker: true,
       fileType: 'webp',
-      quality: 0.85
+      quality: 0.80
     },
     large: {
-      maxSizeMB: 1.5,
-      maxWidthOrHeight: 1920,
+      maxSizeMB: 0.4,
+      maxWidthOrHeight: 1600,
       useWebWorker: true,
       fileType: 'webp',
-      quality: 0.90
+      quality: 0.85
     }
   }
 
@@ -116,9 +116,9 @@ export function estimateOptimizedSize(originalSize: number): {
   savingsPercentage: number
 } {
   // Estimativa baseada nas configurações de compressão
-  const estimatedThumb = Math.min(50 * 1024, originalSize * 0.1)
-  const estimatedMedium = Math.min(500 * 1024, originalSize * 0.6)
-  const estimatedLarge = Math.min(1500 * 1024, originalSize * 0.9)
+  const estimatedThumb = Math.min(30 * 1024, originalSize * 0.1)
+  const estimatedMedium = Math.min(150 * 1024, originalSize * 0.4)
+  const estimatedLarge = Math.min(400 * 1024, originalSize * 0.7)
 
   const estimated = estimatedThumb + estimatedMedium + estimatedLarge
   const savings = originalSize - estimated
