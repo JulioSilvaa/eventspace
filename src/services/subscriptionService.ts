@@ -234,9 +234,9 @@ class SubscriptionService {
     }
   }
 
-  async getCurrentPricing(): Promise<{ plan_type: string; price: number; spots_remaining: number; message: string } | null> {
+  async getCurrentPricing(): Promise<{ plan_type: string; price: number; spots_remaining: number; total_spots?: number; message: string } | null> {
     try {
-      const { data, error } = await apiClient.get<{ plan_type: string; price: number; spots_remaining: number; message: string }>(
+      const { data, error } = await apiClient.get<{ plan_type: string; price: number; spots_remaining: number; total_spots?: number; message: string }>(
         '/api/subscription/current-pricing'
       )
 
