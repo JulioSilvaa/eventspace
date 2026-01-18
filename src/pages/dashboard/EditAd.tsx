@@ -509,9 +509,29 @@ export default function EditAd() {
       try {
         // 2. Upload new images if any
         if (images.length > 0) {
-          toast.updateToast(String(loadingToastId), { title: 'Enviando novas imagens...', message: `Carregando ${images.length} nova${images.length > 1 ? 's' : ''} imagem${images.length > 1 ? 's' : ''}` })
-          const uploadedImages = await uploadAdImages(id, images)
-          const newUrls = uploadedImages.map(img => img.url)
+          toast.updateToast(String(loadingToastId), { title: 'Enviando novas imagens...', message: `Otimizando e enviando ${images.length} foto${images.length > 1 ? 's' : ''}` })
+
+          // Prepare images with their optimized versions
+          // The ImageUpload component attaches 'optimized' property to the image objects
+          // We need to pass this to our new service
+          const imagesToUpload = images.map((img: any, index) => ({
+            id: img.id,
+            optimized: img.optimized, // This comes from ImageUpload component
+            display_order: index
+          })).filter(img => img.optimized) // Ensure we have optimization data
+
+          if (imagesToUpload.length !== images.length) {
+            console.warn('Algumas imagens não tinham versão otimizada e foram ignoradas ou isso indica um erro de estado.')
+            // Fallback for safety or retry? For now assuming ImageUpload always populates this before submit if we wait/check.
+          }
+
+          // Import dynamically to avoid circular deps if any, or just use the imported one
+          const { uploadOptimizedAdImages } = await import('@/services/imageService')
+          const uploadedImages = await uploadOptimizedAdImages(id, imagesToUpload)
+
+          // The result from uploadOptimizedAdImages maps to { thumbnail_url, medium_url, large_url ... }
+          // We want the 'large_url' (or medium) to be the main 'image_url' in our list
+          const newUrls = uploadedImages.map(img => img.large_url || img.medium_url)
           finalImages = [...finalImages, ...newUrls]
         }
 
