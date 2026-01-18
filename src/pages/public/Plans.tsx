@@ -10,6 +10,7 @@ export default function Plans() {
     plan_type: string
     price: number
     spots_remaining: number
+    total_spots?: number
     message: string
   } | null>(null)
   const [loading, setLoading] = useState(true)
@@ -118,7 +119,7 @@ export default function Plans() {
                       <h3 className="text-lg sm:text-xl font-black text-gray-900 uppercase tracking-widest mb-2">
                         Plano Fundador
                       </h3>
-                      <p className="text-sm text-yellow-700 font-medium mb-6">Preço especial para os primeiros 20</p>
+                      <p className="text-sm text-yellow-700 font-medium mb-6">Preço especial para os primeiros {pricing?.total_spots || 20}</p>
 
                       <div className="flex justify-center items-baseline mb-2 relative">
                         {/* Original Price Strike */}
