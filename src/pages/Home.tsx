@@ -7,6 +7,8 @@ import { ChevronRight, MapPin, Star, Check, ChevronLeft, Building2, Search, Part
 import { useAdsStore } from '@/stores/adsStore'
 import { AdCard } from '@/components/ads'
 import { AMENITY_LABELS } from '@/constants/amenities'
+import { LazyLoadImage } from 'react-lazy-load-image-component'
+import 'react-lazy-load-image-component/src/effects/blur.css'
 
 export default function Home() {
   const [currentSlide, setCurrentSlide] = useState(0)
@@ -170,6 +172,7 @@ export default function Home() {
                   src="https://imgs.search.brave.com/xfD4OZFt1qNm-HFxzJP5kH68KAbPbkXq4xgxldAYQG4/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly93d3cu/Y2VudHJhbGNoYWNh/cmFzLmNvbS5ici9p/bWcvY2FjaGUvOTAw/eDU3NC8xMDAvYXV0/by8yODkxMDBkNzBj/MDA2ZDQzNjk3ZjI0/N2E0NjRiYzA5MS5q/cGc"
                   alt="Espaço com piscina e área verde"
                   className="w-full h-64 object-cover rounded-xl mb-4"
+                  fetchPriority="high"
                 />
                 <div className="flex items-center justify-between">
                   <div className="flex items-center text-green-600 text-sm">
@@ -259,11 +262,12 @@ export default function Home() {
                         <div className="bg-white rounded-2xl shadow-xl overflow-hidden mx-2">
                           <div className="md:flex">
                             <div className="md:w-5/12 relative h-56 md:h-72">
-                              <img
+                              <LazyLoadImage
                                 src={ad.listing_images?.[0]?.image_url || 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=800&q=80'}
                                 alt={ad.title}
                                 className="w-full h-full object-cover"
-                                loading="lazy"
+                                effect="blur"
+                                wrapperClassName="w-full h-full"
                               />
                             </div>
                             <div className="md:w-7/12 p-4 md:p-6 flex flex-col justify-center">
@@ -464,10 +468,12 @@ export default function Home() {
                   <div className="flex-1 w-full">
                     <div className="relative group">
                       <div className={`absolute inset-0 bg-blue-600 rounded-3xl transform opacity-10 transition-transform duration-300 ${index % 2 === 0 ? 'rotate-3 group-hover:rotate-6' : '-rotate-3 group-hover:-rotate-6'}`}></div>
-                      <img
+                      <LazyLoadImage
                         src={step.image}
                         alt={step.title}
                         className="relative w-full h-64 md:h-[400px] object-cover rounded-3xl shadow-2xl transform transition-transform duration-300 group-hover:-translate-y-2"
+                        effect="blur"
+                        wrapperClassName="w-full"
                       />
                     </div>
                   </div>
@@ -516,10 +522,13 @@ export default function Home() {
                 <p className="text-slate-300 mb-6 italic text-lg opacity-90">"{testimonial.comment}"</p>
 
                 <div className="flex items-center pt-4 border-t border-slate-700">
-                  <img
+                  <LazyLoadImage
                     src={testimonial.avatar}
                     alt={testimonial.name}
                     className="w-12 h-12 rounded-full mr-4 ring-2 ring-blue-500"
+                    width={48}
+                    height={48}
+                    effect="blur"
                   />
                   <div>
                     <div className="font-bold text-white">{testimonial.name}</div>

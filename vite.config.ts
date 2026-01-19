@@ -118,7 +118,7 @@ export default defineConfig({
           forms: ['react-hook-form', '@hookform/resolvers', 'zod'],
           maps: ['leaflet', 'react-leaflet'],
           charts: ['recharts'],
-          stripe: ['@stripe/stripe-js', 'stripe'],
+          // stripe chunk removed
         },
       },
     },

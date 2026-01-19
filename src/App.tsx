@@ -96,6 +96,8 @@ function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
 import { AdminAuthProvider } from './contexts/admin/AdminAuthContext'
 import ScrollToTop from './components/ScrollToTop'
 
+import { Analytics as VercelAnalytics } from '@vercel/analytics/react'
+
 function App() {
   const [showSplash, setShowSplash] = useState(true)
 
@@ -106,6 +108,7 @@ function App() {
   return (
     <ToastProvider>
       <AdminAuthProvider>
+        <VercelAnalytics />
 
         <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <ScrollToTop />
