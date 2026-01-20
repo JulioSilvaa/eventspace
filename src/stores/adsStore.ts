@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { Ad, SearchFilters } from '@/types'
+import { Sponsor } from '@/types/sponsor'
 import { apiClient } from '@/lib/api-client'
 
 interface SpaceImage {
@@ -174,6 +175,9 @@ interface AdsState {
   }
   adBlockerDetected: boolean
 
+  sponsors: Sponsor[]
+  fetchSponsors: (location?: string) => Promise<void>
+
   // Actions
   fetchAds: (filters?: SearchFilters, page?: number) => Promise<void>
   fetchFeaturedAds: (limit?: number) => Promise<void>
@@ -198,6 +202,7 @@ export const useAdsStore = create<AdsState>((set, get) => ({
   featuredAds: [],
   popularSpaces: [],
   popularEquipment: [],
+  sponsors: [],
   isLoading: false,
   searchFilters: {},
   pagination: {
@@ -212,6 +217,11 @@ export const useAdsStore = create<AdsState>((set, get) => ({
     popularEquipment: null,
   },
   adBlockerDetected: false,
+
+  fetchSponsors: async (location) => {
+    const { data, error } = await apiClient.get<Sponsor[]>('/api/sponsors', { location })
+    if (data) set({ sponsors: data })
+  },
 
   fetchAds: async (filters = {}, page = 1) => {
     set({ isLoading: true })

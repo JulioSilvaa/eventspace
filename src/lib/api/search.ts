@@ -193,24 +193,14 @@ interface CategoryResponse {
 
 export async function getCategories(type?: 'space' | 'advertiser') {
   try {
-    // TODO: Replace with API call when backend endpoint is ready
-    // For now, returning hardcoded categories
-    const staticCategories: CategoryResponse[] = [
-      { id: 1, name: 'Salão de Festas', type: 'space', slug: 'salao-de-festas' },
-      { id: 2, name: 'Chácara', type: 'space', slug: 'chacara' },
-      { id: 3, name: 'Área de Lazer', type: 'space', slug: 'area-de-lazer' },
-      { id: 4, name: 'Buffet', type: 'advertiser', slug: 'buffet' },
-      { id: 5, name: 'Decoração', type: 'advertiser', slug: 'decoracao' },
-      { id: 6, name: 'Fotografia', type: 'advertiser', slug: 'fotografia' },
-      { id: 7, name: 'Som e Iluminação', type: 'advertiser', slug: 'som-e-iluminacao' },
-    ]
+    const { data, error } = await apiClient.get<CategoryResponse[]>('/api/categories', { type })
 
-    // Filter by type if provided
-    if (type) {
-      return staticCategories.filter(cat => cat.type === type)
+    if (error) {
+      console.error('Erro ao buscar categorias:', error)
+      return []
     }
 
-    return staticCategories
+    return data || []
   } catch (error) {
     console.error('Erro ao buscar categorias:', error)
     return []

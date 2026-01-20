@@ -10,6 +10,8 @@ interface SearchFiltersProps {
   onUpdateFilters: (filters: Partial<SearchFilters>) => void
   onClearFilters: () => void
   loading?: boolean
+  className?: string
+  variant?: 'default' | 'sidebar'
 }
 
 export default function SearchFiltersComponent({
@@ -18,15 +20,25 @@ export default function SearchFiltersComponent({
   onUpdateFilter,
   onUpdateFilters,
   onClearFilters,
-  loading = false
+  loading = false,
+  className = '',
+  variant = 'default'
 }: SearchFiltersProps) {
-  const [showAdvanced, setShowAdvanced] = useState(false)
+  const [showAdvanced, setShowAdvanced] = useState(variant === 'sidebar')
   const [searchTerm, setSearchTerm] = useState(filters.query || '')
   const [brazilianStates, setBrazilianStates] = useState<Array<{ code: string, name: string, region: string }>>([])
 
   useEffect(() => {
     getBrazilianStates().then(setBrazilianStates)
   }, [])
+
+  useEffect(() => {
+    setSearchTerm(filters.query || '')
+  }, [filters.query])
+
+  useEffect(() => {
+    if (variant === 'sidebar') setShowAdvanced(true)
+  }, [variant])
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -49,8 +61,167 @@ export default function SearchFiltersComponent({
       ? ['Área de Lazer', 'Chácara', 'Salão']
       : ['DJ', 'Fotógrafo', 'Buffet', 'Decoração', 'Animação', 'Bartender']
 
+  if (variant === 'sidebar') {
+    return (
+      <div className={`space-y-6 ${className}`}>
+        {/* Search Input */}
+        <form onSubmit={handleSearch}>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Buscar..."
+              className="w-full pl-9 pr-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            />
+          </div>
+        </form>
+
+        {/* Filters Stack */}
+        <div className="space-y-4">
+
+          {/* Categoria */}
+          <div>
+            <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">
+              Categoria
+            </label>
+            <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+              <div className="flex items-center">
+                <input
+                  type="radio"
+                  id="cat-all"
+                  name="category"
+                  checked={!filters.category_id}
+                  onChange={() => onUpdateFilter('category_id', undefined)}
+                  className="w-4 h-4 text-primary-600 border-gray-300 focus:ring-primary-500"
+                />
+                <label htmlFor="cat-all" className="ml-2 text-sm text-gray-600 cursor-pointer">Todas</label>
+              </div>
+              {categories.map(category => (
+                <div key={category.id} className="flex items-center">
+                  <input
+                    type="radio"
+                    id={`cat-${category.id}`}
+                    name="category"
+                    checked={filters.category_id === category.id}
+                    onChange={() => onUpdateFilter('category_id', category.id)}
+                    className="w-4 h-4 text-primary-600 border-gray-300 focus:ring-primary-500"
+                  />
+                  <label htmlFor={`cat-${category.id}`} className="ml-2 text-sm text-gray-600 cursor-pointer">{category.name}</label>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="h-px bg-gray-100"></div>
+
+          {/* Localização */}
+          <div>
+            <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">
+              Localização
+            </label>
+            <div className="space-y-3">
+              <select
+                value={filters.state || ''}
+                onChange={(e) => onUpdateFilter('state', e.target.value || undefined)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-primary-500 focus:border-primary-500"
+              >
+                <option value="">Estado</option>
+                {brazilianStates.map(state => (
+                  <option key={state.code} value={state.code}>{state.name}</option>
+                ))}
+              </select>
+              <input
+                type="text"
+                value={filters.city || ''}
+                onChange={(e) => onUpdateFilter('city', e.target.value || undefined)}
+                placeholder="Cidade"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-primary-500 focus:border-primary-500"
+              />
+              <input
+                type="text"
+                value={filters.neighborhood || ''}
+                onChange={(e) => onUpdateFilter('neighborhood', e.target.value || undefined)}
+                placeholder="Bairro"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-primary-500 focus:border-primary-500"
+              />
+            </div>
+          </div>
+
+          <div className="h-px bg-gray-100"></div>
+
+          {/* Preço */}
+          <div>
+            <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">
+              Faixa de Preço
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              <input
+                type="number"
+                value={filters.minPrice || ''}
+                onChange={(e) => onUpdateFilter('minPrice', e.target.value ? Number(e.target.value) : undefined)}
+                placeholder="Mín"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-primary-500 focus:border-primary-500"
+              />
+              <input
+                type="number"
+                value={filters.maxPrice || ''}
+                onChange={(e) => onUpdateFilter('maxPrice', e.target.value ? Number(e.target.value) : undefined)}
+                placeholder="Máx"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-primary-500 focus:border-primary-500"
+              />
+            </div>
+          </div>
+
+          <div className="h-px bg-gray-100"></div>
+
+          {/* Ordenação */}
+          <div>
+            <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">
+              Ordenar por
+            </label>
+            <select
+              value={`${filters.sortBy || 'created_at'}_${filters.sortOrder || 'desc'}`}
+              onChange={(e) => {
+                const [sortBy, sortOrder] = e.target.value.split('_')
+                onUpdateFilters({ sortBy: sortBy as 'price' | 'rating' | 'created_at', sortOrder: sortOrder as 'asc' | 'desc' })
+              }}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-primary-500 focus:border-primary-500"
+            >
+              <option value="created_at_desc">Mais recentes</option>
+              <option value="created_at_asc">Mais antigos</option>
+              <option value="price_asc">Menor preço</option>
+              <option value="price_desc">Maior preço</option>
+              <option value="rating_desc">Mais populares</option>
+            </select>
+          </div>
+
+          {/* Actions */}
+          <div className="pt-2 flex flex-col gap-2">
+            <button
+              onClick={(e) => handleSearch(e)}
+              className="w-full bg-primary-600 text-white rounded-lg py-2 text-sm font-medium hover:bg-primary-700 transition-colors"
+            >
+              Aplicar Filtros
+            </button>
+            {activeFiltersCount > 0 && (
+              <button
+                onClick={onClearFilters}
+                className="w-full bg-white border border-gray-300 text-gray-700 rounded-lg py-2 text-sm font-medium hover:bg-gray-50 transition-colors"
+              >
+                Limpar
+              </button>
+            )}
+          </div>
+
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="max-w-4xl mx-auto mb-8">
+    <div className={`max-w-4xl mx-auto mb-8 ${className}`}>
       {/* Busca Principal */}
       <form onSubmit={handleSearch} className="mb-6 relative z-10">
         <div className="flex gap-2 shadow-lg rounded-2xl p-2 bg-white border border-gray-100 focus-within:ring-4 focus-within:ring-primary-100 transition-all">

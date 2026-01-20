@@ -13,6 +13,7 @@ const Spaces = lazy(() => import('./pages/public/Spaces'))
 const Plans = lazy(() => import('./pages/public/Plans'))
 const AdDetails = lazy(() => import('./pages/AdDetails'))
 const PaymentSuccess = lazy(() => import('./pages/public/PaymentSuccess'))
+const Advertise = lazy(() => import('./pages/Advertise'))
 
 // Auth pages
 const Login = lazy(() => import('./pages/auth/Login'))
@@ -125,6 +126,7 @@ function App() {
               <Route path="/anunciantes" element={<Anunciantes />} />
               <Route path="/espacos" element={<Spaces />} />
               <Route path="/planos" element={<Plans />} />
+              <Route path="/anuncie" element={<Advertise />} />
               <Route path="/anuncio/:id" element={<AdDetails />} />
               <Route path="/equipamentos/:id" element={<AdDetails />} />
               <Route path="/anunciantes/:id" element={<AdDetails />} />
