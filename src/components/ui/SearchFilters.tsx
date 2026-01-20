@@ -222,6 +222,28 @@ export default function SearchFiltersComponent({
 
   return (
     <div className={`max-w-4xl mx-auto mb-8 ${className}`}>
+      {/* Type Tabs */}
+      <div className="flex justify-center mb-6 z-10 relative">
+        <div className="bg-white p-1 rounded-full shadow-sm border border-gray-100 inline-flex">
+          {[
+            { id: 'space', label: 'Espaços' },
+            { id: 'service', label: 'Serviços' },
+            { id: 'equipment', label: 'Equipamentos' }
+          ].map((type) => (
+            <button
+              key={type.id}
+              onClick={() => onUpdateFilter('type', filters.type === type.id ? undefined : type.id)}
+              className={`px-6 py-2 rounded-full text-sm font-semibold transition-all ${filters.type === type.id
+                  ? 'bg-primary-600 text-white shadow-md'
+                  : 'text-gray-600 hover:bg-gray-50'
+                }`}
+            >
+              {type.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Busca Principal */}
       <form onSubmit={handleSearch} className="mb-6 relative z-10">
         <div className="flex gap-2 shadow-lg rounded-2xl p-2 bg-white border border-gray-100 focus-within:ring-4 focus-within:ring-primary-100 transition-all">

@@ -13,7 +13,8 @@ const Spaces = lazy(() => import('./pages/public/Spaces'))
 const Plans = lazy(() => import('./pages/public/Plans'))
 const AdDetails = lazy(() => import('./pages/AdDetails'))
 const PaymentSuccess = lazy(() => import('./pages/public/PaymentSuccess'))
-const Advertise = lazy(() => import('./pages/Advertise'))
+const Advertise = lazy(() => import('./pages/public/BecomeSponsor'))
+import SponsorCheckout from './pages/public/SponsorCheckout'
 
 // Auth pages
 const Login = lazy(() => import('./pages/auth/Login'))
@@ -137,6 +138,11 @@ function App() {
               <Route path="/termos" element={<TermsOfService />} />
               <Route path="/privacidade" element={<PrivacyPolicy />} />
               <Route path="/payment/success" element={<PaymentSuccess />} />
+              <Route path="/checkout/sponsor" element={
+                <SimpleProtectedRoute>
+                  <SponsorCheckout />
+                </SimpleProtectedRoute>
+              } />
 
               {/* Auth routes - only accessible when not logged in */}
               <Route path="/login" element={

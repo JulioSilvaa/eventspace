@@ -221,7 +221,7 @@ export default function SearchResults({
                 </p>
 
                 {/* Conforto / Amenities */}
-                {result.comfort && result.comfort.length > 0 && (
+                {result.category_type === 'space' && result.comfort && result.comfort.length > 0 && (
                   <div className="flex flex-wrap gap-2 mb-4">
                     {result.comfort.slice(0, 3).map((item, i) => (
                       <ComfortIcon key={i} name={item} />
