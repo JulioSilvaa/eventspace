@@ -262,7 +262,7 @@ export default function Home() {
                   >
                     {displayedFeaturedAds.slice(0, 4).map((ad) => (
                       <div key={ad.id} className="w-full flex-shrink-0 px-2">
-                        <div className="relative h-[250px] md:h-[350px] rounded-3xl overflow-hidden shadow-2xl group cursor-pointer">
+                        <div className="relative h-[300px] md:h-[400px] rounded-3xl overflow-hidden shadow-2xl group cursor-pointer">
 
                           {/* Full Background Image */}
                           <div className="absolute inset-0">
@@ -278,7 +278,7 @@ export default function Home() {
                           </div>
 
                           {/* Content Overlay */}
-                          <div className="absolute bottom-0 left-0 right-0 p-6 md:px-20 md:py-10 text-white z-10 flex flex-col justify-end h-full">
+                          <div className="absolute bottom-0 left-0 right-0 p-4 md:px-20 md:py-10 text-white z-10 flex flex-col justify-end h-full">
 
                             {/* Top Badges */}
                             <div className="absolute top-6 left-6 flex gap-2">
@@ -296,7 +296,7 @@ export default function Home() {
 
                             {/* Main Info */}
                             <div className="transform transition-transform duration-300 group-hover:-translate-y-2">
-                              <h3 className="text-2xl md:text-4xl font-bold mb-3 leading-tight text-white shadow-sm">
+                              <h3 className="text-lg md:text-4xl font-bold mb-2 md:mb-3 leading-tight text-white shadow-sm">
                                 {ad.title}
                               </h3>
 
@@ -419,7 +419,7 @@ export default function Home() {
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 min-[375px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
               {popularSpaces.slice(0, 8).map((space) => (
                 <AdCard
                   key={space.id}
@@ -485,7 +485,7 @@ export default function Home() {
               <Link
                 key={index}
                 to={category.link}
-                className="group relative h-[400px] rounded-3xl overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-500"
+                className="group relative h-[200px] md:h-[400px] rounded-3xl overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-500"
               >
                 <div className="absolute inset-0">
                   <LazyLoadImage
@@ -498,8 +498,8 @@ export default function Home() {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
                 </div>
 
-                <div className="absolute bottom-0 left-0 right-0 p-8 text-white transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-                  <h3 className="text-2xl font-bold mb-2">{category.title}</h3>
+                <div className="absolute bottom-0 left-0 right-0 p-4 md:p-8 text-white transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+                  <h3 className="text-lg md:text-2xl font-bold mb-1 md:mb-2">{category.title}</h3>
                   <p className="text-gray-200 text-sm mb-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100">
                     {category.desc}
                   </p>
