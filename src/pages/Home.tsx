@@ -446,8 +446,75 @@ export default function Home() {
       </section>
 
 
+
+      {/* Services Categories Section */}
+      <section className="py-24 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Complete seu Evento</h2>
+            <p className="text-xl text-gray-600">Encotre tudo para sua festa em um só lugar</p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              {
+                title: 'Mesas e Cadeiras',
+                image: 'https://cdn0.casamentos.com.br/vendor/1623/3_2/960/jpg/alugar-cadeira-de-ferro-em-moma_13_191623.jpeg',
+                desc: 'Mobiliário para sua festa',
+                link: '/anunciantes?category_id=14'
+              },
+              {
+                title: 'Brinquedos',
+                image: 'https://d1p6nzzdute2g.cloudfront.net/lojas/loja-885/d467582e-c6ce-480d-a728-a4a5de6d5f3e',
+                desc: 'Infláveis e diversão',
+                link: '/anunciantes?category_id=15'
+              },
+              {
+                title: 'Buffet e Comida',
+                image: 'https://eventosplus.com.br/wp-content/uploads/2020/08/Rechaud-2.jpg',
+                desc: 'Salgadinhos, bolos e mais',
+                link: '/anunciantes?category_id=8'
+              },
+              {
+                title: 'DJ e Música',
+                image: 'https://www.jasound.com.br/dj/imagens/03.jpg',
+                desc: 'Som e iluminação',
+                link: '/anunciantes?category_id=10'
+              }
+            ].map((category, index) => (
+              <Link
+                key={index}
+                to={category.link}
+                className="group relative h-[400px] rounded-3xl overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-500"
+              >
+                <div className="absolute inset-0">
+                  <LazyLoadImage
+                    src={category.image}
+                    alt={category.title}
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    effect="blur"
+                    wrapperClassName="w-full h-full"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
+                </div>
+
+                <div className="absolute bottom-0 left-0 right-0 p-8 text-white transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+                  <h3 className="text-2xl font-bold mb-2">{category.title}</h3>
+                  <p className="text-gray-200 text-sm mb-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100">
+                    {category.desc}
+                  </p>
+                  <span className="inline-flex items-center text-sm font-semibold text-blue-300 group-hover:text-white transition-colors">
+                    Ver opções <ChevronRight className="w-4 h-4 ml-1" />
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* How It Works Section */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Como funciona?</h2>
