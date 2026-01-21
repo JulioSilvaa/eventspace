@@ -408,6 +408,7 @@ export const useAdsStore = create<AdsState>((set, get) => ({
     const spaceData: any = {
       title: adData.title,
       description: adData.description,
+      type: adData.type, // Ensure type is passed (SPACE, SERVICE, EQUIPMENT)
 
       // Address object (required by backend)
       address: adData.address || {
