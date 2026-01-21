@@ -231,7 +231,7 @@ export default function AmenitiesSelector({
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Comodidades Básicas
           </h3>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
             {AMENITIES.map((amenity) => {
               const Icon = amenity.icon
               const isSelected = selectedAmenities.includes(amenity.id)
@@ -289,7 +289,7 @@ export default function AmenitiesSelector({
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Adicionar comodidade personalizada
               </label>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <input
                   type="text"
                   value={newAmenity}
@@ -303,7 +303,7 @@ export default function AmenitiesSelector({
                   type="button"
                   onClick={addCustomAmenity}
                   disabled={!newAmenity.trim()}
-                  className="flex items-center gap-1 px-3 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                  className="flex items-center justify-center gap-1 px-3 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm w-full sm:w-auto"
                 >
                   <Plus className="w-4 h-4" />
                   Adicionar
@@ -322,7 +322,7 @@ export default function AmenitiesSelector({
         <h3 className="text-lg font-semibold text-gray-900 mb-4">
           {getFeaturesTitle()}
         </h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
           {features.map((feature) => {
             const Icon = feature.icon
             const isSelected = selectedFeatures.includes(feature.id)
@@ -377,7 +377,7 @@ export default function AmenitiesSelector({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               {categoryType === 'space' ? 'Adicionar recurso para eventos personalizado' : 'Adicionar diferencial personalizado'}
             </label>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <input
                 type="text"
                 value={newFeature}
@@ -394,7 +394,7 @@ export default function AmenitiesSelector({
                 type="button"
                 onClick={addCustomFeature}
                 disabled={!newFeature.trim()}
-                className="flex items-center gap-1 px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                className="flex items-center justify-center gap-1 px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm w-full sm:w-auto"
               >
                 <Plus className="w-4 h-4" />
                 Adicionar
@@ -412,7 +412,7 @@ export default function AmenitiesSelector({
         <h3 className="text-lg font-semibold text-gray-900 mb-4">
           Serviços Inclusos
         </h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
           {SERVICES.map((service) => {
             const Icon = service.icon
             const isSelected = selectedServices.includes(service.id)
@@ -467,7 +467,7 @@ export default function AmenitiesSelector({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Adicionar serviço personalizado
             </label>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <input
                 type="text"
                 value={newService}
@@ -481,7 +481,7 @@ export default function AmenitiesSelector({
                 type="button"
                 onClick={addCustomService}
                 disabled={!newService.trim()}
-                className="flex items-center gap-1 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                className="flex items-center justify-center gap-1 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm w-full sm:w-auto"
               >
                 <Plus className="w-4 h-4" />
                 Adicionar

@@ -1018,7 +1018,7 @@ export default function EditAd() {
                   <div className="space-y-4">
                     <div>
                       <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Título</p>
-                      <p className="text-lg text-gray-900 font-medium">{watch('title')}</p>
+                      <p className="text-lg text-gray-900 font-medium break-words">{watch('title')}</p>
                     </div>
                   </div>
                   <div className="space-y-4">
@@ -1046,7 +1046,7 @@ export default function EditAd() {
 
                 <div className="mt-6 pt-6 border-t border-gray-100">
                   <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-2">Descrição</p>
-                  <p className="text-sm text-gray-700 leading-relaxed line-clamp-3">
+                  <p className="text-sm text-gray-700 leading-relaxed line-clamp-3 break-all">
                     {watch('description')}
                   </p>
                 </div>

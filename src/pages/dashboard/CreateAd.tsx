@@ -1095,14 +1095,14 @@ export default function CreateAd() {
               </div>
 
               <div className="space-y-4">
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <h4 className="text-2xl font-bold text-gray-900 mb-1">{watch('title') || 'Título não informado'}</h4>
+                <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+                  <div className="flex-1 w-full min-w-0">
+                    <h4 className="text-2xl font-bold text-gray-900 mb-1 break-words">{watch('title') || 'Título não informado'}</h4>
                     <p className="text-sm text-gray-600">
                       {categories.find(cat => cat.id === watch('category_id'))?.name || 'Categoria não selecionada'}
                     </p>
                   </div>
-                  <div className="text-right">
+                  <div className="text-left sm:text-right w-full sm:w-auto">
                     <p className="text-3xl font-bold text-green-600">
                       {watch('price') || 'R$ 0,00'}
                     </p>
@@ -1114,7 +1114,7 @@ export default function CreateAd() {
 
                 <div className="border-t pt-4">
                   <p className="text-sm font-medium text-gray-700 mb-2">Descrição:</p>
-                  <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">
+                  <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap break-all">
                     {watch('description') || 'Nenhuma descrição informada.'}
                   </p>
                 </div>
