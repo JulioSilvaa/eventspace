@@ -521,6 +521,7 @@ export default function CreateAd() {
       const listingData: any = {
         user_id: user.id,
         category_id: data.category_id,
+        type: data.categoryType.toUpperCase(), // 'SPACE', 'SERVICE', 'EQUIPMENT'
         title: data.title,
         description: data.description,
 
