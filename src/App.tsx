@@ -127,7 +127,6 @@ function App() {
               <Route path="/anunciantes" element={<Anunciantes />} />
               <Route path="/espacos" element={<Spaces />} />
               <Route path="/planos" element={<Plans />} />
-              <Route path="/anuncie" element={<Advertise />} />
               <Route path="/anuncio/:id" element={<AdDetails />} />
               <Route path="/equipamentos/:id" element={<AdDetails />} />
               <Route path="/anunciantes/:id" element={<AdDetails />} />
@@ -138,11 +137,18 @@ function App() {
               <Route path="/termos" element={<TermsOfService />} />
               <Route path="/privacidade" element={<PrivacyPolicy />} />
               <Route path="/payment/success" element={<PaymentSuccess />} />
-              <Route path="/checkout/sponsor" element={
-                <SimpleProtectedRoute>
-                  <SponsorCheckout />
-                </SimpleProtectedRoute>
-              } />
+
+              {/* Sponsor routes - Only show if feature is enabled */}
+              {import.meta.env.VITE_ENABLE_SPONSORS === 'true' && (
+                <>
+                  <Route path="/anuncie" element={<Advertise />} />
+                  <Route path="/checkout/sponsor" element={
+                    <SimpleProtectedRoute>
+                      <SponsorCheckout />
+                    </SimpleProtectedRoute>
+                  } />
+                </>
+              )}
 
               {/* Auth routes - only accessible when not logged in */}
               <Route path="/login" element={

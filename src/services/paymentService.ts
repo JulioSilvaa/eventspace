@@ -155,6 +155,18 @@ class PaymentService {
       pro: {
         monthly: 49.90,
         yearly: 499.00
+      },
+      sponsor_bronze: {
+        monthly: 99.90,
+        yearly: 999.00
+      },
+      sponsor_silver: {
+        monthly: 199.90,
+        yearly: 1999.00
+      },
+      sponsor_gold: {
+        monthly: 299.90,
+        yearly: 2999.00
       }
     }
 

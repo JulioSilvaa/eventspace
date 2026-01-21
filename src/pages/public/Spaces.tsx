@@ -71,8 +71,8 @@ export default function Spaces() {
                 />
               </div>
 
-              {/* Sidebar Sponsor */}
-              <SidebarSponsor />
+              {/* Sidebar Sponsor - Only show if feature is enabled */}
+              {import.meta.env.VITE_ENABLE_SPONSORS === 'true' && <SidebarSponsor />}
             </div>
           </div>
 

@@ -144,7 +144,7 @@ export default function SearchResults({
       <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-8" : "flex flex-col gap-4 md:gap-6 mb-8"}>
         {results.map((result, index) => (
           <Fragment key={result.id}>
-            {index === 6 && <FeedSponsor />}
+            {index === 6 && import.meta.env.VITE_ENABLE_SPONSORS === 'true' && <FeedSponsor />}
             <div className={`group bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ${viewMode === 'list' ? 'flex flex-col md:flex-row h-auto md:h-64' : 'flex flex-col h-full'}`}>
               {/* Imagem do Anúncio */}
               <div className={`relative bg-gray-100 overflow-hidden group shrink-0 ${viewMode === 'list' ? 'w-full md:w-80 h-56 md:h-full' : 'h-48 md:h-56 w-full'}`}>

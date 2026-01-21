@@ -111,7 +111,8 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white pt-16">
       <Header />
-      <SponsorHero />
+      {/* Sponsor Hero Banner - Only show if feature is enabled */}
+      {import.meta.env.VITE_ENABLE_SPONSORS === 'true' && <SponsorHero />}
       <DevNotice />
 
       {/* Hero Section */}

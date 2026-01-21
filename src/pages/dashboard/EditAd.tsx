@@ -551,6 +551,7 @@ export default function EditAd() {
         category_id: data.category_id,
         title: data.title,
         description: data.description,
+        capacity: data.capacity, // Send capacity at root level so backend updates the column correctly
         price: parseCurrency(data.price),
         // Send separate fields for clarity, though price_type helps backend decide
         price_per_day: data.priceType === 'daily' ? parseCurrency(data.price) : undefined,
@@ -595,64 +596,7 @@ export default function EditAd() {
 
 
 
-      // Rastrear eventos de atualização
-      try {
-        const changedFields: string[] = []
-
-        // Detectar mudanças nos campos principais
-        if (currentAd?.title !== data.title) changedFields.push('título')
-        if (currentAd?.description !== data.description) {
-          changedFields.push('descrição')
-          await trackDescriptionUpdated()
-        }
-        if (currentAd?.price !== data.price) {
-          changedFields.push('preço')
-          await trackPriceUpdated(Number(currentAd?.price || 0), parseCurrency(data.price))
-        }
-
-        // Detectar mudanças nos contatos
-        const contactChanged = (
-          currentAd?.contact_whatsapp !== data.contactWhatsapp ||
-          currentAd?.contact_whatsapp_alternative !== data.contactWhatsappAlternative ||
-          currentAd?.contact_phone !== data.contactPhone ||
-          currentAd?.contact_email !== data.contactEmail ||
-          currentAd?.contact_instagram !== data.contactInstagram ||
-          currentAd?.contact_facebook !== data.contactFacebook
-        )
-
-        if (contactChanged) {
-          changedFields.push('contatos')
-          const updatedContactFields = []
-          if (currentAd?.contact_whatsapp !== data.contactWhatsapp) updatedContactFields.push('WhatsApp')
-          if (currentAd?.contact_whatsapp_alternative !== data.contactWhatsappAlternative) updatedContactFields.push('WhatsApp Alternativo')
-          if (currentAd?.contact_phone !== data.contactPhone) updatedContactFields.push('Telefone')
-          if (currentAd?.contact_email !== data.contactEmail) updatedContactFields.push('E-mail')
-          if (currentAd?.contact_instagram !== data.contactInstagram) updatedContactFields.push('Instagram')
-          if (currentAd?.contact_facebook !== data.contactFacebook) updatedContactFields.push('Facebook')
-          await trackContactUpdated(updatedContactFields)
-        }
-
-        // Detectar mudanças nas imagens
-        const imagesChanged = images.length > 0 || removedExistingImageIds.length > 0
-        if (imagesChanged) {
-          changedFields.push('fotos')
-          let photoAction: 'added' | 'removed' | 'updated' = 'updated'
-          if (images.length > 0 && removedExistingImageIds.length === 0) photoAction = 'added'
-          else if (images.length === 0 && removedExistingImageIds.length > 0) photoAction = 'removed'
-
-          await trackPhotosUpdated(photoAction, images.length)
-        }
-
-        // Rastrear atualização geral
-        if (changedFields.length > 0) {
-          await trackListingUpdated(changedFields, {
-            totalChanges: changedFields.length,
-            timestamp: new Date().toISOString()
-          })
-        }
-      } catch (trackingError) {
-        console.error('Erro ao rastrear eventos de atualização:', trackingError)
-      }
+      // Tracking de eventos agora é feito pelo backend para garantir consistência
 
       toast.removeToast(String(loadingToastId))
       toast.success('Anúncio atualizado com sucesso!', 'Suas alterações foram salvas e já estão disponíveis.')
