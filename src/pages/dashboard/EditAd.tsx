@@ -89,7 +89,7 @@ const editAdSchema = z.object({
     .min(1, 'Descrição é obrigatória')
     .min(50, 'Descrição deve ter pelo menos 50 caracteres')
     .max(1000, 'Descrição deve ter no máximo 1000 caracteres'),
-  category_id: z.number().min(1, 'Categoria é obrigatória'),
+  category_id: z.number({ required_error: 'Selecione uma categoria' }).min(1, 'Selecione uma categoria'),
 
   capacity: z.number()
     .min(1, 'Capacidade deve ser maior que zero')
@@ -280,7 +280,7 @@ export default function EditAd() {
         categoryType: 'space',
         title: currentAd.title,
         description: currentAd.description,
-        category_id: currentAd.category_id,
+        category_id: currentAd.category_id || undefined,
         capacity: (currentAd.specifications?.capacity as number) || undefined,
         area_sqm: (currentAd.specifications?.area_sqm as number) || undefined,
         state: currentAd.state,
