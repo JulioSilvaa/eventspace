@@ -518,6 +518,12 @@ export default function CreateAd() {
       }
 
       // Criar objeto no formato esperado pelo backend (SpaceEntity)
+      console.log('🚀 PREPARANDO ENVIO:', {
+        tipoSelecionado: data.categoryType,
+        tipoEnviado: data.categoryType.toUpperCase(),
+        conforto: allComfort
+      });
+
       const listingData: any = {
         user_id: user.id,
         category_id: data.category_id,
