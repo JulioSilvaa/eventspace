@@ -675,7 +675,7 @@ export default function AdDetails() {
               </div>
 
               {/* Informações específicas para espaços */}
-              {typeof specifications.capacity === 'number' && (
+              {(ad as any).type !== 'SERVICE' && typeof specifications.capacity === 'number' && (
                 <div className="grid grid-cols-2 gap-3 mb-6">
                   <div className="flex flex-col justify-center p-3 bg-gray-50 rounded-xl border border-gray-100">
                     <div className="flex items-center gap-2 mb-1">
@@ -702,8 +702,8 @@ export default function AdDetails() {
               </div>
             </div>
 
-            {/* Comodidades e Recursos (Unified Comfort List) */}
-            {(ad.comfort && ad.comfort.length > 0) || amenities.length > 0 || features.length > 0 || services.length > 0 ? (
+            {/* Comodidades e Recursos (Unified Comfort List) - Hide for SERVICES for now as seed data is generic */}
+            {(ad as any).type !== 'SERVICE' && ((ad.comfort && ad.comfort.length > 0) || amenities.length > 0 || features.length > 0 || services.length > 0) ? (
               <div className="bg-white rounded-lg shadow p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-6">O que esse lugar oferece</h3>
 

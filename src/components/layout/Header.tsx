@@ -44,7 +44,7 @@ function Header() {
               Início
             </Link>
             <Link
-              to="/espacos"
+              to="/anunciantes"
               className="text-gray-700 hover:text-primary-600 transition-colors"
             >
               Anúncios
@@ -55,6 +55,14 @@ function Header() {
             >
               Planos
             </Link>
+            {import.meta.env.VITE_ENABLE_SPONSORS === 'true' && (
+              <Link
+                to="/anuncie"
+                className="text-gray-700 hover:text-primary-600 transition-colors font-semibold"
+              >
+                Patrocinar
+              </Link>
+            )}
             <Link
               to="/como-funciona"
               className="text-gray-700 hover:text-primary-600 transition-colors"
@@ -127,7 +135,7 @@ function Header() {
                 Início
               </Link>
               <Link
-                to="/espacos"
+                to="/anunciantes"
                 className="text-gray-700 hover:text-primary-600 transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >

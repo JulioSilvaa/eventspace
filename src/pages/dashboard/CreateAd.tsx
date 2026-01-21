@@ -18,7 +18,8 @@ import {
   Users,
   DollarSign,
   Star,
-  AlertCircle
+  AlertCircle,
+  Speaker
 } from 'lucide-react'
 import { FormField, FormButton, FormSelect } from '@/components/forms'
 import ImageUpload from '@/components/forms/ImageUpload'
@@ -88,7 +89,7 @@ const translateItem = (item: string) => {
 // Schema de validação
 const createListingSchema = z.object({
   // Step 1: Tipo
-  categoryType: z.enum(['space', 'advertiser'], {
+  categoryType: z.enum(['space', 'service', 'equipment', 'advertiser'], {
     required_error: 'Selecione o tipo de anúncio'
   }),
 
@@ -181,7 +182,51 @@ const STEPS = [
   { id: 7, title: 'Revisão', description: 'Confirmar dados' }
 ]
 
+const getFilteredSteps = (categoryType: string) => {
+  if (categoryType !== 'space') {
+    return STEPS.filter(step => step.id !== 3);
+  }
+  return STEPS;
+}
 
+const getStepTitle = (stepId: number, type: string) => {
+  if (stepId === 3) {
+    if (type === 'service') return 'Diferenciais';
+    if (type === 'equipment') return 'Detalhes';
+    return 'Comodidades';
+  }
+  return STEPS.find(s => s.id === stepId)?.title || '';
+}
+
+const getStepDescription = (stepId: number, type: string) => {
+  if (stepId === 3) {
+    if (type === 'service') return 'O que está incluso';
+    if (type === 'equipment') return 'Especificações';
+    return 'Recursos disponíveis';
+  }
+  return STEPS.find(s => s.id === stepId)?.description || '';
+}
+
+
+
+const PLACEHOLDERS = {
+  space: {
+    title: 'Ex: Chácara Recanto Feliz - Piscina e Churrasqueira',
+    description: 'Exemplo: Chácara Recanto das Flores: Espaço ideal para casamentos e aniversários com 500m². Possuímos piscina aquecida, área de churrasqueira completa, salão de festas coberto para 200 pessoas e estacionamento para 50 carros. Ambiente familiar e aconchegante, perfeito para celebrar momentos especiais...'
+  },
+  service: {
+    title: 'Ex: Buffet Delícias da Vovó - Churrasco e Massas',
+    description: 'Exemplo: Oferecemos serviço completo de buffet para casamentos e eventos corporativos. Equipe treinada, cardápio variado com opções vegetarianas e veganas. Inclusa louça, toalhas e garçons. Atendemos em toda a região com excelência e pontualidade...'
+  },
+  equipment: {
+    title: 'Ex: Kit Som e Iluminação Festa Top',
+    description: 'Exemplo: Aluguel de kit completo de som para festas de até 100 pessoas. Inclui 2 caixas ativas, mesa de som, microfone sem fio e iluminação básica (laser e strobo). Equipamentos profissionais das marcas JBL e Yamaha. Entrega e montagem inclusas...'
+  },
+  advertiser: { // Fallback
+    title: 'Ex: Anúncio Exemplo',
+    description: ' descreva seu anúncio...'
+  }
+}
 
 export default function CreateAd() {
   const [currentStep, setCurrentStep] = useState(1)
@@ -192,7 +237,7 @@ export default function CreateAd() {
   const { createAd } = useAdsStore()
   const toast = useToast()
   const [brazilianStates, setBrazilianStates] = useState<Array<{ code: string, name: string, region: string }>>([])
-  const [categories, setCategories] = useState<Array<{ id: number, name: string, type: 'space' | 'advertiser', parent_id?: number }>>([])
+  const [categories, setCategories] = useState<Array<{ id: number, name: string, type: 'space' | 'service' | 'equipment' | 'advertiser', parent_id?: number }>>([])
   const [error, setError] = useState<string | null>(null)
   const [images, setImages] = useState<Array<{ id: string, file: File, preview: string }>>([])
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([])
@@ -211,13 +256,26 @@ export default function CreateAd() {
     apiClient.get('/api/categories')
       .then(response => {
         const dbCategories = (response.data as any[]).map((cat: any) => {
-          const isAdvertiser = ['Buffet', 'Decoração', 'Fotografia', 'Som e Iluminação'].some(
-            t => cat.name.includes(t)
-          );
+          // Simplistic mapping based on name keywords - later backend should provide type
+          let type: 'space' | 'service' | 'equipment' = 'space';
+
+          const lowerName = cat.name.toLowerCase();
+
+          if (['buffet', 'fotografia', 'foto', 'video', 'filmagem', 'cerimonial', 'segurança', 'limpeza', 'bar', 'garçom', 'dj', 'banda', 'música', 'assessoria', 'recepcionista', 'animador'].some(t => lowerName.includes(t))) {
+            type = 'service';
+          } else if (['som', 'iluminação', 'luz', 'tendas', 'mesas', 'cadeiras', 'brinquedo', 'gerador', 'palco', 'telão', 'projetor', 'cobertura'].some(t => lowerName.includes(t))) {
+            // Some items like Decor could be service, but let's assume equipment rental often 
+            // Or better, let's treat Decor as Service usually. 
+            if (lowerName.includes('decoração')) type = 'service';
+            else type = 'equipment';
+          } else {
+            type = 'space';
+          }
+
           return {
             id: cat.id,
             name: cat.name,
-            type: (isAdvertiser ? 'advertiser' : 'space') as 'space' | 'advertiser',
+            type: type,
             parent_id: undefined
           };
         });
@@ -318,8 +376,21 @@ export default function CreateAd() {
     }
   }, []) // Empty dependency array means this runs once on mount and cleanup runs only on unmount
 
+  // Reset category and amenities when changing type
+  useEffect(() => {
+    if (watchedCategoryType) {
+      setValue('category_id', undefined as unknown as number)
+      // Clear amenities/features/services when switching types
+      setSelectedAmenities([])
+      setSelectedFeatures([])
+      setSelectedServices([])
+      setCustomAmenities([])
+      setCustomFeatures([])
+      setCustomServices([])
+    }
+  }, [watchedCategoryType, setValue])
 
-  // function removed
+  const filteredSteps = getFilteredSteps(watchedCategoryType)
 
   const nextStep = async () => {
     let fieldsToValidate: (keyof CreateListingData)[] = []
@@ -356,8 +427,9 @@ export default function CreateAd() {
     const isStepValid = await trigger(fieldsToValidate)
 
     if (isStepValid) {
-      if (currentStep < 7) {
-        setCurrentStep(currentStep + 1)
+      const currentIndex = filteredSteps.findIndex(s => s.id === currentStep)
+      if (currentIndex < filteredSteps.length - 1) {
+        setCurrentStep(filteredSteps[currentIndex + 1].id)
       }
     } else {
       // Show generic error if standard validation fails
@@ -369,8 +441,9 @@ export default function CreateAd() {
   }
 
   const prevStep = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1)
+    const currentIndex = filteredSteps.findIndex(s => s.id === currentStep)
+    if (currentIndex > 0) {
+      setCurrentStep(filteredSteps[currentIndex - 1].id)
     }
   }
 
@@ -518,11 +591,63 @@ export default function CreateAd() {
               </p>
             </div>
 
+            {/* Seleção de Tipo (3 Opções) */}
+            <div className="mb-8">
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                O que você vai anunciar?
+              </label>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <button
+                  type="button"
+                  onClick={() => setValue('categoryType', 'space')}
+                  className={`flex flex-col items-center p-4 rounded-xl border-2 transition-all ${watchedCategoryType === 'space'
+                    ? 'border-primary-500 bg-primary-50 text-primary-700'
+                    : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                    }`}
+                >
+                  <Building2 className={`w-8 h-8 mb-2 ${watchedCategoryType === 'space' ? 'text-primary-600' : 'text-gray-400'}`} />
+                  <span className="font-bold">Espaço</span>
+                  <span className="text-xs mt-1 text-center opacity-80">Salão, Sítio, Chácara</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setValue('categoryType', 'service')}
+                  className={`flex flex-col items-center p-4 rounded-xl border-2 transition-all ${watchedCategoryType === 'service'
+                    ? 'border-primary-500 bg-primary-50 text-primary-700'
+                    : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                    }`}
+                >
+                  <Users className={`w-8 h-8 mb-2 ${watchedCategoryType === 'service' ? 'text-primary-600' : 'text-gray-400'}`} />
+                  <span className="font-bold">Serviço</span>
+                  <span className="text-xs mt-1 text-center opacity-80">Buffet, DJ, Fotografia</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setValue('categoryType', 'equipment')}
+                  className={`flex flex-col items-center p-4 rounded-xl border-2 transition-all ${watchedCategoryType === 'equipment'
+                    ? 'border-primary-500 bg-primary-50 text-primary-700'
+                    : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                    }`}
+                >
+                  <Speaker className={`w-8 h-8 mb-2 ${watchedCategoryType === 'equipment' ? 'text-primary-600' : 'text-gray-400'}`} />
+                  <span className="font-bold">Equipamento</span>
+                  <span className="text-xs mt-1 text-center opacity-80">Som, Iluminação, Tendas</span>
+                </button>
+              </div>
+            </div>
+
             <FormSelect
               key="category_id"
               label="Categoria"
               options={categories
-                .filter(cat => cat.type === 'space')
+                .filter(cat => {
+                  if (watchedCategoryType === 'space') return cat.type === 'space';
+                  if (watchedCategoryType === 'service') return cat.type === 'service';
+                  if (watchedCategoryType === 'equipment') return cat.type === 'equipment';
+                  return true;
+                })
                 .map(cat => ({
                   value: cat.id.toString(),
                   label: cat.name
@@ -541,7 +666,7 @@ export default function CreateAd() {
               key="title"
               label="Título do Anúncio"
               type="text"
-              placeholder="Ex: Chácara Recanto Feliz - Piscina e Churrasqueira"
+              placeholder={PLACEHOLDERS[watchedCategoryType as keyof typeof PLACEHOLDERS]?.title || PLACEHOLDERS.space.title}
               error={errors.title}
               required
               {...register('title')}
@@ -554,7 +679,7 @@ export default function CreateAd() {
               <textarea
                 key="description"
                 rows={6}
-                placeholder="Exemplo: Chácara Recanto das Flores: Espaço ideal para casamentos e aniversários com 500m². Possuímos piscina aquecida, área de churrasqueira completa, salão de festas coberto para 200 pessoas e estacionamento para 50 carros. Ambiente familiar e aconchegante, perfeito para celebrar momentos especiais..."
+                placeholder={PLACEHOLDERS[watchedCategoryType as keyof typeof PLACEHOLDERS]?.description || PLACEHOLDERS.space.description}
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all shadow-sm"
                 {...register('description')}
               />
@@ -563,30 +688,32 @@ export default function CreateAd() {
               )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                key="capacity"
-                label="Capacidade (pessoas)"
-                type="number"
-                placeholder="Ex: 100"
-                error={errors.capacity}
-                required
-                {...register('capacity', {
-                  setValueAs: (v) => v === "" ? undefined : parseFloat(v)
-                })}
-              />
+            {watchedCategoryType === 'space' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  key="capacity"
+                  label="Capacidade (pessoas)"
+                  type="number"
+                  placeholder="Ex: 100"
+                  error={errors.capacity}
+                  required
+                  {...register('capacity', {
+                    setValueAs: (v) => v === "" ? undefined : parseFloat(v)
+                  })}
+                />
 
-              <FormField
-                key="area_sqm"
-                label="Área total (m²)"
-                type="number"
-                placeholder="Ex: 500"
-                error={errors.area_sqm}
-                {...register('area_sqm', {
-                  setValueAs: (v) => v === "" ? undefined : parseFloat(v)
-                })}
-              />
-            </div>
+                <FormField
+                  key="area_sqm"
+                  label="Área total (m²)"
+                  type="number"
+                  placeholder="Ex: 500"
+                  error={errors.area_sqm}
+                  {...register('area_sqm', {
+                    setValueAs: (v) => v === "" ? undefined : parseFloat(v)
+                  })}
+                />
+              </div>
+            )}
           </div>
         )
 
@@ -701,10 +828,14 @@ export default function CreateAd() {
           <div className="space-y-6">
             <div className="text-center mb-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Comodidades e Recursos
+                {watchedCategoryType === 'space' ? 'Comodidades e Recursos' :
+                  watchedCategoryType === 'service' ? 'Diferenciais do Serviço' :
+                    'Detalhes do Equipamento'}
               </h2>
               <p className="text-gray-600">
-                Selecione as comodidades e recursos disponíveis no seu espaço
+                {watchedCategoryType === 'space' ? 'Selecione as comodidades e recursos disponíveis no seu espaço' :
+                  watchedCategoryType === 'service' ? 'Selecione os diferenciais e itens inclusos no serviço' :
+                    'Selecione as características e itens inclusos no equipamento'}
               </p>
             </div>
 
@@ -715,7 +846,7 @@ export default function CreateAd() {
               onAmenitiesChange={setSelectedAmenities}
               onFeaturesChange={setSelectedFeatures}
               onServicesChange={setSelectedServices}
-              categoryType="space"
+              categoryType={watchedCategoryType}
               customAmenities={customAmenities}
               customFeatures={customFeatures}
               customServices={customServices}
@@ -1105,8 +1236,8 @@ export default function CreateAd() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <div className="max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-[800px] bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="max-w-3xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-4 mb-6">
@@ -1134,16 +1265,16 @@ export default function CreateAd() {
               <div className="absolute top-6 left-0 right-0 h-1 bg-gray-200 rounded-full" style={{ marginLeft: '2rem', marginRight: '2rem' }}>
                 <div
                   className="h-full bg-gradient-to-r from-primary-500 to-primary-600 rounded-full transition-all duration-500 ease-out"
-                  style={{ width: `${((currentStep - 1) / (STEPS.length - 1)) * 100}%` }}
+                  style={{ width: `${(filteredSteps.findIndex(s => s.id === currentStep) / (filteredSteps.length - 1)) * 100}%` }}
                 />
               </div>
 
               {/* Steps */}
+              {/* Steps */}
               <div className="relative flex justify-between">
-                {STEPS.map((step, index) => {
-                  const isCompleted = currentStep > step.id
+                {filteredSteps.map((step, index) => {
+                  const isCompleted = filteredSteps.findIndex(s => s.id === currentStep) > index
                   const isCurrent = currentStep === step.id
-                  const isPending = currentStep < step.id
 
                   return (
                     <div key={step.id} className="flex flex-col items-center" style={{ flex: 1 }}>
@@ -1171,51 +1302,53 @@ export default function CreateAd() {
                           text-sm font-semibold mb-0.5 transition-colors
                           ${isCurrent ? 'text-primary-600' : isCompleted ? 'text-gray-900' : 'text-gray-500'}
                         `}>
-                          {step.title}
+                          {getStepTitle(step.id, watchedCategoryType)}
                         </p>
                         <p className={`
                           text-xs leading-tight transition-colors
                           ${isCurrent ? 'text-gray-700' : 'text-gray-500'}
                         `}>
-                          {step.description}
+                          {getStepDescription(step.id, watchedCategoryType)}
                         </p>
                       </div>
                     </div>
                   )
                 })}
               </div>
-            </div>
-          </div>
 
-          {/* Mobile Stepper */}
-          <div className="md:hidden">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 text-white flex items-center justify-center font-bold shadow-lg">
-                    {currentStep}
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-primary-600">Etapa {currentStep} de {STEPS.length}</p>
-                    <p className="text-xs text-gray-600">{STEPS[currentStep - 1]?.title}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Mobile Progress Bar */}
-              <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-primary-500 to-primary-600 transition-all duration-500 ease-out rounded-full"
-                  style={{ width: `${(currentStep / STEPS.length) * 100}%` }}
-                />
-              </div>
-
-              <p className="text-xs text-gray-500 mt-2 text-center">
-                {STEPS[currentStep - 1]?.description}
-              </p>
             </div>
           </div>
         </div>
+
+        {/* Mobile Stepper */}
+        <div className="md:hidden">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 text-white flex items-center justify-center font-bold shadow-lg">
+                  {currentStep}
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-primary-600">Etapa {filteredSteps.findIndex(s => s.id === currentStep) + 1} de {filteredSteps.length}</p>
+                  <p className="text-xs text-gray-600">{getStepTitle(currentStep, watchedCategoryType)}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Mobile Progress Bar */}
+            <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-primary-500 to-primary-600 transition-all duration-500 ease-out rounded-full"
+                style={{ width: `${((filteredSteps.findIndex(s => s.id === currentStep) + 1) / filteredSteps.length) * 100}%` }}
+              />
+            </div>
+
+            <p className="text-xs text-gray-500 mt-2 text-center">
+              {getStepDescription(currentStep, watchedCategoryType)}
+            </p>
+          </div>
+        </div>
+
 
         {/* Step Content */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 md:p-10 mb-8">
@@ -1276,10 +1409,8 @@ export default function CreateAd() {
             </div>
           </div>
         )}
-      </div>
-
-      {/* Upgrade Modal - Temporarily disabled */}
-      {/* <UpgradeModal
+        {/* Upgrade Modal - Temporarily disabled */}
+        {/* <UpgradeModal
         isOpen={isOpen}
         onClose={() => {
           closeModal()
@@ -1288,6 +1419,7 @@ export default function CreateAd() {
         }}
         context={context}
       /> */}
+      </div>
     </div>
   )
 }

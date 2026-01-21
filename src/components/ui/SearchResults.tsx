@@ -1,9 +1,11 @@
+
 import { MapPin, Star, Eye, Wifi, Wind, Speaker, Armchair, Utensils, Music, Waves, Snowflake, Lightbulb } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { SearchResult } from '@/lib/api/search'
-
-import { formatPrice } from '@/lib/utils'
-import { useEffect, useRef } from 'react'
+import { formatPrice, formatCurrency } from '@/lib/utils'
+import { useEffect, useRef, Fragment } from 'react'
+import { AMENITY_LABELS } from '@/constants/amenities'
+import FeedSponsor from '@/components/sponsors/FeedSponsor'
 
 interface SearchResultsProps {
   results: SearchResult[]
@@ -19,8 +21,6 @@ interface SearchResultsProps {
   hasPrevPage?: boolean
   viewMode?: 'grid' | 'list'
 }
-
-import { AMENITY_LABELS } from '@/constants/amenities'
 
 function ComfortIcon({ name }: { name: string }) {
   const normalized = name.toLowerCase().trim()
@@ -53,20 +53,9 @@ function ComfortIcon({ name }: { name: string }) {
     'churrasqueira': Utensils,
     'bbq': Utensils,
     'som e iluminação': Music,
-    'parking': Armchair, // using armchair as car replacement if needed, but imported Car is better. 
-    // Wait, Car is not imported in original snippet, need to check imports.
-    // Checking imports... original imports had: Wifi, Wind, Speaker, Armchair, Utensils, Music, Waves, Snowflake
-    // Needs Car for parking.
+    'parking': Armchair,
   }
 
-  // Checking if 'Car' is imported in SearchResults.tsx
-  // It is NOT in the import list of original file I viewed (step 302).
-  // Step 302 imports: MapPin, Star, Phone, MessageCircle, Eye, Wifi, Wind, Speaker, Armchair, Utensils, Music, Waves, Snowflake
-  // So I should stick to available icons or add Car to imports. 
-  // I will add Car to imports in a separate edit or just map parking to something else for now to avoid breaking if I can't double edit easily.
-  // Actually, I can do multi-edit or just be safe. Let's map 'parking' to 'Armchair' (generic) or 'MapPin' (access) for now, OR better: use existing imports.
-
-  // Find a matching icon
   let Icon = icons[name] || icons[normalized]
   if (!Icon) {
     const key = Object.keys(icons).find(k => normalized.includes(k))
@@ -138,9 +127,6 @@ export default function SearchResults({
     )
   }
 
-
-
-
   return (
     <div ref={resultsTopRef}>
       {/* Header com contador de resultados */}
@@ -156,161 +142,161 @@ export default function SearchResults({
 
       {/* Grid/Lista de Resultados */}
       <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-8" : "flex flex-col gap-4 md:gap-6 mb-8"}>
-        {results.map((result) => (
-          <div key={result.id} className={`group bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ${viewMode === 'list' ? 'flex flex-col md:flex-row h-auto md:h-64' : 'flex flex-col h-full'}`}>
-            {/* Imagem do Anúncio */}
-            <div className={`relative bg-gray-100 overflow-hidden group shrink-0 ${viewMode === 'list' ? 'w-full md:w-80 h-56 md:h-full' : 'h-48 md:h-56 w-full'}`}>
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10" />
-              {result.listing_images && result.listing_images.length > 0 && result.listing_images[0].image_url ? (
-                <img
-                  src={result.listing_images[0].image_url}
-                  alt={result.title}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
-                  loading="lazy"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement
-                    target.src = result.category_type === 'space'
-                      ? 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&h=300&fit=crop'
-                      : 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=300&fit=crop'
-                  }}
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-gray-400 bg-gray-100">
+        {results.map((result, index) => (
+          <Fragment key={result.id}>
+            {index === 6 && import.meta.env.VITE_ENABLE_SPONSORS === 'true' && <FeedSponsor />}
+            <div className={`group bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ${viewMode === 'list' ? 'flex flex-col md:flex-row h-auto md:h-64' : 'flex flex-col h-full'}`}>
+              {/* Imagem do Anúncio */}
+              <div className={`relative bg-gray-100 overflow-hidden group shrink-0 ${viewMode === 'list' ? 'w-full md:w-80 h-56 md:h-full' : 'h-48 md:h-56 w-full'}`}>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10" />
+                {result.listing_images && result.listing_images.length > 0 && result.listing_images[0].image_url ? (
                   <img
-                    src={result.category_type === 'space'
-                      ? 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&h=300&fit=crop'
-                      : 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=300&fit=crop'}
-                    alt="Placeholder"
-                    className="w-full h-full object-cover opacity-50"
+                    src={result.listing_images[0].image_url}
+                    alt={result.title}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+                    loading="lazy"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement
+                      target.src = result.category_type === 'space'
+                        ? 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&h=300&fit=crop'
+                        : 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=300&fit=crop'
+                    }}
                   />
-                </div>
-              )}
-
-              {/* Badges */}
-              <div className="absolute top-3 left-3 flex flex-wrap gap-2 max-w-[80%]">
-                {result.featured && (
-                  <span className="bg-yellow-400/90 backdrop-blur-sm text-yellow-950 text-xs px-2.5 py-1 rounded-lg font-bold flex items-center gap-1 shadow-sm">
-                    <Star className="w-3 h-3 fill-current" />
-                    Destaque
-                  </span>
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-400 bg-gray-100">
+                    <img
+                      src={result.category_type === 'space'
+                        ? 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&h=300&fit=crop'
+                        : 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=300&fit=crop'}
+                      alt="Placeholder"
+                      className="w-full h-full object-cover opacity-50"
+                    />
+                  </div>
                 )}
-                <span className="bg-white/90 backdrop-blur-sm text-gray-900 text-xs px-2.5 py-1 rounded-lg font-semibold shadow-sm border border-white/20">
-                  {result.category_name}
-                </span>
-              </div>
 
-              {/* Preço */}
-              <div className="absolute bottom-3 right-3 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-xl shadow-lg border border-gray-100">
-                <span className="text-xs text-gray-500 font-medium uppercase tracking-wider block text-right">A partir de</span>
-                <span className="text-lg font-bold text-primary-700">
-                  {formatPrice(result.price, result.price_type)}
-                </span>
-              </div>
-            </div>
-
-            {/* Conteúdo do Card */}
-            <div className="p-4 md:p-5 flex-1 flex flex-col">
-              {/* Título */}
-              <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2 line-clamp-1 group-hover:text-primary-600 transition-colors">
-                {result.title}
-              </h3>
-
-              {/* Localização */}
-              <div className="flex items-center text-gray-600 text-sm mb-2">
-                <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
-                <span className="truncate">
-                  {result.neighborhood ? `${result.neighborhood}, ` : ''}
-                  {result.city || 'Cidade não informada'}
-                  {result.state ? `, ${result.state}` : ''}
-                </span>
-              </div>
-
-              {/* Descrição */}
-              <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                {result.description}
-              </p>
-
-              {/* Conforto / Amenities */}
-              {result.comfort && result.comfort.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {result.comfort.slice(0, 3).map((item, i) => (
-                    <ComfortIcon key={i} name={item} />
-                  ))}
-                  {result.comfort.length > 3 && (
-                    <span className="text-[10px] text-gray-500 bg-gray-50 px-2 py-1 rounded-md border border-gray-100 font-medium">
-                      +{result.comfort.length - 3}
+                {/* Badges */}
+                <div className="absolute top-3 left-3 flex flex-wrap gap-2 max-w-[80%]">
+                  {result.featured && (
+                    <span className="bg-yellow-400/90 backdrop-blur-sm text-yellow-950 text-xs px-2.5 py-1 rounded-lg font-bold flex items-center gap-1 shadow-sm">
+                      <Star className="w-3 h-3 fill-current" />
+                      Destaque
                     </span>
                   )}
+                  <span className="bg-white/90 backdrop-blur-sm text-gray-900 text-xs px-2.5 py-1 rounded-lg font-semibold shadow-sm border border-white/20">
+                    {result.category_name}
+                  </span>
                 </div>
-              )}
 
-              {/* Ações */}
-              <div className="flex gap-2 mt-auto pt-2">
-                {/* Botão Ver Detalhes */}
-                <Link
-                  to={`/${result.category_type === 'advertiser' ? 'anunciantes' : 'espacos'}/${result.id}`}
-                  className="flex-1 bg-gray-900 text-white text-center py-2.5 px-4 rounded-xl hover:bg-primary-600 transition-all font-semibold shadow-sm hover:shadow-md"
-                >
-                  Ver Detalhes
-                </Link>
+                {/* Preço */}
+                <div className="absolute bottom-3 right-3 bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-lg shadow-lg border border-gray-100">
+                  <span className="text-base font-bold text-primary-700">
+                    {result.price ? formatCurrency(result.price) : 'Consulte'}
+                    <span className="text-[10px] font-normal text-gray-500 ml-1">
+                      {result.price_type === 'daily' ? '/dia' : '/fds'}
+                    </span>
+                  </span>
+                </div>
+              </div>
 
+              {/* Conteúdo do Card */}
+              <div className="p-4 md:p-5 flex-1 flex flex-col">
+                {/* Título */}
+                <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2 line-clamp-1 group-hover:text-primary-600 transition-colors">
+                  {result.title}
+                </h3>
 
+                {/* Localização */}
+                <div className="flex items-center text-gray-600 text-sm mb-2">
+                  <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
+                  <span className="truncate">
+                    {result.neighborhood ? `${result.neighborhood}, ` : ''}
+                    {result.city || 'Cidade não informada'}
+                    {result.state ? `, ${result.state}` : ''}
+                  </span>
+                </div>
+
+                {/* Descrição */}
+                <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                  {result.description}
+                </p>
+
+                {/* Conforto / Amenities */}
+                {result.category_type === 'space' && result.comfort && result.comfort.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {result.comfort.slice(0, 3).map((item, i) => (
+                      <ComfortIcon key={i} name={item} />
+                    ))}
+                    {result.comfort.length > 3 && (
+                      <span className="text-[10px] text-gray-500 bg-gray-50 px-2 py-1 rounded-md border border-gray-100 font-medium">
+                        +{result.comfort.length - 3}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {/* Ações */}
+                <div className="flex gap-2 mt-auto pt-2">
+                  <Link
+                    to={`/${result.category_type === 'advertiser' ? 'anunciantes' : 'espacos'}/${result.id}`}
+                    className="flex-1 bg-gray-900 text-white text-center py-2.5 px-4 rounded-xl hover:bg-primary-600 transition-all font-semibold shadow-sm hover:shadow-md"
+                  >
+                    Ver Detalhes
+                  </Link>
+                </div>
               </div>
             </div>
-          </div>
+          </Fragment>
         ))}
       </div>
 
       {/* Paginação */}
-      {
-        totalPages > 1 && (
-          <div className="flex justify-center items-center gap-2">
-            <button
-              onClick={onPrevPage}
-              disabled={!hasPrevPage}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Anterior
-            </button>
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center gap-2">
+          <button
+            onClick={onPrevPage}
+            disabled={!hasPrevPage}
+            className="px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Anterior
+          </button>
 
-            <div className="flex gap-1 flex-wrap justify-center">
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                let pageNum: number
-                if (totalPages <= 5) {
-                  pageNum = i + 1
-                } else if (currentPage <= 3) {
-                  pageNum = i + 1
-                } else if (currentPage >= totalPages - 2) {
-                  pageNum = totalPages - 4 + i
-                } else {
-                  pageNum = currentPage - 2 + i
-                }
+          <div className="flex gap-1 flex-wrap justify-center">
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              let pageNum: number
+              if (totalPages <= 5) {
+                pageNum = i + 1
+              } else if (currentPage <= 3) {
+                pageNum = i + 1
+              } else if (currentPage >= totalPages - 2) {
+                pageNum = totalPages - 4 + i
+              } else {
+                pageNum = currentPage - 2 + i
+              }
 
-                return (
-                  <button
-                    key={pageNum}
-                    onClick={() => onGoToPage?.(pageNum)}
-                    className={`min-w-[40px] h-10 flex items-center justify-center rounded-lg text-sm font-medium transition-colors ${currentPage === pageNum
-                      ? 'bg-primary-600 text-white'
-                      : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
-                      }`}
-                  >
-                    {pageNum}
-                  </button>
-                )
-              })}
-            </div>
-
-            <button
-              onClick={onNextPage}
-              disabled={!hasNextPage}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Próxima
-            </button>
+              return (
+                <button
+                  key={pageNum}
+                  onClick={() => onGoToPage?.(pageNum)}
+                  className={`min-w-[40px] h-10 flex items-center justify-center rounded-lg text-sm font-medium transition-colors ${currentPage === pageNum
+                    ? 'bg-primary-600 text-white'
+                    : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                    }`}
+                >
+                  {pageNum}
+                </button>
+              )
+            })}
           </div>
-        )
-      }
-    </div >
+
+          <button
+            onClick={onNextPage}
+            disabled={!hasNextPage}
+            className="px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Próxima
+          </button>
+        </div>
+      )}
+    </div>
   )
 }

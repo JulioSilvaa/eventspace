@@ -42,7 +42,7 @@ interface AmenitiesSelectorProps {
   onAmenitiesChange: (amenities: string[]) => void
   onFeaturesChange: (features: string[]) => void
   onServicesChange: (services: string[]) => void
-  categoryType: 'space' | 'advertiser'
+  categoryType: 'space' | 'service' | 'equipment' | 'advertiser' // 'advertiser' kept for backward compat if needed, but we will move away
   customAmenities?: string[]
   customFeatures?: string[]
   customServices?: string[]
@@ -86,6 +86,13 @@ const EQUIPMENT_FEATURES = [
   { id: 'lighting_system', name: 'Sistema de Iluminação', icon: Lightbulb },
   { id: 'decoration_items', name: 'Itens Decorativos', icon: Palette },
   { id: 'recording_equipment', name: 'Equipamento de Gravação', icon: Camera },
+]
+
+const SERVICE_FEATURES = [
+  { id: 'team', name: 'Equipe Própria', icon: Users },
+  { id: 'uniform', name: 'Trabalha Uniformizado', icon: UserCheck },
+  { id: 'equipment_own', name: 'Equipamento Próprio', icon: Speaker },
+  { id: 'transport_own', name: 'Transporte Próprio', icon: Car },
 ]
 
 const SERVICES = [
@@ -194,104 +201,126 @@ export default function AmenitiesSelector({
     }
   }
 
-  const features = categoryType === 'space' ? SPACE_FEATURES : EQUIPMENT_FEATURES
+  const getFeaturesList = () => {
+    switch (categoryType) {
+      case 'space': return SPACE_FEATURES
+      case 'service': return SERVICE_FEATURES
+      case 'equipment': return EQUIPMENT_FEATURES
+      case 'advertiser': return EQUIPMENT_FEATURES // Fallback
+      default: return SPACE_FEATURES
+    }
+  }
+
+  const features = getFeaturesList()
+
+  const getFeaturesTitle = () => {
+    switch (categoryType) {
+      case 'space': return 'Recursos para Eventos'
+      case 'service': return 'Diferenciais do Serviço'
+      case 'equipment': return 'Características do Equipamento'
+      default: return 'Recursos'
+    }
+  }
 
   return (
     <div className="space-y-8">
       {/* Comodidades Básicas */}
-      <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          Comodidades Básicas
-        </h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          {AMENITIES.map((amenity) => {
-            const Icon = amenity.icon
-            const isSelected = selectedAmenities.includes(amenity.id)
+      {/* Comodidades Básicas - Apenas para Espaços */}
+      {categoryType === 'space' && (
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Comodidades Básicas
+          </h3>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {AMENITIES.map((amenity) => {
+              const Icon = amenity.icon
+              const isSelected = selectedAmenities.includes(amenity.id)
 
-            return (
-              <button
-                key={amenity.id}
-                type="button"
-                onClick={() => handleAmenityToggle(amenity.id)}
-                className={`
-                  flex items-center gap-3 p-3 rounded-lg border-2 transition-all text-left relative
-                  ${isSelected
-                    ? 'border-green-500 bg-green-50 text-green-700'
-                    : 'border-gray-200 hover:border-gray-300 text-gray-700'
-                  }
-                `}
-              >
-                <Icon className={`w-5 h-5 ${isSelected ? 'text-green-600' : 'text-gray-500'}`} />
-                <span className="font-medium text-sm">{amenity.name}</span>
-                {isSelected && (
-                  <Check className="w-4 h-4 text-green-600 ml-auto" />
-                )}
-              </button>
-            )
-          })}
-        </div>
-
-        {/* Custom Amenities */}
-        {customAmenities.length > 0 && (
-          <div className="mt-4">
-            <h4 className="text-sm font-medium text-gray-700 mb-2">Comodidades personalizadas:</h4>
-            <div className="flex flex-wrap gap-2">
-              {customAmenities.map((amenity, index) => (
-                <div
-                  key={index}
-                  className="flex items-center gap-2 bg-primary-50 text-primary-700 px-3 py-1 rounded-full text-sm border border-primary-200"
+              return (
+                <button
+                  key={amenity.id}
+                  type="button"
+                  onClick={() => handleAmenityToggle(amenity.id)}
+                  className={`
+                    flex items-center gap-3 p-3 rounded-lg border-2 transition-all text-left relative
+                    ${isSelected
+                      ? 'border-green-500 bg-green-50 text-green-700'
+                      : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                    }
+                  `}
                 >
-                  <span>{amenity}</span>
-                  <button
-                    type="button"
-                    onClick={() => removeCustomAmenity(amenity)}
-                    className="text-primary-500 hover:text-primary-700"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-              ))}
-            </div>
+                  <Icon className={`w-5 h-5 ${isSelected ? 'text-green-600' : 'text-gray-500'}`} />
+                  <span className="font-medium text-sm">{amenity.name}</span>
+                  {isSelected && (
+                    <Check className="w-4 h-4 text-green-600 ml-auto" />
+                  )}
+                </button>
+              )
+            })}
           </div>
-        )}
 
-        {/* Add Custom Amenity - Only show if callback is available */}
-        {onCustomAmenitiesChange && (
-          <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Adicionar comodidade personalizada
-            </label>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={newAmenity}
-                onChange={(e) => setNewAmenity(e.target.value)}
-                placeholder="Ex: Karaokê, Mesa de bilhar, Espaço kids..."
-                maxLength={50}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addCustomAmenity())}
-              />
-              <button
-                type="button"
-                onClick={addCustomAmenity}
-                disabled={!newAmenity.trim()}
-                className="flex items-center gap-1 px-3 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-              >
-                <Plus className="w-4 h-4" />
-                Adicionar
-              </button>
+          {/* Custom Amenities */}
+          {customAmenities.length > 0 && (
+            <div className="mt-4">
+              <h4 className="text-sm font-medium text-gray-700 mb-2">Comodidades personalizadas:</h4>
+              <div className="flex flex-wrap gap-2">
+                {customAmenities.map((amenity, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center gap-2 bg-primary-50 text-primary-700 px-3 py-1 rounded-full text-sm border border-primary-200"
+                  >
+                    <span>{amenity}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeCustomAmenity(amenity)}
+                      className="text-primary-500 hover:text-primary-700"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
-            <p className="text-xs text-gray-500 mt-1">
-              {newAmenity.length}/50 caracteres
-            </p>
-          </div>
-        )}
-      </div>
+          )}
+
+          {/* Add Custom Amenity - Only show if callback is available */}
+          {onCustomAmenitiesChange && (
+            <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Adicionar comodidade personalizada
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newAmenity}
+                  onChange={(e) => setNewAmenity(e.target.value)}
+                  placeholder="Ex: Karaokê, Mesa de bilhar, Espaço kids..."
+                  maxLength={50}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addCustomAmenity())}
+                />
+                <button
+                  type="button"
+                  onClick={addCustomAmenity}
+                  disabled={!newAmenity.trim()}
+                  className="flex items-center gap-1 px-3 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                >
+                  <Plus className="w-4 h-4" />
+                  Adicionar
+                </button>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                {newAmenity.length}/50 caracteres
+              </p>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Recursos Especiais */}
       <div>
         <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          {categoryType === 'space' ? 'Recursos para Eventos' : 'Recursos do Serviço'}
+          {getFeaturesTitle()}
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {features.map((feature) => {
@@ -346,7 +375,7 @@ export default function AmenitiesSelector({
         {onCustomFeaturesChange && (
           <div className="mt-4 p-4 bg-gray-50 rounded-lg">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              {categoryType === 'space' ? 'Adicionar recurso para eventos personalizado' : 'Adicionar recurso personalizado'}
+              {categoryType === 'space' ? 'Adicionar recurso para eventos personalizado' : 'Adicionar diferencial personalizado'}
             </label>
             <div className="flex gap-2">
               <input
@@ -355,7 +384,7 @@ export default function AmenitiesSelector({
                 onChange={(e) => setNewFeature(e.target.value)}
                 placeholder={categoryType === 'space'
                   ? "Ex: Palco com piano, Deck com vista, Espaço para foodtrucks..."
-                  : "Ex: Equipamento profissional, Serviço especializado..."
+                  : "Ex: Atendimento bilíngue, Equipamento de última geração..."
                 }
                 maxLength={50}
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"

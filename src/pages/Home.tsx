@@ -9,6 +9,7 @@ import { AdCard } from '@/components/ads'
 import { AMENITY_LABELS } from '@/constants/amenities'
 import { LazyLoadImage } from 'react-lazy-load-image-component'
 import 'react-lazy-load-image-component/src/effects/blur.css'
+import SponsorHero from '@/components/sponsors/SponsorHero'
 
 export default function Home() {
   const [currentSlide, setCurrentSlide] = useState(0)
@@ -110,6 +111,8 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white pt-16">
       <Header />
+      {/* Sponsor Hero Banner - Only show if feature is enabled */}
+      {import.meta.env.VITE_ENABLE_SPONSORS === 'true' && <SponsorHero />}
       <DevNotice />
 
       {/* Hero Section */}
@@ -258,65 +261,77 @@ export default function Home() {
                     style={{ transform: `translateX(-${currentSlide * 100}%)` }}
                   >
                     {displayedFeaturedAds.slice(0, 4).map((ad) => (
-                      <div key={ad.id} className="w-full flex-shrink-0">
-                        <div className="bg-white rounded-2xl shadow-xl overflow-hidden mx-2">
-                          <div className="md:flex">
-                            <div className="md:w-5/12 relative h-56 md:h-72">
-                              <LazyLoadImage
-                                src={ad.listing_images?.[0]?.image_url || 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=800&q=80'}
-                                alt={ad.title}
-                                className="w-full h-full object-cover"
-                                effect="blur"
-                                wrapperClassName="w-full h-full"
-                              />
-                            </div>
-                            <div className="md:w-7/12 p-4 md:p-6 flex flex-col justify-center">
-                              <div className="flex items-center gap-2 mb-3">
-                                <span className="flex items-center gap-1 bg-blue-50 text-blue-700 px-2.5 py-0.5 rounded-full text-xs font-medium">
-                                  <Building2 className="w-3 h-3" />
-                                  {ad.categories?.name || 'Espaço'}
+                      <div key={ad.id} className="w-full flex-shrink-0 px-2">
+                        <div className="relative h-[250px] md:h-[350px] rounded-3xl overflow-hidden shadow-2xl group cursor-pointer">
+
+                          {/* Full Background Image */}
+                          <div className="absolute inset-0">
+                            <LazyLoadImage
+                              src={ad.listing_images?.[0]?.image_url || 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=800&q=80'}
+                              alt={ad.title}
+                              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                              effect="blur"
+                              wrapperClassName="w-full h-full"
+                            />
+                            {/* Gradient Overlay */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
+                          </div>
+
+                          {/* Content Overlay */}
+                          <div className="absolute bottom-0 left-0 right-0 p-6 md:px-20 md:py-10 text-white z-10 flex flex-col justify-end h-full">
+
+                            {/* Top Badges */}
+                            <div className="absolute top-6 left-6 flex gap-2">
+                              <span className="flex items-center gap-1.5 bg-white/20 backdrop-blur-md border border-white/20 text-white px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide">
+                                <Building2 className="w-3.5 h-3.5" />
+                                {ad.categories?.name || 'Espaço'}
+                              </span>
+                              {ad.rating && (
+                                <span className="flex items-center gap-1 bg-yellow-400 text-yellow-950 px-2 py-1 rounded-full text-xs font-bold">
+                                  <Star className="w-3 h-3 fill-current" />
+                                  {ad.rating.toFixed(1)}
                                 </span>
-                              </div>
-
-                              <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-2 line-clamp-1">{ad.title}</h3>
-
-                              <div className="flex items-center text-gray-600 mb-3 text-sm">
-                                <MapPin className="w-4 h-4 mr-1.5" />
-                                <span>{ad.city}, {ad.state}</span>
-                              </div>
-
-                              <div className="flex items-center mb-4">
-                                <div className="flex items-center">
-                                  <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                                  <span className="font-medium ml-1.5 text-sm">{(ad.rating || 4.8).toFixed(1)}</span>
-                                </div>
-                                <span className="mx-2 text-gray-300">|</span>
-                                <span className="text-sm text-gray-500">{ad.reviews_count || 0} avaliações</span>
-                              </div>
-
-                              {typeof ad.specifications?.capacity === 'number' && (
-                                <p className="text-gray-600 mb-4">Até {String(ad.specifications.capacity)} pessoas</p>
                               )}
+                            </div>
 
+                            {/* Main Info */}
+                            <div className="transform transition-transform duration-300 group-hover:-translate-y-2">
+                              <h3 className="text-2xl md:text-4xl font-bold mb-3 leading-tight text-white shadow-sm">
+                                {ad.title}
+                              </h3>
+
+                              <div className="flex items-center text-gray-200 mb-4 text-sm md:text-base">
+                                <MapPin className="w-5 h-5 mr-2 text-white/80" />
+                                <span>{ad.city}, {ad.state}</span>
+                                <span className="mx-3 text-white/40">|</span>
+                                <span>Até {String(ad.specifications?.capacity || 0)} pessoas</span>
+                              </div>
+
+                              {/* Amenities */}
                               <div className="flex flex-wrap gap-2 mb-6">
                                 {ad.comfort && ad.comfort.slice(0, 3).map((amenity: string, index: number) => {
-                                  const amenityName = AMENITY_LABELS[amenity] || AMENITY_LABELS[amenity.toLowerCase()] || amenity
+                                  // Simplified amenity names matching the old logic if needed, or just display raw
                                   return (
-                                    <span key={index} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-                                      {amenityName}
+                                    <span key={index} className="bg-white/10 backdrop-blur-sm border border-white/10 text-white/90 px-3 py-1 rounded-full text-xs">
+                                      {amenity}
                                     </span>
                                   )
                                 })}
+                                {ad.comfort && ad.comfort.length > 3 && (
+                                  <span className="bg-white/10 backdrop-blur-sm px-3 py-1 rounded-full text-xs text-white/90">
+                                    +{ad.comfort.length - 3}
+                                  </span>
+                                )}
                               </div>
 
-                              <div className="flex items-center justify-between mt-auto">
-                                <Link
-                                  to={`/espacos/${ad.id}`}
-                                  className="inline-flex items-center justify-center bg-primary-600 text-white px-5 py-2.5 rounded-lg hover:bg-primary-700 transition-colors font-medium text-sm w-full md:w-auto"
-                                >
-                                  Ver Detalhes
-                                </Link>
-                              </div>
+                              {/* CTA Button */}
+                              <Link
+                                to={`/espacos/${ad.id}`}
+                                className="inline-flex items-center gap-2 bg-white text-gray-900 px-6 py-3 rounded-xl hover:bg-blue-50 transition-all font-bold text-sm md:text-base opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 duration-300"
+                              >
+                                Ver Detalhes
+                                <ChevronRight className="w-4 h-4" />
+                              </Link>
                             </div>
                           </div>
                         </div>
@@ -330,15 +345,15 @@ export default function Home() {
                   <>
                     <button
                       onClick={() => setCurrentSlide(currentSlide === 0 ? Math.min(displayedFeaturedAds.length, 4) - 1 : currentSlide - 1)}
-                      className="hidden md:block absolute left-4 top-1/2 transform -translate-y-1/2 bg-white shadow-lg rounded-full p-3 hover:bg-gray-50 transition-colors z-10"
+                      className="hidden md:block absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/90 backdrop-blur-sm shadow-lg rounded-full p-2 hover:bg-white transition-colors z-20"
                     >
-                      <ChevronLeft className="w-6 h-6 text-gray-600" />
+                      <ChevronLeft className="w-5 h-5 text-gray-800" />
                     </button>
                     <button
                       onClick={() => setCurrentSlide(currentSlide === Math.min(displayedFeaturedAds.length, 4) - 1 ? 0 : currentSlide + 1)}
-                      className="hidden md:block absolute right-4 top-1/2 transform -translate-y-1/2 bg-white shadow-lg rounded-full p-3 hover:bg-gray-50 transition-colors z-10"
+                      className="hidden md:block absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/90 backdrop-blur-sm shadow-lg rounded-full p-2 hover:bg-white transition-colors z-20"
                     >
-                      <ChevronRight className="w-6 h-6 text-gray-600" />
+                      <ChevronRight className="w-5 h-5 text-gray-800" />
                     </button>
 
                     {/* Dots Indicator */}
@@ -431,8 +446,75 @@ export default function Home() {
       </section>
 
 
+
+      {/* Services Categories Section */}
+      <section className="py-24 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Complete seu Evento</h2>
+            <p className="text-xl text-gray-600">Encotre tudo para sua festa em um só lugar</p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              {
+                title: 'Mesas e Cadeiras',
+                image: 'https://cdn0.casamentos.com.br/vendor/1623/3_2/960/jpg/alugar-cadeira-de-ferro-em-moma_13_191623.jpeg',
+                desc: 'Mobiliário para sua festa',
+                link: '/anunciantes?category_id=14'
+              },
+              {
+                title: 'Brinquedos',
+                image: 'https://d1p6nzzdute2g.cloudfront.net/lojas/loja-885/d467582e-c6ce-480d-a728-a4a5de6d5f3e',
+                desc: 'Infláveis e diversão',
+                link: '/anunciantes?category_id=15'
+              },
+              {
+                title: 'Buffet e Comida',
+                image: 'https://eventosplus.com.br/wp-content/uploads/2020/08/Rechaud-2.jpg',
+                desc: 'Salgadinhos, bolos e mais',
+                link: '/anunciantes?category_id=8'
+              },
+              {
+                title: 'DJ e Música',
+                image: 'https://www.jasound.com.br/dj/imagens/03.jpg',
+                desc: 'Som e iluminação',
+                link: '/anunciantes?category_id=10'
+              }
+            ].map((category, index) => (
+              <Link
+                key={index}
+                to={category.link}
+                className="group relative h-[400px] rounded-3xl overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-500"
+              >
+                <div className="absolute inset-0">
+                  <LazyLoadImage
+                    src={category.image}
+                    alt={category.title}
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    effect="blur"
+                    wrapperClassName="w-full h-full"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
+                </div>
+
+                <div className="absolute bottom-0 left-0 right-0 p-8 text-white transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+                  <h3 className="text-2xl font-bold mb-2">{category.title}</h3>
+                  <p className="text-gray-200 text-sm mb-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100">
+                    {category.desc}
+                  </p>
+                  <span className="inline-flex items-center text-sm font-semibold text-blue-300 group-hover:text-white transition-colors">
+                    Ver opções <ChevronRight className="w-4 h-4 ml-1" />
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* How It Works Section */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Como funciona?</h2>
