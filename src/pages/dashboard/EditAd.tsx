@@ -209,7 +209,7 @@ export default function EditAd() {
   const [customFeatures, setCustomFeatures] = useState<string[]>([])
   const [customServices, setCustomServices] = useState<string[]>([])
   const [removedExistingImageIds, setRemovedExistingImageIds] = useState<string[]>([])
-  const maxImages = 10
+  const maxImages = 8
 
   const {
     register,

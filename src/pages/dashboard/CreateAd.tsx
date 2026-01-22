@@ -33,6 +33,12 @@ import { handleMaskedChange, parseCurrency } from '@/utils/formUtils'
 // Import apiClient for fetching categories
 import { apiClient } from '@/lib/api-client'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
+import {
+  PRICING_TYPES,
+  CATEGORY_PRICING_CONFIG,
+  DEFAULT_PRICING_OPTIONS,
+  type PricingType
+} from '@/constants/pricing'
 
 // Mapas de tradução das comodidades
 const AMENITIES_LABELS = {
@@ -133,18 +139,10 @@ const createListingSchema = z.object({
   services: z.array(z.string()).optional(),
 
   // Step 5: Preço
-  price: z.any()
-    .refine((val) => {
-      if (typeof val === 'number') return val > 0
-      if (typeof val === 'string') {
-        const num = parseFloat(val.replace(/[^\d,]/g, '').replace(',', '.'))
-        return num > 0
-      }
-      return false
-    }, 'Preço deve ser maior que zero'),
-  priceType: z.enum(['daily', 'weekend'], {
-    required_error: 'Selecione o tipo de preço'
-  }),
+  // Validation handled in superRefine
+  price: z.any().optional(),
+  priceType: z.any().optional(),
+  priceUnit: z.string().min(1, 'Selecione a unidade de preço'),
 
   // Step 6: Contato
   contactPhone: z.string()
@@ -169,6 +167,25 @@ const createListingSchema = z.object({
 
   // Images (será tratado separadamente no estado)
   images: z.array(z.any()).optional()
+}).superRefine((data, ctx) => {
+  if (data.priceUnit !== 'orcamento') {
+    const val = data.price;
+    let isValid = false;
+
+    if (typeof val === 'number' && val > 0) isValid = true;
+    else if (typeof val === 'string') {
+      const num = parseFloat(val.replace(/[^\d,]/g, '').replace(',', '.'));
+      if (!isNaN(num) && num > 0) isValid = true;
+    }
+
+    if (!isValid) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Preço deve ser maior que zero',
+        path: ['price']
+      });
+    }
+  }
 })
 
 type CreateListingData = z.infer<typeof createListingSchema>
@@ -238,7 +255,7 @@ export default function CreateAd() {
   const { createAd } = useAdsStore()
   const toast = useToast()
   const [brazilianStates, setBrazilianStates] = useState<Array<{ code: string, name: string, region: string }>>([])
-  const [categories, setCategories] = useState<Array<{ id: number, name: string, type: 'space' | 'service' | 'equipment' | 'advertiser', parent_id?: number }>>([])
+  const [categories, setCategories] = useState<Array<{ id: number, name: string, type: 'space' | 'service' | 'equipment' | 'advertiser', allowed_pricing_models?: any[], parent_id?: number }>>([])
   const [error, setError] = useState<string | null>(null)
   const [images, setImages] = useState<Array<{ id: string, file: File, preview: string }>>([])
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([])
@@ -247,36 +264,43 @@ export default function CreateAd() {
   const [customAmenities, setCustomAmenities] = useState<string[]>([])
   const [customFeatures, setCustomFeatures] = useState<string[]>([])
   const [customServices, setCustomServices] = useState<string[]>([])
-  const maxImages = 10
+  const [pricingModels, setPricingModels] = useState<Array<{ id: string, key: string, label: string, unit: string | null, description: string | null }>>([])
+  const maxImages = 8
   const modalShownRef = useRef(false)
 
   useEffect(() => {
     getBrazilianStates().then(setBrazilianStates)
 
+    // Fetch pricing models
+    apiClient.get('/api/pricing-models')
+      .then(res => setPricingModels(res.data))
+      .catch(err => console.error('Error fetching pricing models', err));
+
     // Fetch categories from API
     apiClient.get('/api/categories')
       .then(response => {
         const dbCategories = (response.data as any[]).map((cat: any) => {
-          // Simplistic mapping based on name keywords - later backend should provide type
-          let type: 'space' | 'service' | 'equipment' = 'space';
+          // Use backend type if available, otherwise infer (fallback)
+          let type: 'space' | 'service' | 'equipment' = (cat.type?.toLowerCase() as any) || 'space';
 
-          const lowerName = cat.name.toLowerCase();
-
-          if (['buffet', 'fotografia', 'foto', 'video', 'filmagem', 'cerimonial', 'segurança', 'limpeza', 'bar', 'garçom', 'dj', 'banda', 'música', 'assessoria', 'recepcionista', 'animador'].some(t => lowerName.includes(t))) {
-            type = 'service';
-          } else if (['som', 'iluminação', 'luz', 'tendas', 'mesas', 'cadeiras', 'brinquedo', 'gerador', 'palco', 'telão', 'projetor', 'cobertura'].some(t => lowerName.includes(t))) {
-            // Some items like Decor could be service, but let's assume equipment rental often 
-            // Or better, let's treat Decor as Service usually. 
-            if (lowerName.includes('decoração')) type = 'service';
-            else type = 'equipment';
-          } else {
-            type = 'space';
+          // Legacy Inference Fallback if backend returns null/undefined properties
+          if (!cat.type) {
+            const lowerName = cat.name.toLowerCase();
+            if (['buffet', 'fotografia', 'foto', 'video', 'filmagem', 'cerimonial', 'segurança', 'limpeza', 'bar', 'garçom', 'dj', 'banda', 'música', 'assessoria', 'recepcionista', 'animador'].some(t => lowerName.includes(t))) {
+              type = 'service';
+            } else if (['som', 'iluminação', 'luz', 'tendas', 'mesas', 'cadeiras', 'brinquedo', 'gerador', 'palco', 'telão', 'projetor', 'cobertura'].some(t => lowerName.includes(t))) {
+              if (lowerName.includes('decoração')) type = 'service';
+              else type = 'equipment';
+            } else {
+              type = 'space';
+            }
           }
 
           return {
             id: cat.id,
             name: cat.name,
             type: type,
+            allowed_pricing_models: cat.allowed_pricing_models,
             parent_id: undefined
           };
         });
@@ -334,6 +358,7 @@ export default function CreateAd() {
       services: [],
       price: undefined,
       priceType: undefined,
+      priceUnit: 'diaria',
       contactPhone: '',
       contactWhatsapp: '',
       contactWhatsappAlternative: '',
@@ -575,15 +600,6 @@ export default function CreateAd() {
 
       const finalPrice = parseCurrency(data.price)
 
-      let price_per_day: number | undefined
-      let price_per_weekend: number | undefined
-
-      if (data.priceType === 'daily') {
-        price_per_day = finalPrice
-      } else if (data.priceType === 'weekend') {
-        price_per_weekend = finalPrice
-      }
-
       const formattedPhone = processPhone(data.contactPhone)
       const formattedWhatsapp = processPhone(data.contactWhatsapp)
       const formattedWhatsappAlternative = processPhone(data.contactWhatsappAlternative)
@@ -629,8 +645,8 @@ export default function CreateAd() {
         },
 
         capacity: data.capacity,
-        price_per_day,
-        price_per_weekend,
+        price_per_day: data.price ? finalPrice : undefined, // Always save price here as base value
+        price_unit: data.priceUnit, // New field
         comfort: allComfort,
         contact_phone: formattedPhone,
         contact_whatsapp: formattedWhatsapp,
@@ -713,6 +729,7 @@ export default function CreateAd() {
                     setCustomAmenities([])
                     setCustomFeatures([])
                     setCustomServices([])
+                    setValue('priceUnit', 'diaria')
                   }}
                   className={`flex flex-col items-center p-4 rounded-xl border-2 transition-all ${watchedCategoryType === 'space'
                     ? 'border-primary-500 bg-primary-50 text-primary-700'
@@ -735,6 +752,7 @@ export default function CreateAd() {
                     setCustomAmenities([])
                     setCustomFeatures([])
                     setCustomServices([])
+                    setValue('priceUnit', 'pessoa')
                   }}
                   className={`flex flex-col items-center p-4 rounded-xl border-2 transition-all ${watchedCategoryType === 'service'
                     ? 'border-primary-500 bg-primary-50 text-primary-700'
@@ -757,6 +775,7 @@ export default function CreateAd() {
                     setCustomAmenities([])
                     setCustomFeatures([])
                     setCustomServices([])
+                    setValue('priceUnit', 'unidade')
                   }}
                   className={`flex flex-col items-center p-4 rounded-xl border-2 transition-all ${watchedCategoryType === 'equipment'
                     ? 'border-primary-500 bg-primary-50 text-primary-700'
@@ -1004,7 +1023,7 @@ export default function CreateAd() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div key="price-field-container">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Preço (R$) <span className="text-red-500">*</span>
+                  Preço <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -1013,29 +1032,42 @@ export default function CreateAd() {
                   <input
                     key="price-input"
                     type="text"
-                    placeholder="0,00"
-                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all shadow-sm"
+                    disabled={watch('priceUnit') === 'orcamento'}
+                    placeholder={watch('priceUnit') === 'orcamento' ? 'A Combinar' : '0,00'}
+                    className={`w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all shadow-sm ${watch('priceUnit') === 'orcamento' ? 'bg-gray-100 text-gray-500' : ''}`}
                     {...register('price')}
                     onChange={(e) => handleMaskedChange(e, maskMoneyFlexible, 'price', setValue)}
                   />
                 </div>
-                <p className="mt-1 text-xs text-gray-500">Informe o valor (Ex: 600 ou 600,00)</p>
+                {watch('priceUnit') && (
+                  <p className="mt-1 text-xs text-gray-500">
+                    {pricingModels.find(m => m.key === watch('priceUnit'))?.description || ''}
+                  </p>
+                )}
                 {errors.price && (
                   <p className="mt-1 text-sm text-red-600">{String(errors.price.message || '')}</p>
                 )}
               </div>
 
               <FormSelect
-                key="priceType"
-                label="Período"
-                options={[
-                  { value: 'daily', label: 'Por dia' },
-                  { value: 'weekend', label: 'Por final de semana' }
-                ]}
-                error={errors.priceType}
+                key="priceUnit"
+                label="Como você cobra?"
+                options={(() => {
+                  const selectedCat = categories.find(c => c.id === Number(watch('category_id')));
+                  if (selectedCat && selectedCat.allowed_pricing_models && selectedCat.allowed_pricing_models.length > 0) {
+                    return selectedCat.allowed_pricing_models.map((m: any) => ({
+                      value: m.key,
+                      label: m.label
+                    }));
+                  }
+                  return pricingModels.filter(m => {
+                    return true;
+                  }).map(m => ({ value: m.key, label: m.label }));
+                })()}
+                error={errors.priceUnit as any}
                 required
-                placeholder="Selecione o período"
-                {...register('priceType')}
+                placeholder="Selecione..."
+                {...register('priceUnit')}
               />
             </div>
           </div>
@@ -1229,11 +1261,18 @@ export default function CreateAd() {
                   </div>
                   <div className="text-left sm:text-right w-full sm:w-auto">
                     <p className="text-3xl font-bold text-green-600">
-                      {watch('price') || 'R$ 0,00'}
+                      {watch('priceUnit') === 'orcamento' ? 'Consultar' : (watch('price') || 'R$ 0,00')}
                     </p>
-                    <p className="text-sm text-gray-500">
-                      por {watch('priceType') === 'daily' ? 'dia' : watch('priceType') === 'weekend' ? 'final de semana' : 'período'}
-                    </p>
+                    {watch('priceUnit') && pricingModels.find(m => m.key === watch('priceUnit'))?.unit && (
+                      <p className="text-sm text-gray-500">
+                        por {pricingModels.find(m => m.key === watch('priceUnit'))?.unit || 'período'}
+                      </p>
+                    )}
+                    {watch('priceUnit') && !pricingModels.find(m => m.key === watch('priceUnit'))?.unit && (
+                      <p className="text-sm text-gray-500">
+                        {pricingModels.find(m => m.key === watch('priceUnit'))?.label || ''}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -1244,16 +1283,18 @@ export default function CreateAd() {
                   </p>
                 </div>
 
-                <div className="border-t pt-4 grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-xs text-gray-500 uppercase font-semibold">Capacidade</p>
-                    <p className="text-sm text-gray-900">{watch('capacity') ?? '--'} pessoas</p>
+                {watchedCategoryType === 'space' && (
+                  <div className="border-t pt-4 grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase font-semibold">Capacidade</p>
+                      <p className="text-sm text-gray-900">{watch('capacity') ?? '--'} pessoas</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase font-semibold">Área</p>
+                      <p className="text-sm text-gray-900">{watch('area_sqm') ?? '--'} m²</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs text-gray-500 uppercase font-semibold">Área</p>
-                    <p className="text-sm text-gray-900">{watch('area_sqm') ?? '--'} m²</p>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
 

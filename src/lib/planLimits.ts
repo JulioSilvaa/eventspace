@@ -7,7 +7,7 @@ export interface PlanLimits {
 
 // Em uma plataforma gratuita, todos os usuários têm os mesmos limites
 export const PLAN_LIMITS: PlanLimits = {
-  maxImages: 15,    // Aumentado para 15 para todos
+  maxImages: 8,    // Aumentado para 15 para todos
   maxAds: 50,       // Praticamente ilimitado para uso normal
   allowsFeatured: true, // Todos podem ter destaque
   hasPriority: true

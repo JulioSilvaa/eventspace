@@ -33,6 +33,10 @@ const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             <FileText className="w-5 h-5 mr-3" />
             Anúncios
           </a>
+          <a href="/admin/config" className="flex items-center px-4 py-3 text-slate-400 hover:bg-slate-700 hover:text-white rounded-xl transition-colors">
+            <Settings className="w-5 h-5 mr-3" />
+            Configurações
+          </a>
         </nav>
 
         <div className="p-4 border-t border-slate-700">
