@@ -32,6 +32,7 @@ import { handleMaskedChange, parseCurrency } from '@/utils/formUtils'
 
 // Import apiClient for fetching categories
 import { apiClient } from '@/lib/api-client'
+import LoadingSpinner from '@/components/ui/LoadingSpinner'
 
 // Mapas de tradução das comodidades
 const AMENITIES_LABELS = {
@@ -349,46 +350,14 @@ export default function CreateAd() {
   // Log validation errors for debugging
   useEffect(() => {
     if (Object.keys(errors).length > 0) {
-      // console.log('📝 FORM VALIDATION ERRORS:', errors)
+      // Validation errors exist
     }
   }, [errors])
-
-  // console.log('🔄 CreateAd Render - isValid:', isValid, 'errors count:', Object.keys(errors).length)
 
   const watchedCategoryType = watch('categoryType')
   const allValues = watch()
 
-  // Reset category when changing type
-  useEffect(() => {
-    if (watchedCategoryType) {
-      setValue('category_id', undefined as unknown as number)
-    }
-  }, [watchedCategoryType, setValue])
 
-
-  // Cleanup image URLs ONLY on unmount to avoid ERR_FILE_NOT_FOUND during transitions
-  useEffect(() => {
-    const currentImages = images
-    return () => {
-      currentImages.forEach(image => {
-        URL.revokeObjectURL(image.preview)
-      })
-    }
-  }, []) // Empty dependency array means this runs once on mount and cleanup runs only on unmount
-
-  // Reset category and amenities when changing type
-  useEffect(() => {
-    if (watchedCategoryType) {
-      setValue('category_id', undefined as unknown as number)
-      // Clear amenities/features/services when switching types
-      setSelectedAmenities([])
-      setSelectedFeatures([])
-      setSelectedServices([])
-      setCustomAmenities([])
-      setCustomFeatures([])
-      setCustomServices([])
-    }
-  }, [watchedCategoryType, setValue])
 
   const filteredSteps = getFilteredSteps(watchedCategoryType)
 
@@ -447,8 +416,96 @@ export default function CreateAd() {
     }
   }
 
+  // Helper to convert File to Base64
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.readAsDataURL(file)
+      reader.onload = () => resolve(reader.result as string)
+      reader.onerror = error => reject(error)
+    })
+  }
+
+  // Helper to convert Base64 to File
+  const base64ToFile = (url: string, filename: string, mimeType: string): Promise<File> => {
+    return (fetch(url)
+      .then(res => res.arrayBuffer())
+      .then(buf => new File([buf], filename, { type: mimeType }))
+    )
+  }
+
+  // Restore draft on mount
+  const [isRestoring, setIsRestoring] = useState(true)
+
+  useEffect(() => {
+    const restore = async () => {
+      const draft = localStorage.getItem('ad_draft')
+      const draftImages = localStorage.getItem('ad_draft_images')
+      const savedStep = localStorage.getItem('ad_draft_step')
+
+      if (draft) {
+        try {
+          const parsed = JSON.parse(draft)
+          Object.keys(parsed).forEach(key => {
+            // Ensure category_id is a number
+            if (key === 'category_id' && parsed[key]) {
+              setValue(key as keyof CreateListingData, Number(parsed[key]))
+            } else {
+              setValue(key as keyof CreateListingData, parsed[key])
+            }
+          })
+
+          if (savedStep) {
+            setCurrentStep(Number(savedStep))
+          }
+
+          // Toast removed per user request (too noisy)
+        } catch (e) {
+          console.error('Error parsing draft', e)
+        }
+      }
+
+      if (draftImages) {
+        try {
+          const parsedImages = JSON.parse(draftImages) as Array<{ name: string, type: string, base64: string }>
+          const restoredImages = await Promise.all(parsedImages.map(async (img) => {
+            const file = await base64ToFile(img.base64, img.name, img.type)
+            return {
+              id: Math.random().toString(36).substr(2, 9),
+              file,
+              preview: URL.createObjectURL(file)
+            }
+          }))
+          setImages(restoredImages)
+        } catch (e) {
+          console.error('Error restoring images', e)
+        }
+      }
+
+      setIsRestoring(false)
+    }
+
+    restore()
+  }, [setValue])
+
+  // Auto-submit if coming back from registration with a completed draft
+  useEffect(() => {
+    // Só tenta enviar se: não estiver restaurando, usuário estiver logado, e houver um rascunho salvo
+    if (!isRestoring && user && localStorage.getItem('ad_draft') && !isSubmitting) {
+      // Pequeno delay para garantir que o estado do form (especialmente imagens) esteja syncado
+      const timer = setTimeout(() => {
+        // Verifica se estamos no último passo ou se o draft indica intenção de finalizar
+        const savedStep = localStorage.getItem('ad_draft_step')
+        if (savedStep === '7') {
+          // Toast removed per user request (too noisy) - onSubmit will show its own toast
+          handleSubmit(onSubmit)()
+        }
+      }, 500)
+      return () => clearTimeout(timer)
+    }
+  }, [isRestoring, user, isSubmitting, handleSubmit])
+
   const onSubmit = async (data: CreateListingData) => {
-    // console.log('🚀 SUBMITTING FORM START', data)
     setIsSubmitting(true)
     setError(null)
 
@@ -456,7 +513,29 @@ export default function CreateAd() {
 
     try {
       if (!user) {
-        throw new Error('Usuário não encontrado')
+        // Save form text data
+        localStorage.setItem('ad_draft', JSON.stringify(data))
+        localStorage.setItem('ad_draft_step', currentStep.toString())
+
+        // Save images as Base64 (Limit size/count ideally, but simple for now)
+        if (images.length > 0) {
+          try {
+            const imagesToBase64 = await Promise.all(images.map(async (img) => ({
+              name: img.file.name,
+              type: img.file.type,
+              base64: await fileToBase64(img.file)
+            })))
+            localStorage.setItem('ad_draft_images', JSON.stringify(imagesToBase64))
+          } catch (imgErr) {
+            console.error('Error saving images draft', imgErr)
+            toast.warning('Aviso', 'Algumas imagens não puderam ser salvas no rascunho.')
+          }
+        }
+
+        toast.success('Rascunho salvo!', 'Crie sua conta para publicar seu anúncio.', { duration: 5000 })
+        // Use a slight delay to allow toast to be seen? No need.
+        navigate('/cadastro?returnTo=/anuncie/novo')
+        return
       }
 
       loadingToastId = toast.loading('Criando anúncio...', 'Aguarde enquanto processamos seus dados')
@@ -518,11 +597,6 @@ export default function CreateAd() {
       }
 
       // Criar objeto no formato esperado pelo backend (SpaceEntity)
-      console.log('🚀 PREPARANDO ENVIO:', {
-        tipoSelecionado: data.categoryType,
-        tipoEnviado: data.categoryType.toUpperCase(),
-        conforto: allComfort
-      });
 
       const listingData: any = {
         user_id: user.id,
@@ -565,6 +639,11 @@ export default function CreateAd() {
         return;
       }
 
+      // Clear draft on success
+      localStorage.removeItem('ad_draft')
+      localStorage.removeItem('ad_draft_images')
+      localStorage.removeItem('ad_draft_step')
+
       if (loadingToastId) toast.removeToast(String(loadingToastId));
 
       toast.success('Anúncio criado!', 'Redirecionando para ativação do plano...');
@@ -582,6 +661,14 @@ export default function CreateAd() {
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  if (isRestoring) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
+        <LoadingSpinner message="Restaurando seu anúncio..." />
+      </div>
+    )
   }
 
   const renderStep = () => {
@@ -606,7 +693,16 @@ export default function CreateAd() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <button
                   type="button"
-                  onClick={() => setValue('categoryType', 'space')}
+                  onClick={() => {
+                    setValue('categoryType', 'space')
+                    setValue('category_id', undefined as unknown as number)
+                    setSelectedAmenities([])
+                    setSelectedFeatures([])
+                    setSelectedServices([])
+                    setCustomAmenities([])
+                    setCustomFeatures([])
+                    setCustomServices([])
+                  }}
                   className={`flex flex-col items-center p-4 rounded-xl border-2 transition-all ${watchedCategoryType === 'space'
                     ? 'border-primary-500 bg-primary-50 text-primary-700'
                     : 'border-gray-200 hover:border-gray-300 text-gray-600'
@@ -619,7 +715,16 @@ export default function CreateAd() {
 
                 <button
                   type="button"
-                  onClick={() => setValue('categoryType', 'service')}
+                  onClick={() => {
+                    setValue('categoryType', 'service')
+                    setValue('category_id', undefined as unknown as number)
+                    setSelectedAmenities([])
+                    setSelectedFeatures([])
+                    setSelectedServices([])
+                    setCustomAmenities([])
+                    setCustomFeatures([])
+                    setCustomServices([])
+                  }}
                   className={`flex flex-col items-center p-4 rounded-xl border-2 transition-all ${watchedCategoryType === 'service'
                     ? 'border-primary-500 bg-primary-50 text-primary-700'
                     : 'border-gray-200 hover:border-gray-300 text-gray-600'
@@ -632,7 +737,16 @@ export default function CreateAd() {
 
                 <button
                   type="button"
-                  onClick={() => setValue('categoryType', 'equipment')}
+                  onClick={() => {
+                    setValue('categoryType', 'equipment')
+                    setValue('category_id', undefined as unknown as number)
+                    setSelectedAmenities([])
+                    setSelectedFeatures([])
+                    setSelectedServices([])
+                    setCustomAmenities([])
+                    setCustomFeatures([])
+                    setCustomServices([])
+                  }}
                   className={`flex flex-col items-center p-4 rounded-xl border-2 transition-all ${watchedCategoryType === 'equipment'
                     ? 'border-primary-500 bg-primary-50 text-primary-700'
                     : 'border-gray-200 hover:border-gray-300 text-gray-600'

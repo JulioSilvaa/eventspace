@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useSearchParams, Link } from 'react-router-dom'
+import { useSearchParams, Link, useNavigate } from 'react-router-dom'
 import { TrendingUp, LogOut, Home } from 'lucide-react'
 import DashboardStats, { DashboardStatsData } from '@/components/dashboard/DashboardStats'
 import QuickActions from '@/components/dashboard/QuickActions'
@@ -35,6 +35,7 @@ export default function Dashboard() {
   } = useAuth()
   const { userAds, fetchUserAds } = useAdsStore()
   const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
   const isWelcome = searchParams.get('welcome') === 'true'
   const isNewAd = searchParams.get('newAd') === 'true'
   const [data, setData] = useState<DashboardData | null>(null)
@@ -190,7 +191,10 @@ export default function Dashboard() {
               </Link>
 
               <button
-                onClick={signOut}
+                onClick={async () => {
+                  navigate('/')
+                  await signOut()
+                }}
                 className="flex items-center gap-2 px-3 py-2 text-sm font-bold text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-all active:scale-95"
               >
                 <LogOut className="w-4 h-4" />

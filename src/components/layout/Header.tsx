@@ -10,8 +10,9 @@ function Header() {
   const isHomePage = location.pathname === '/' || location.pathname === '/home'
 
   const handleSignOut = async () => {
-    await signOut()
+    // Navigate first to avoid ProtectedRoute redirecting to /login
     navigate('/')
+    await signOut()
   }
 
   return (
@@ -99,7 +100,7 @@ function Header() {
                   Entrar
                 </Link>
                 <Link
-                  to="/cadastro"
+                  to="/anuncie/novo"
                   className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 transition-colors font-medium"
                 >
                   Anunciar Agora

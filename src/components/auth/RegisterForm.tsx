@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { FormField, FormButton } from '@/components/forms'
 import { useAuthStore } from '@/stores/authStore'
 import { useToast } from '@/contexts/ToastContext'
@@ -43,6 +43,7 @@ type RegisterForm = z.infer<typeof registerSchema>
 export default function RegisterForm() {
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
+  const location = useLocation()
   const toast = useToast()
   const { signUp } = useAuthStore()
 
@@ -89,8 +90,10 @@ export default function RegisterForm() {
         message: 'Bem-vindo ao EventSpace'
       })
 
-      // Redirecionar para a home ou dashboard
-      navigate('/')
+      // Redirecionar para a home ou dashboard (ou url de retorno)
+      const searchParams = new URLSearchParams(location.search)
+      const returnTo = searchParams.get('returnTo') || '/'
+      navigate(returnTo)
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro ao criar conta'
       toast.updateToast(loadingToast, {
