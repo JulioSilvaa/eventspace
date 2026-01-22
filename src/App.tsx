@@ -136,7 +136,14 @@ function App() {
               <Route path="/como-funciona" element={<HowItWorks />} />
               <Route path="/termos" element={<TermsOfService />} />
               <Route path="/privacidade" element={<PrivacyPolicy />} />
+              {/* Legal pages */}
+              <Route path="/como-funciona" element={<HowItWorks />} />
+              <Route path="/termos" element={<TermsOfService />} />
+              <Route path="/privacidade" element={<PrivacyPolicy />} />
               <Route path="/payment/success" element={<PaymentSuccess />} />
+
+              {/* Public Ad Creation Route */}
+              <Route path="/anuncie/novo" element={<CreateAd />} />
 
               {/* Sponsor routes - Only show if feature is enabled */}
               {import.meta.env.VITE_ENABLE_SPONSORS === 'true' && (

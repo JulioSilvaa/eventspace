@@ -14,18 +14,18 @@ import {
 export default function HowItWorks() {
   const steps = [
     {
-      icon: UserPlus,
-      title: "1. Crie sua Conta Grátis",
-      description: "Cadastre-se em menos de 1 minuto. É rápido, simples e não exigimos cartão de crédito nesta etapa.",
+      icon: ImagePlus,
+      title: "1. Crie seu Anúncio",
+      description: "Comece montando seu anúncio agora mesmo, antes de criar sua conta. É rápido e você já vê como vai ficar.",
       color: "blue",
-      badge: "Passo Inicial"
+      badge: "Comece Agora"
     },
     {
-      icon: ImagePlus,
-      title: "2. Monte seu Anúncio",
-      description: "Adicione fotos incríveis, descreva seu espaço e liste os diferenciais. Você pode deixar tudo pronto antes de pagar.",
+      icon: UserPlus,
+      title: "2. Crie sua Conta Grátis",
+      description: "Gostou do resultado? Cadastre-se rapidinho para salvar seu anúncio. Não pedimos cartão de crédito.",
       color: "purple",
-      badge: "Prepare Tudo"
+      badge: "Salve Seu Progresso"
     },
     {
       icon: Rocket,

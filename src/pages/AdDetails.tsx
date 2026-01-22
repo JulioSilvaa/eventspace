@@ -921,6 +921,15 @@ export default function AdDetails() {
                         <span className="text-sm font-semibold text-gray-900">{formatPhone(displayWhatsapp)}</span>
                       </div>
                     )}
+                    {(ad as any).contact_whatsapp_alternative && (
+                      <div className="flex items-center justify-between group">
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <MessageCircle className="w-4 h-4 text-gray-400 group-hover:text-green-500 transition-colors" />
+                          <span>WhatsApp Alt.</span>
+                        </div>
+                        <span className="text-sm font-semibold text-gray-900">{formatPhone((ad as any).contact_whatsapp_alternative)}</span>
+                      </div>
+                    )}
                     {displayEmail && (
                       <div className="flex items-center justify-between group">
                         <div className="flex items-center gap-2 text-sm text-gray-600">
