@@ -4,7 +4,7 @@
  */
 
 // Chave para criptografia - usa variável de ambiente ou fallback
-const CRYPTO_KEY = import.meta.env.VITE_CRYPTO_KEY || 'EventSpace2024SecureKey'
+const CRYPTO_KEY = import.meta.env.VITE_CRYPTO_KEY || ''
 
 
 /**
