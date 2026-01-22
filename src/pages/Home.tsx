@@ -23,8 +23,8 @@ export default function Home() {
 
   // Icons mapping for features
   const FeatureIcons = {
-    Search: <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>,
-    Dollar: <svg className="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" /></svg>
+    Search: <svg className="w-6 h-6 md:w-8 md:h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>,
+    Dollar: <svg className="w-6 h-6 md:w-8 md:h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" /></svg>
   }
 
   // Carregar dados reais do banco
@@ -204,37 +204,45 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="group p-8 bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100">
-              <div className="bg-blue-50 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
+            <div className="group p-4 md:p-8 bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 flex flex-row md:flex-col items-center md:items-start text-left">
+              <div className="bg-blue-50 w-12 h-12 md:w-16 md:h-16 rounded-2xl flex items-center justify-center mr-4 md:mr-0 md:mb-6 group-hover:scale-110 transition-transform flex-shrink-0">
                 {FeatureIcons.Search}
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Busca Inteligente</h3>
-              <p className="text-gray-600 leading-relaxed">Encontre o espaço ideal filtrando por localização e capacidade</p>
-            </div>
-
-            <div className="group p-8 bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100">
-              <div className="bg-green-50 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                <MapPin className="w-8 h-8 text-green-600" />
+              <div>
+                <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-1 md:mb-3">Busca Inteligente</h3>
+                <p className="text-gray-600 leading-relaxed text-sm md:text-base">Encontre o espaço ideal filtrando por localização e capacidade</p>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Localização Precisa</h3>
-              <p className="text-gray-600 leading-relaxed">Veja distâncias e negocie entrega diretamente</p>
             </div>
 
-            <div className="group p-8 bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100">
-              <div className="bg-yellow-50 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                <Star className="w-8 h-8 text-yellow-600" />
+            <div className="group p-4 md:p-8 bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 flex flex-row md:flex-col items-center md:items-start text-left">
+              <div className="bg-green-50 w-12 h-12 md:w-16 md:h-16 rounded-2xl flex items-center justify-center mr-4 md:mr-0 md:mb-6 group-hover:scale-110 transition-transform flex-shrink-0">
+                <MapPin className="w-6 h-6 md:w-8 md:h-8 text-green-600" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Avaliações Reais</h3>
-              <p className="text-gray-600 leading-relaxed">Confira avaliações de outros organizadores</p>
+              <div>
+                <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-1 md:mb-3">Localização Precisa</h3>
+                <p className="text-gray-600 leading-relaxed text-sm md:text-base">Veja distâncias e negocie entrega diretamente</p>
+              </div>
             </div>
 
-            <div className="group p-8 bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100">
-              <div className="bg-orange-50 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+            <div className="group p-4 md:p-8 bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 flex flex-row md:flex-col items-center md:items-start text-left">
+              <div className="bg-yellow-50 w-12 h-12 md:w-16 md:h-16 rounded-2xl flex items-center justify-center mr-4 md:mr-0 md:mb-6 group-hover:scale-110 transition-transform flex-shrink-0">
+                <Star className="w-6 h-6 md:w-8 md:h-8 text-yellow-600" />
+              </div>
+              <div>
+                <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-1 md:mb-3">Avaliações Reais</h3>
+                <p className="text-gray-600 leading-relaxed text-sm md:text-base">Confira avaliações de outros organizadores</p>
+              </div>
+            </div>
+
+            <div className="group p-4 md:p-8 bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 flex flex-row md:flex-col items-center md:items-start text-left">
+              <div className="bg-orange-50 w-12 h-12 md:w-16 md:h-16 rounded-2xl flex items-center justify-center mr-4 md:mr-0 md:mb-6 group-hover:scale-110 transition-transform flex-shrink-0">
                 {FeatureIcons.Dollar}
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Sem Taxas Extras</h3>
-              <p className="text-gray-600 leading-relaxed">Negocie direto com o fornecedor, sem intermediação</p>
+              <div>
+                <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-1 md:mb-3">Sem Taxas Extras</h3>
+                <p className="text-gray-600 leading-relaxed text-sm md:text-base">Negocie direto com o fornecedor, sem intermediação</p>
+              </div>
             </div>
           </div>
         </div>
@@ -244,7 +252,7 @@ export default function Home() {
       <section className="py-24 bg-white">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <div className="flex items-center justify-center gap-2 mb-4">
+            <div className="flex flex-col md:flex-row items-center justify-center gap-2 md:gap-4 mb-4">
               <Star className="w-8 h-8 text-yellow-600 fill-current" />
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900">Anúncios em Destaque</h2>
             </div>
@@ -603,14 +611,15 @@ export default function Home() {
 
                 <p className="text-slate-300 mb-6 italic text-lg opacity-90">"{testimonial.comment}"</p>
 
-                <div className="flex items-center pt-4 border-t border-slate-700">
+                <div className="flex items-center pt-4 border-t border-slate-700 gap-4">
                   <LazyLoadImage
                     src={testimonial.avatar}
                     alt={testimonial.name}
-                    className="w-12 h-12 rounded-full mr-4 ring-2 ring-blue-500"
+                    className="w-12 h-12 rounded-full ring-2 ring-blue-500"
                     width={48}
                     height={48}
                     effect="blur"
+                    wrapperClassName="flex-shrink-0"
                   />
                   <div>
                     <div className="font-bold text-white">{testimonial.name}</div>
