@@ -488,15 +488,26 @@ export default function CreateAd() {
     restore()
   }, [setValue])
 
+  const hasAutoSubmittedRef = useRef(false)
+
   // Auto-submit if coming back from registration with a completed draft
   useEffect(() => {
     // Só tenta enviar se: não estiver restaurando, usuário estiver logado, e houver um rascunho salvo
-    if (!isRestoring && user && localStorage.getItem('ad_draft') && !isSubmitting) {
+    if (
+      !isRestoring &&
+      user &&
+      localStorage.getItem('ad_draft') &&
+      !isSubmitting &&
+      !hasAutoSubmittedRef.current
+    ) {
       // Pequeno delay para garantir que o estado do form (especialmente imagens) esteja syncado
       const timer = setTimeout(() => {
         // Verifica se estamos no último passo ou se o draft indica intenção de finalizar
         const savedStep = localStorage.getItem('ad_draft_step')
         if (savedStep === '7') {
+          // Mark as attempted to prevent loop on failure
+          hasAutoSubmittedRef.current = true
+
           // Toast removed per user request (too noisy) - onSubmit will show its own toast
           handleSubmit(onSubmit)()
         }
