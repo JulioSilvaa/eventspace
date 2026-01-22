@@ -22,12 +22,10 @@ class ApiClient {
   /**
    * Set the access token for authenticated requests
    */
-  /**
-   * Set the access token (kept in memory only, if needed, or rely on cookies)
-   */
   setToken(token: string): void {
     this.accessToken = token
-    // Token is not persisted in localStorage anymore - relying on HttpOnly cookies
+    // Persist token for page refreshes
+    localStorage.setItem('accessToken', token)
   }
 
   /**
@@ -35,13 +33,16 @@ class ApiClient {
    */
   clearToken(): void {
     this.accessToken = null
-    // Cookies should be cleared by the backend on /logout
+    localStorage.removeItem('accessToken')
   }
 
   /**
    * Get current access token
    */
   getToken(): string | null {
+    if (!this.accessToken) {
+      this.accessToken = localStorage.getItem('accessToken')
+    }
     return this.accessToken
   }
 
@@ -98,11 +99,11 @@ class ApiClient {
       ...options.headers,
     }
 
-    // Authorization header removed - using HttpOnly cookies
-    // const token = this.getToken()
-    // if (token) {
-    //   (headers as Record<string, string>)['Authorization'] = `Bearer ${token}`
-    // }
+    // Add authorization header if we have a token
+    const token = this.getToken()
+    if (token) {
+      (headers as Record<string, string>)['Authorization'] = `Bearer ${token}`
+    }
 
     try {
       const response = await fetch(url, {
@@ -224,10 +225,8 @@ class ApiClient {
 
     // Add authorization header if we have a token
     const getHeaders = (): Record<string, string> => {
-      // Authorization header removed - using HttpOnly cookies
-      // const token = this.getToken()
-      // return token ? { Authorization: `Bearer ${token}` } : {}
-      return {}
+      const token = this.getToken()
+      return token ? { Authorization: `Bearer ${token}` } : {}
     }
 
     try {
