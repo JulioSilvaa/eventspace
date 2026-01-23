@@ -205,9 +205,7 @@ export default function SearchResults({
                 <div className="absolute bottom-3 right-3 bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-lg shadow-lg border border-gray-100">
                   <span className="text-base font-bold text-primary-700">
                     {result.price ? formatCurrency(result.price) : 'Consulte'}
-                    <span className="text-[10px] font-normal text-gray-500 ml-1">
-                      {result.price_type === 'diaria' ? '/dia' : result.price_type === 'hora' ? '/hora' : result.price_type === 'pessoa' ? '/pessoa' : '/unid'}
-                    </span>
+                    {unitMap[result.price_type] || '/unid'}
                   </span>
                 </div>
               </div>
