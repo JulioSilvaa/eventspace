@@ -201,9 +201,7 @@ const STEPS = [
 ]
 
 const getFilteredSteps = (categoryType: string) => {
-  if (categoryType !== 'space') {
-    return STEPS.filter(step => step.id !== 3);
-  }
+  // Always return all steps - Step 3 content adapts based on category type
   return STEPS;
 }
 

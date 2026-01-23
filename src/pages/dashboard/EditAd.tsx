@@ -77,7 +77,7 @@ const translateItem = (item: string) => {
 }
 
 const editAdSchema = z.object({
-  categoryType: z.enum(['equipment', 'space'], {
+  categoryType: z.enum(['space', 'service', 'equipment', 'advertiser'], {
     required_error: 'Selecione o tipo de anúncio'
   }),
 
@@ -277,7 +277,7 @@ export default function EditAd() {
   useEffect(() => {
     if (currentAd && !isLoading) {
       reset({
-        categoryType: 'space',
+        categoryType: (currentAd.categories?.type?.toLowerCase() as any) || 'space',
         title: currentAd.title,
         description: currentAd.description,
         category_id: currentAd.category_id || undefined,
@@ -668,30 +668,32 @@ export default function EditAd() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                label="Capacidade de pessoas"
-                type="number"
-                placeholder="Ex: 100"
-                error={errors.capacity}
-                required
-                hint="Número máximo de pessoas que o espaço comporta"
-                {...register('capacity', {
-                  setValueAs: (v) => v === "" ? undefined : parseFloat(v)
-                })}
-              />
+            {watch('categoryType') === 'space' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  label="Capacidade de pessoas"
+                  type="number"
+                  placeholder="Ex: 100"
+                  error={errors.capacity}
+                  required
+                  hint="Número máximo de pessoas que o espaço comporta"
+                  {...register('capacity', {
+                    setValueAs: (v) => v === "" ? undefined : parseFloat(v)
+                  })}
+                />
 
-              <FormField
-                label="Área (m²)"
-                type="number"
-                placeholder="Ex: 200"
-                error={errors.area_sqm}
-                hint="Área total do espaço em metros quadrados (opcional)"
-                {...register('area_sqm', {
-                  setValueAs: (v) => v === "" ? undefined : parseFloat(v)
-                })}
-              />
-            </div>
+                <FormField
+                  label="Área (m²)"
+                  type="number"
+                  placeholder="Ex: 200"
+                  error={errors.area_sqm}
+                  hint="Área total do espaço em metros quadrados (opcional)"
+                  {...register('area_sqm', {
+                    setValueAs: (v) => v === "" ? undefined : parseFloat(v)
+                  })}
+                />
+              </div>
+            )}
           </div>
         )
 
@@ -792,14 +794,21 @@ export default function EditAd() {
         )
 
       case 3:
+        const currentType = watch('categoryType') || 'space';
+        const getStep3Title = () => {
+          if (currentType === 'service') return 'Diferenciais';
+          if (currentType === 'equipment') return 'Detalhes e Especificações';
+          return 'Comodidades e Recursos';
+        }
+
         return (
           <div className="space-y-6">
             <div className="text-center mb-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Comodidades e Recursos
+                {getStep3Title()}
               </h2>
               <p className="text-gray-600">
-                Selecione as comodidades e recursos disponíveis no seu espaço
+                Selecione os recursos disponíveis
               </p>
             </div>
 
@@ -810,7 +819,7 @@ export default function EditAd() {
               onAmenitiesChange={setSelectedAmenities}
               onFeaturesChange={setSelectedFeatures}
               onServicesChange={setSelectedServices}
-              categoryType="space"
+              categoryType={currentType}
               customAmenities={customAmenities}
               customFeatures={customFeatures}
               customServices={customServices}
@@ -1031,16 +1040,18 @@ export default function EditAd() {
                         </span>
                       </p>
                     </div>
-                    <div className="flex gap-4">
-                      <div>
-                        <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Capacidade</p>
-                        <p className="text-sm text-gray-900 font-medium">{watch('capacity') ?? '--'} pessoas</p>
+                    {watch('categoryType') === 'space' && (
+                      <div className="flex gap-4">
+                        <div>
+                          <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Capacidade</p>
+                          <p className="text-sm text-gray-900 font-medium">{watch('capacity') ?? '--'} pessoas</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Área</p>
+                          <p className="text-sm text-gray-900 font-medium">{watch('area_sqm') ?? '--'} m²</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Área</p>
-                        <p className="text-sm text-gray-900 font-medium">{watch('area_sqm') ?? '--'} m²</p>
-                      </div>
-                    </div>
+                    )}
                   </div>
                 </div>
 

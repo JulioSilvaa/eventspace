@@ -25,7 +25,7 @@ export interface User {
 export interface Category {
   id: number
   name: string
-  type: 'space' | 'advertiser'
+  type: 'space' | 'service' | 'equipment' | 'advertiser'
   slug: string
   description?: string
   parent_id?: number
@@ -124,7 +124,7 @@ export interface SearchFilters {
   price_min?: number
   price_max?: number
   delivery_available?: boolean
-  type?: 'space' | 'advertiser'
+  type?: 'space' | 'service' | 'equipment' | 'advertiser'
 }
 
 export interface PaginatedResponse<T> {

@@ -139,7 +139,16 @@ function mapSpaceToAd(space: SpaceResponse): Ad {
     categories: {
       id: space.category_id || 1,
       name: space.category_name || 'Espaço',
-      type: 'space',
+      type: (() => {
+        const lowerName = (space.category_name || '').toLowerCase();
+        if (['buffet', 'fotografia', 'foto', 'video', 'filmagem', 'cerimonial', 'segurança', 'limpeza', 'bar', 'garçom', 'dj', 'banda', 'música', 'assessoria', 'recepcionista', 'animador'].some(t => lowerName.includes(t))) {
+          return 'service';
+        } else if (['som', 'iluminação', 'luz', 'tendas', 'mesas', 'cadeiras', 'brinquedo', 'gerador', 'palco', 'telão', 'projetor', 'cobertura'].some(t => lowerName.includes(t))) {
+          if (lowerName.includes('decoração')) return 'service';
+          return 'equipment';
+        }
+        return 'space';
+      })(),
       slug: 'espaco',
     },
     specifications: {
