@@ -1,6 +1,8 @@
 import { formatPrice } from '@/lib/utils'
 import { Phone, MessageCircle, Share2, ShieldCheck, Crown, Instagram, Mail } from 'lucide-react'
 import FavoriteButton from '@/components/favorites/FavoriteButton'
+import { usePricingModels } from '@/hooks/usePricingModels'
+import { useMemo } from 'react'
 
 interface StickyBookingCardProps {
   ad: any
@@ -18,6 +20,20 @@ export default function StickyBookingCard({ ad, onWhatsApp, onCall, onShare }: S
     return `+55 ${clean.replace(/(\d{2})(\d{4,5})(\d{4})/, '($1) $2-$3')}`
   }
 
+  const { data: pricingModels } = usePricingModels()
+
+  const unitMap = useMemo(() => {
+    const map: Record<string, string> = {}
+    if (pricingModels) {
+      pricingModels.forEach(pm => {
+        if (pm.unit) {
+          map[pm.key] = `/${pm.unit}`
+        }
+      })
+    }
+    return map
+  }, [pricingModels])
+
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 sticky top-24">
@@ -29,7 +45,7 @@ export default function StickyBookingCard({ ad, onWhatsApp, onCall, onShare }: S
               {formatPrice(ad.price, ad.price_type).split('/')[0]}
             </span>
             <span className="text-gray-500 mb-1.5 font-medium">
-              /{ad.price_type === 'hourly' ? 'h' : 'dia'}
+              {unitMap[ad.price_type] || '/unid'}
             </span>
           </div>
         </div>
