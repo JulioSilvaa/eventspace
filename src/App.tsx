@@ -21,6 +21,7 @@ const Dashboard = lazy(() => import('./pages/dashboard/Dashboard'))
 const CreateAd = lazy(() => import('./pages/dashboard/CreateAd'))
 const EditAd = lazy(() => import('./pages/dashboard/EditAd'))
 const MyAds = lazy(() => import('./pages/dashboard/MyAds'))
+const Analytics = lazy(() => import('./pages/dashboard/Analytics'))
 const Settings = lazy(() => import('./pages/dashboard/Settings'))
 const PlanSelection = lazy(() => import('./pages/public/Plans'))
 // const Checkout = lazy(() => import('./pages/dashboard/Checkout'))
@@ -80,9 +81,10 @@ function App() {
                     <ProtectedRoute>
                       <Routes>
                         <Route index element={<Dashboard />} />
-                        <Route path="anunciar" element={<CreateAd />} />
+                        <Route path="criar-anuncio" element={<CreateAd />} />
                         <Route path="meus-anuncios" element={<MyAds />} />
                         <Route path="anuncios/:id/editar" element={<EditAd />} />
+                        <Route path="analytics" element={<Analytics />} />
                         <Route path="favoritos" element={<Favorites />} />
                         <Route path="configuracoes" element={<Settings />} />
 
@@ -101,6 +103,7 @@ function App() {
 
                   {/* Public Plans Route */}
                   <Route path="/planos" element={<PlanSelection />} />
+                  <Route path="/anuncie/novo" element={<CreateAd />} />
 
                   {/* Admin Routes */}
                   <Route path="/admin/login" element={<AdminLogin />} />

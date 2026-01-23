@@ -132,7 +132,7 @@ export default function Plans() {
                       </p>
 
                       <Link
-                        to="/cadastro"
+                        to="/anuncie/novo"
                         className="block w-full bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700 text-white shadow-yellow-500/30 transform hover:-translate-y-1 py-4 rounded-xl font-bold text-lg transition-all shadow-lg flex items-center justify-center gap-2"
                       >
                         Garantir Vaga de Fundador
@@ -186,7 +186,7 @@ export default function Plans() {
 
                     {!isFounderActive ? (
                       <Link
-                        to="/cadastro"
+                        to="/anuncie/novo"
                         className="block w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition-all shadow-lg hover:shadow-blue-500/30 flex items-center justify-center gap-2"
                       >
                         Quero Anunciar

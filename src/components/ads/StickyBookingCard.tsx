@@ -58,21 +58,44 @@ export default function StickyBookingCard({ ad, onWhatsApp, onCall, onShare }: S
           )}
 
           {/* Numbers Display */}
-          <div className="text-center space-y-1">
+          <div className="bg-gray-50 rounded-xl p-4 space-y-3 border border-gray-100">
             {ad.contact_whatsapp && (
-              <div className="text-sm text-gray-500 font-medium">
-                {formatPhoneNumber(ad.contact_whatsapp)}
+              <div className="flex items-center gap-3 group cursor-pointer" onClick={() => {
+                navigator.clipboard.writeText(ad.contact_whatsapp)
+                // Optional: show toast
+              }}>
+                <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center text-green-600 flex-shrink-0">
+                  <MessageCircle className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="text-[10px] text-green-700 font-bold uppercase tracking-wide leading-none mb-0.5">WhatsApp Principal</p>
+                  <p className="text-sm font-bold text-gray-700 font-mono">{formatPhoneNumber(ad.contact_whatsapp)}</p>
+                </div>
               </div>
             )}
+
             {ad.contact_phone && ad.contact_phone !== ad.contact_whatsapp && (
-              <div className="text-sm text-gray-500 font-medium">
-                {formatPhoneNumber(ad.contact_phone)}
+              <div className="flex items-center gap-3 group cursor-pointer" onClick={() => navigator.clipboard.writeText(ad.contact_phone)}>
+                <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 flex-shrink-0">
+                  <Phone className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="text-[10px] text-blue-700 font-bold uppercase tracking-wide leading-none mb-0.5">Telefone</p>
+                  <p className="text-sm font-bold text-gray-700 font-mono">{formatPhoneNumber(ad.contact_phone)}</p>
+                </div>
               </div>
             )}
+
             {/* Alternative Number */}
             {ad.contact_whatsapp_alternative && (
-              <div className="text-sm text-gray-500 font-medium pt-1">
-                {formatPhoneNumber(ad.contact_whatsapp_alternative)} <span className="text-xs text-gray-400 font-normal">(Alt)</span>
+              <div className="flex items-center gap-3 group cursor-pointer" onClick={() => navigator.clipboard.writeText(ad.contact_whatsapp_alternative)}>
+                <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 flex-shrink-0">
+                  <MessageCircle className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wide leading-none mb-0.5">WhatsApp Alternativo</p>
+                  <p className="text-sm font-bold text-gray-700 font-mono">{formatPhoneNumber(ad.contact_whatsapp_alternative)}</p>
+                </div>
               </div>
             )}
           </div>

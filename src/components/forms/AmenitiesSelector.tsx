@@ -249,8 +249,8 @@ export default function AmenitiesSelector({
                     }
                   `}
                 >
-                  <Icon className={`w-5 h-5 ${isSelected ? 'text-green-600' : 'text-gray-500'}`} />
-                  <span className="font-medium text-sm">{amenity.name}</span>
+                  <Icon className={`w-5 h-5 flex-shrink-0 ${isSelected ? 'text-green-600' : 'text-gray-500'}`} />
+                  <span className="font-medium text-sm truncate">{amenity.name}</span>
                   {isSelected && (
                     <Check className="w-4 h-4 text-green-600 ml-auto" />
                   )}
@@ -340,8 +340,8 @@ export default function AmenitiesSelector({
                   }
                 `}
               >
-                <Icon className={`w-5 h-5 ${isSelected ? 'text-green-600' : 'text-gray-500'}`} />
-                <span className="font-medium text-sm">{feature.name}</span>
+                <Icon className={`w-5 h-5 flex-shrink-0 ${isSelected ? 'text-green-600' : 'text-gray-500'}`} />
+                <span className="font-medium text-sm truncate">{feature.name}</span>
               </button>
             )
           })}
@@ -430,8 +430,8 @@ export default function AmenitiesSelector({
                   }
                 `}
               >
-                <Icon className={`w-5 h-5 ${isSelected ? 'text-blue-600' : 'text-gray-500'}`} />
-                <span className="font-medium text-sm">{service.name}</span>
+                <Icon className={`w-5 h-5 flex-shrink-0 ${isSelected ? 'text-blue-600' : 'text-gray-500'}`} />
+                <span className="font-medium text-sm truncate">{service.name}</span>
               </button>
             )
           })}

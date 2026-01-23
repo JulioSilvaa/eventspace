@@ -100,7 +100,7 @@ function Header() {
                   Entrar
                 </Link>
                 <Link
-                  to="/cadastro"
+                  to="/anuncie/novo"
                   className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 transition-colors font-medium"
                 >
                   Anunciar Agora
@@ -189,7 +189,7 @@ function Header() {
                       Área do Assinante
                     </Link>
                     <Link
-                      to="/cadastro"
+                      to="/anuncie/novo"
                       className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 transition-colors font-medium text-center"
                       onClick={() => setIsMenuOpen(false)}
                     >

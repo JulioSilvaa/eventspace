@@ -103,7 +103,7 @@ export default function HowItWorks() {
 
           <div className="mt-20 text-center">
             <Link
-              to="/cadastro"
+              to="/anuncie/novo"
               className="inline-flex items-center gap-3 bg-blue-600 text-white px-10 py-4 rounded-xl font-bold text-lg hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-500/30 transform hover:-translate-y-1"
             >
               Começar Agora
