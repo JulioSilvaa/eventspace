@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Tag, DollarSign } from 'lucide-react';
-import { apiClient } from '../../lib/api-client';
+import adminApi from '../../services/adminApi';
 import toast from 'react-hot-toast';
 
 interface Category {
@@ -36,8 +36,8 @@ const AdminConfigPage: React.FC = () => {
     setIsLoading(true);
     try {
       const [catsRes, modelsRes] = await Promise.all([
-        apiClient.get<Category[]>('/api/admin/config/categories'),
-        apiClient.get<PricingModel[]>('/api/admin/config/pricing-models')
+        adminApi.get<Category[]>('/admin/config/categories'),
+        adminApi.get<PricingModel[]>('/admin/config/pricing-models')
       ]);
 
       if (catsRes.data) setCategories(catsRes.data);
@@ -55,10 +55,10 @@ const AdminConfigPage: React.FC = () => {
 
     try {
       if (editingCategory.id) {
-        await apiClient.put(`/api/admin/config/categories/${editingCategory.id}`, editingCategory);
+        await adminApi.put(`/admin/config/categories/${editingCategory.id}`, editingCategory);
         toast.success('Categoria atualizada');
       } else {
-        await apiClient.post('/api/admin/config/categories', editingCategory);
+        await adminApi.post('/admin/config/categories', editingCategory);
         toast.success('Categoria criada');
       }
       setEditingCategory(null);
@@ -71,7 +71,7 @@ const AdminConfigPage: React.FC = () => {
   const handleDeleteCategory = async (id: number) => {
     if (!confirm('Tem certeza? Isso pode afetar anúncios existentes.')) return;
     try {
-      await apiClient.delete(`/api/admin/config/categories/${id}`);
+      await adminApi.delete(`/admin/config/categories/${id}`);
       toast.success('Categoria removida');
       fetchData();
     } catch (error) {
@@ -85,10 +85,10 @@ const AdminConfigPage: React.FC = () => {
 
     try {
       if (editingModel.id) {
-        await apiClient.put(`/api/admin/config/pricing-models/${editingModel.id}`, editingModel);
+        await adminApi.put(`/admin/config/pricing-models/${editingModel.id}`, editingModel);
         toast.success('Modelo atualizado');
       } else {
-        await apiClient.post('/api/admin/config/pricing-models', editingModel);
+        await adminApi.post('/admin/config/pricing-models', editingModel);
         toast.success('Modelo criado');
       }
       setEditingModel(null);
@@ -101,7 +101,7 @@ const AdminConfigPage: React.FC = () => {
   const handleDeleteModel = async (id: string) => {
     if (!confirm('Tem certeza?')) return;
     try {
-      await apiClient.delete(`/api/admin/config/pricing-models/${id}`);
+      await adminApi.delete(`/admin/config/pricing-models/${id}`);
       toast.success('Modelo removido');
       fetchData();
     } catch (error) {
