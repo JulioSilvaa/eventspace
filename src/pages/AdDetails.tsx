@@ -11,6 +11,7 @@ import { useEventTracking } from '@/hooks/useRealTimeMetrics'
 import { formatPrice } from '@/lib/utils'
 import AdGallery from '@/components/ads/AdGallery'
 import StickyBookingCard from '@/components/ads/StickyBookingCard'
+import Seo from '@/components/common/Seo'
 
 import {
   ArrowLeft,
@@ -328,6 +329,11 @@ export default function AdDetails() {
         </div>
 
         {/* Main Content Grid */}
+        <Seo
+          title={ad.title}
+          description={ad.description.substring(0, 160)}
+          image={ad.listing_images?.[0]?.image_url || undefined}
+        />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 relative">
 
           {/* Left Column: Details */}

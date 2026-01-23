@@ -7,6 +7,7 @@ import { useSearch } from '@/hooks/useSearch'
 import { Building2 } from 'lucide-react'
 import { useState } from 'react'
 import SidebarSponsor from '@/components/sponsors/SidebarSponsor'
+import Seo from '@/components/common/Seo'
 
 export default function Spaces() {
   const {
@@ -34,6 +35,10 @@ export default function Spaces() {
   return (
     <div className="min-h-screen bg-gray-50 pt-16">
       <Header />
+      <Seo
+        title="Buscar Espaços"
+        description="Explore centenas de espaços para eventos disponíveis para aluguel. Filtre por localização, preço e categoria."
+      />
 
       <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         {/* Header da Página */}

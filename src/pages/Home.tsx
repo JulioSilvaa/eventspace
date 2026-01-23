@@ -1,4 +1,5 @@
 import Header from '@/components/layout/Header'
+import Seo from '../components/common/Seo'
 import Footer from '@/components/layout/Footer'
 import DevNotice from '@/components/ui/DevNotice'
 import { Link } from 'react-router-dom'
@@ -111,6 +112,10 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white pt-16">
       <Header />
+      <Seo
+        title="Aluguel de Espaços e Equipamentos para Eventos"
+        description="Encontre o local perfeito para seu evento. Chácaras, salões, equipamentos e serviços para festas e celebrações."
+      />
       {/* Sponsor Hero Banner - Only show if feature is enabled */}
       {import.meta.env.VITE_ENABLE_SPONSORS === 'true' && <SponsorHero />}
       <DevNotice />
