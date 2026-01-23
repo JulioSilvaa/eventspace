@@ -3,9 +3,10 @@ import { MapPin, Star, Eye, Wifi, Wind, Speaker, Armchair, Utensils, Music, Wave
 import { Link } from 'react-router-dom'
 import type { SearchResult } from '@/lib/api/search'
 import { formatPrice, formatCurrency } from '@/lib/utils'
-import { useEffect, useRef, Fragment } from 'react'
+import { useEffect, useRef, Fragment, useMemo } from 'react'
 import { AMENITY_LABELS } from '@/constants/amenities'
 import FeedSponsor from '@/components/sponsors/FeedSponsor'
+import { usePricingModels } from '@/hooks/usePricingModels'
 
 interface SearchResultsProps {
   results: SearchResult[]
@@ -85,6 +86,19 @@ export default function SearchResults({
   viewMode = 'grid'
 }: SearchResultsProps) {
   const resultsTopRef = useRef<HTMLDivElement>(null)
+  const { data: pricingModels } = usePricingModels()
+
+  const unitMap = useMemo(() => {
+    const map: Record<string, string> = {}
+    if (pricingModels) {
+      pricingModels.forEach(pm => {
+        if (pm.unit) {
+          map[pm.key] = `/${pm.unit}`
+        }
+      })
+    }
+    return map
+  }, [pricingModels])
 
   useEffect(() => {
     if (resultsTopRef.current) {
