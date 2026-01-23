@@ -8,6 +8,7 @@ import { Building2 } from 'lucide-react'
 import { useState } from 'react'
 import SidebarSponsor from '@/components/sponsors/SidebarSponsor'
 import Seo from '@/components/common/Seo'
+import { SimpleTooltip } from '@/components/onboarding'
 
 export default function Spaces() {
   const {
@@ -170,6 +171,14 @@ export default function Spaces() {
           </div>
         </div>
       </div>
+
+      {/* Onboarding Tooltip */}
+      <SimpleTooltip
+        id="first-search"
+        title="💡 Dica de Busca"
+        message="Use os filtros na lateral para encontrar exatamente o que você precisa! Você pode filtrar por localização, preço, capacidade e muito mais."
+        delay={2000}
+      />
 
       <Footer />
     </div>
