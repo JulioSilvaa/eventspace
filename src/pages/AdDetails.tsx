@@ -403,40 +403,67 @@ export default function AdDetails() {
                   </div>
                 </div>
 
-                {/* Bairro */}
-                {ad.neighborhood && (
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 flex-shrink-0">
-                      <Home className="w-4 h-4" />
+                {/* Location Details Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Bairro */}
+                  {ad.neighborhood && (
+                    <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                      <div className="flex items-center gap-3 mb-1">
+                        <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                          <Home className="w-4 h-4" />
+                        </div>
+                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Bairro</span>
+                      </div>
+                      <p className="text-gray-900 font-medium ml-11">{ad.neighborhood}</p>
                     </div>
-                    <div>
-                      <span className="font-semibold text-gray-900">Bairro: </span>
-                      <span className="text-gray-600">{ad.neighborhood}</span>
-                    </div>
-                  </div>
-                )}
+                  )}
 
-                {/* Address Lines */}
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 flex-shrink-0">
-                    <MapPin className="w-4 h-4" />
+                  {/* CEP */}
+                  {ad.postal_code && (
+                    <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                      <div className="flex items-center gap-3 mb-1">
+                        <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
+                          <Share2 className="w-4 h-4 rotate-90" />
+                        </div>
+                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">CEP</span>
+                      </div>
+                      <p className="text-gray-900 font-medium ml-11">{ad.postal_code}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Full Address Card */}
+                <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">
+                      <MapPin className="w-4 h-4" />
+                    </div>
+                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Endereço Completo</span>
                   </div>
-                  <div>
-                    <span className="font-semibold text-gray-900">Endereço: </span>
-                    <span className="text-gray-600">{ad.street}, {ad.number}</span>
+                  <div className="ml-11 space-y-1">
+                    <p className="text-gray-900 font-medium text-lg">
+                      {ad.street}, {ad.number}
+                    </p>
+                    {ad.complement && (
+                      <p className="text-gray-600">
+                        <span className="font-medium">Complemento:</span> {ad.complement}
+                      </p>
+                    )}
                   </div>
                 </div>
 
-                {/* CEP */}
-                {ad.postal_code && (
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 flex-shrink-0">
-                      <Share2 className="w-4 h-4 rotate-90" />
+                {/* Reference Point */}
+                {(ad.reference_point || String(specifications.reference_point || '')) && (
+                  <div className="p-4 bg-orange-50 rounded-xl border border-orange-100">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">
+                        <MapPin className="w-4 h-4" />
+                      </div>
+                      <span className="text-xs font-bold text-orange-800 uppercase tracking-wider">Ponto de Referência</span>
                     </div>
-                    <div>
-                      <span className="font-semibold text-gray-900">CEP: </span>
-                      <span className="text-gray-600">{ad.postal_code}</span>
-                    </div>
+                    <p className="text-orange-900 ml-11 leading-relaxed">
+                      {ad.reference_point || String(specifications.reference_point || '')}
+                    </p>
                   </div>
                 )}
               </div>

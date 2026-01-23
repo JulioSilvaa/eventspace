@@ -41,7 +41,7 @@ export interface Ad {
   price: number
   price_per_day?: number
   price_per_weekend?: number
-  price_type: 'daily' | 'hourly' | 'event' | 'weekend'
+  price_type: string
   capacity?: number
   state: string
   city: string
@@ -50,6 +50,7 @@ export interface Ad {
   street?: string
   number?: string
   complement?: string
+  reference_point?: string
   rental_period?: string
   specifications?: Record<string, unknown>
   availability_notes?: string
