@@ -48,7 +48,7 @@ export default defineConfig({
         name: 'EventSpace - Espaços para Eventos',
         short_name: 'EventSpace',
         description: 'Encontre e alugue espaços para eventos',
-        theme_color: '#9333ea',
+        theme_color: '#2563eb',
         background_color: '#ffffff',
         display: 'standalone',
         icons: [
