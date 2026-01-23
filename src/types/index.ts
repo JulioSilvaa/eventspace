@@ -50,6 +50,7 @@ export interface Ad {
   street?: string
   number?: string
   complement?: string
+  reference_point?: string
   rental_period?: string
   specifications?: Record<string, unknown>
   availability_notes?: string
