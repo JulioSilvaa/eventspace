@@ -30,6 +30,8 @@ const Spaces = lazy(() => import('./pages/public/Spaces'))
 const Anunciantes = lazy(() => import('./pages/public/Anunciantes'))
 const AdDetails = lazy(() => import('./pages/AdDetails'))
 const HowItWorks = lazy(() => import('./pages/legal/HowItWorks'))
+const TermsOfService = lazy(() => import('./pages/legal/TermsOfService'))
+const PrivacyPolicy = lazy(() => import('./pages/legal/PrivacyPolicy'))
 const SponsorCheckout = lazy(() => import('./pages/public/SponsorCheckout'))
 
 // Admin Pages
@@ -67,6 +69,8 @@ function App() {
                   <Route path="/anunciantes/:id" element={<AdDetails />} />
                   <Route path="/anunciante/:id" element={<AdDetails />} />
                   <Route path="/como-funciona" element={<HowItWorks />} />
+                  <Route path="/termos" element={<TermsOfService />} />
+                  <Route path="/privacidade" element={<PrivacyPolicy />} />
 
                   {/* Sponsor Checkout */}
                   <Route path="/checkout/sponsor" element={
