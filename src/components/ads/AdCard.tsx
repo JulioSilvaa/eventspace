@@ -137,7 +137,7 @@ export default function AdCard({
   }
 
   return (
-    <Link to={`/anuncio/${ad.id}`} className="block group h-full">
+    <Link to={isSpace ? `/espacos/${ad.id}` : `/anunciantes/${ad.id}`} className="block group h-full">
       <div className={cardClasses[size]}>
         {/* Image */}
         <div className="relative">
