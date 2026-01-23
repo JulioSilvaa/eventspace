@@ -85,7 +85,7 @@ function App() {
                         <Route path="anuncios/:id/editar" element={<EditAd />} />
                         <Route path="favoritos" element={<Favorites />} />
                         <Route path="configuracoes" element={<Settings />} />
-                        <Route path="planos" element={<PlanSelection />} />
+
                         {/* <Route path="checkout/:planId" element={<Checkout />} /> */}
                         <Route path="pagamento/sucesso" element={<PaymentSuccess />} />
                       </Routes>
@@ -98,6 +98,9 @@ function App() {
                       <Settings />
                     </ProtectedRoute>
                   } />
+
+                  {/* Public Plans Route */}
+                  <Route path="/planos" element={<PlanSelection />} />
 
                   {/* Admin Routes */}
                   <Route path="/admin/login" element={<AdminLogin />} />
