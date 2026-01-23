@@ -106,7 +106,7 @@ function mapSpaceToAd(space: SpaceResponse): Ad {
     price,
     price_per_day: space.price_per_day,
     price_per_weekend: space.price_per_weekend,
-    price_type: (space.price_type as 'daily' | 'hourly' | 'event') || 'daily',
+    price_type: space.price_type || 'daily',
     capacity: space.capacity,
     state: space.address?.state || '',
     city: space.address?.city || '',
