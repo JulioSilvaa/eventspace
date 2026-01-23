@@ -192,7 +192,7 @@ export default function SearchResults({
                   <span className="text-base font-bold text-primary-700">
                     {result.price ? formatCurrency(result.price) : 'Consulte'}
                     <span className="text-[10px] font-normal text-gray-500 ml-1">
-                      {result.price_type === 'daily' ? '/dia' : '/fds'}
+                      {result.price_type === 'diaria' ? '/dia' : result.price_type === 'hora' ? '/hora' : result.price_type === 'pessoa' ? '/pessoa' : '/unid'}
                     </span>
                   </span>
                 </div>
