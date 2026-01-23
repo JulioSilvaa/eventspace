@@ -273,7 +273,7 @@ export default function CreateAd() {
 
     // Fetch pricing models
     apiClient.get('/api/pricing-models')
-      .then(res => setPricingModels(res.data))
+      .then(res => setPricingModels(res.data as any))
       .catch(err => console.error('Error fetching pricing models', err));
 
     // Fetch categories from API

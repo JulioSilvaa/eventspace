@@ -175,7 +175,7 @@ export default function Home() {
                   src="https://imgs.search.brave.com/xfD4OZFt1qNm-HFxzJP5kH68KAbPbkXq4xgxldAYQG4/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly93d3cu/Y2VudHJhbGNoYWNh/cmFzLmNvbS5ici9p/bWcvY2FjaGUvOTAw/eDU3NC8xMDAvYXV0/by8yODkxMDBkNzBj/MDA2ZDQzNjk3ZjI0/N2E0NjRiYzA5MS5q/cGc"
                   alt="Espaço com piscina e área verde"
                   className="w-full h-64 object-cover rounded-xl mb-4"
-                  fetchpriority="high"
+                  fetchPriority="high"
                 />
                 <div className="flex items-center justify-between">
                   <div className="flex items-center text-green-600 text-sm">
