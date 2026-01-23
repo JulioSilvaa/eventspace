@@ -11,9 +11,14 @@ import { AMENITY_LABELS } from '@/constants/amenities'
 import { LazyLoadImage } from 'react-lazy-load-image-component'
 import 'react-lazy-load-image-component/src/effects/blur.css'
 import SponsorHero from '@/components/sponsors/SponsorHero'
+import { WelcomeModal } from '@/components/onboarding'
+import TrustBadges from '@/components/home/TrustBadges'
+import HowItWorksSection from '@/components/home/HowItWorksSection'
+import { useOnboardingStore } from '@/stores/onboardingStore'
 
 export default function Home() {
   const [currentSlide, setCurrentSlide] = useState(0)
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false)
   const {
     featuredAds,
     popularSpaces,
@@ -21,6 +26,7 @@ export default function Home() {
     fetchPopularSpaces,
     isLoading
   } = useAdsStore()
+  const { hasVisited, welcomeModalDismissed } = useOnboardingStore()
 
   // Icons mapping for features
   const FeatureIcons = {
@@ -33,6 +39,16 @@ export default function Home() {
     fetchFeaturedAds(4)
     fetchPopularSpaces(8)
   }, [fetchFeaturedAds, fetchPopularSpaces])
+
+  // Show welcome modal on first visit
+  useEffect(() => {
+    if (!hasVisited && !welcomeModalDismissed) {
+      const timer = setTimeout(() => {
+        setShowWelcomeModal(true)
+      }, 2000) // Show after 2 seconds
+      return () => clearTimeout(timer)
+    }
+  }, [hasVisited, welcomeModalDismissed])
 
   // Filtrar apenas anúncios de espaços
   const displayedFeaturedAds = featuredAds.filter(ad => ad.categories?.type === 'space' || !ad.categories?.type)
@@ -120,6 +136,12 @@ export default function Home() {
       {import.meta.env.VITE_ENABLE_SPONSORS === 'true' && <SponsorHero />}
       <DevNotice />
 
+      {/* Welcome Modal */}
+      <WelcomeModal
+        isOpen={showWelcomeModal}
+        onClose={() => setShowWelcomeModal(false)}
+      />
+
       {/* Hero Section */}
       <section className="relative bg-white pt-20 pb-32 overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px] opacity-30 pointer-events-none"></div>
@@ -196,6 +218,12 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Trust Badges */}
+      <TrustBadges />
+
+      {/* How It Works Section */}
+      <HowItWorksSection />
 
       {/* Features Section */}
       <section className="py-20 bg-gray-50">
