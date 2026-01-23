@@ -18,8 +18,27 @@ export function formatPrice(price: number | null | undefined, priceType: string 
   }
 
   const formatted = formatCurrency(Number(price))
-  const type = priceType || 'daily'
-  const period = type === 'daily' ? 'dia' : type === 'hourly' ? 'hora' : type === 'weekend' ? 'final de semana' : 'evento'
+  const type = priceType || 'diaria'
+
+  // Mapping for display (could use PRICING_TYPES[type].unit but keeping it simple here)
+  const periodMap: Record<string, string> = {
+    'diaria': 'dia',
+    'daily': 'dia', // Legacy fallback
+    'day': 'dia', // Legacy fallback
+    'hora': 'hora',
+    'hourly': 'hora', // Legacy fallback
+    'final_de_semana': 'final de semana',
+    'weekend': 'final de semana', // Legacy fallback
+    'evento': 'evento',
+    'event': 'evento', // Legacy fallback
+    'pessoa': 'pessoa',
+    'person': 'pessoa', // Legacy fallback
+    'unidade': 'unidade',
+    'conjunto': 'jogo',
+    'pernoite': 'noite'
+  }
+
+  const period = periodMap[type] || 'dia'
   return `${formatted}/${period}`
 }
 

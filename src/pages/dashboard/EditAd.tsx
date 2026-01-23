@@ -386,7 +386,8 @@ export default function EditAd() {
             'orcamento': 'orcamento'
           };
 
-          return valueMap[apiValue?.toLowerCase()] || apiValue;
+          const normalizedValue = apiValue?.toLowerCase();
+          return valueMap[normalizedValue] || normalizedValue;
         })(),
         contactPhone: utilMaskPhone((currentAd.contact_phone || '').replace(/^(\+?55|55)\s?/, '').replace(/^\+55/, '')),
         contactWhatsapp: utilMaskPhone((currentAd.contact_whatsapp || '').replace(/^(\+?55|55)\s?/, '').replace(/^\+55/, '')),
@@ -646,8 +647,8 @@ export default function EditAd() {
         capacity: data.capacity, // Send capacity at root level so backend updates the column correctly
         price: parseCurrency(data.price),
         // Send separate fields for clarity, though price_type helps backend decide
-        price_per_day: data.priceType === 'daily' ? parseCurrency(data.price) : undefined,
-        price_per_weekend: data.priceType === 'weekend' ? parseCurrency(data.price) : undefined,
+        price_per_day: data.priceType === 'diaria' ? parseCurrency(data.price) : undefined,
+        price_per_weekend: data.priceType === 'final_de_semana' ? parseCurrency(data.price) : undefined,
         price_type: data.priceType,
         state: data.state,
         city: data.city,
