@@ -496,7 +496,7 @@ export default function MyAds() {
 
                         <Tooltip content="Ver anúncio público">
                           <Link
-                            to={`/anuncio/${ad.id}`}
+                            to={`/espacos/${ad.id}`}
                             className="flex-1 sm:flex-none flex items-center justify-center h-11 px-4 text-gray-400 hover:text-blue-600 hover:bg-blue-50 border border-gray-200 hover:border-blue-100 rounded-xl transition-all"
                           >
                             <span className="sm:hidden mr-2 text-sm font-bold">Ver</span>
