@@ -13,6 +13,8 @@ import {
   ArrowRight,
   CheckCircle,
   Building2,
+  Users,
+  Speaker,
   Star,
   Loader2,
   AlertCircle
@@ -115,19 +117,9 @@ const editAdSchema = z.object({
   features: z.array(z.string()).optional(),
   services: z.array(z.string()).optional(),
 
-  price: z.any()
-    .refine((val) => {
-      if (typeof val === 'number') return val > 0
-      if (typeof val === 'string') {
-        const num = parseFloat(val.replace(/[^\d,]/g, '').replace(',', '.'))
-        return num > 0
-      }
-      return false
-    }, 'Preço deve ser maior que zero'),
+  price: z.any().optional(),
   price_per_weekend: z.any().optional(),
-  priceType: z.enum(Object.keys(PRICING_TYPES) as [string, ...string[]], {
-    required_error: 'Selecione o tipo de preço'
-  }),
+  priceType: z.string().min(1, 'Selecione o tipo de preço'),
 
   contactPhone: z.string()
     .min(1, 'Telefone é obrigatório')
@@ -150,6 +142,26 @@ const editAdSchema = z.object({
   featured: z.boolean().optional(),
 
   images: z.array(z.any()).optional()
+}).superRefine((data, ctx) => {
+  // Budget/Orcamento doesn't require price
+  if (data.priceType !== 'orcamento' && data.priceType !== 'budget') {
+    const val = data.price;
+    let isValid = false;
+
+    if (typeof val === 'number' && val > 0) isValid = true;
+    else if (typeof val === 'string') {
+      const num = parseFloat(val.replace(/[^\d,]/g, '').replace(',', '.'));
+      if (!isNaN(num) && num > 0) isValid = true;
+    }
+
+    if (!isValid) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Preço deve ser maior que zero',
+        path: ['price']
+      });
+    }
+  }
 })
 
 type EditAdData = z.infer<typeof editAdSchema>
@@ -176,6 +188,7 @@ const SPACE_CATEGORIES = [
   { id: 7, name: 'Som e Iluminação' },
 ]
 import { maskPhone as utilMaskPhone, maskMoneyFlexible as utilMaskMoney } from '@/utils/masks'
+import { handleMaskedChange } from '@/utils/formUtils'
 import { apiClient } from '@/lib/api-client'
 import {
   PRICING_TYPES,
@@ -184,10 +197,26 @@ import {
   type PricingType
 } from '@/constants/pricing'
 
-const pricingModels = Object.entries(PRICING_TYPES).map(([key, value]) => ({
-  key,
-  ...value
-}))
+const PLACEHOLDERS = {
+  space: {
+    title: 'Ex: Chácara Recanto Feliz - Piscina e Churrasqueira',
+    description: 'Exemplo: Chácara Recanto das Flores: Espaço ideal para casamentos e aniversários com 500m². Possuímos piscina aquecida, área de churrasqueira completa, salão de festas coberto para 200 pessoas e estacionamento para 50 carros. Ambiente familiar e aconchegante, perfeito para celebrar momentos especiais...'
+  },
+  service: {
+    title: 'Ex: Buffet Delícias da Vovó - Churrasco e Massas',
+    description: 'Exemplo: Oferecemos serviço completo de buffet para casamentos e eventos corporativos. Equipe treinada, cardápio variado com opções vegetarianas e veganas. Inclusa louça, toalhas e garçons. Atendemos em toda a região com excelência e pontualidade...'
+  },
+  equipment: {
+    title: 'Ex: Kit Som e Iluminação Festa Top',
+    description: 'Exemplo: Aluguel de kit completo de som para festas de até 100 pessoas. Inclui 2 caixas ativas, mesa de som, microfone sem fio e iluminação básica (laser e strobo). Equipamentos profissionais das marcas JBL e Yamaha. Entrega e montagem inclusas...'
+  },
+  advertiser: { // Fallback
+    title: 'Ex: Anúncio Exemplo',
+    description: ' descreva seu anúncio...'
+  }
+}
+
+
 
 interface Category {
   id: number
@@ -232,12 +261,37 @@ export default function EditAd() {
   const maxImages = 8
 
   const [categories, setCategories] = useState<Category[]>([])
+  const [pricingModels, setPricingModels] = useState<Array<{ id: string, key: string, label: string, unit: string | null, description: string | null }>>([])
 
-  // Fetch categories
+  // Fetch categories with type inference logic (Same as CreateAd)
   useEffect(() => {
     const fetchCategories = async () => {
       const { data } = await apiClient.get<Category[]>('/api/categories')
-      if (data) setCategories(data)
+      if (data) {
+        const processedCategories = data.map((cat: any) => {
+          // Use backend type if available, otherwise infer (fallback)
+          let type: 'space' | 'service' | 'equipment' = (cat.type?.toLowerCase() as any) || 'space';
+
+          // Legacy Inference Fallback if backend returns null/undefined properties
+          if (!cat.type) {
+            const lowerName = cat.name.toLowerCase();
+            if (['buffet', 'fotografia', 'foto', 'video', 'filmagem', 'cerimonial', 'segurança', 'limpeza', 'bar', 'garçom', 'dj', 'banda', 'música', 'assessoria', 'recepcionista', 'animador'].some((t: string) => lowerName.includes(t))) {
+              type = 'service';
+            } else if (['som', 'iluminação', 'luz', 'tendas', 'mesas', 'cadeiras', 'brinquedo', 'gerador', 'palco', 'telão', 'projetor', 'cobertura'].some((t: string) => lowerName.includes(t))) {
+              if (lowerName.includes('decoração')) type = 'service';
+              else type = 'equipment';
+            } else {
+              type = 'space';
+            }
+          }
+
+          return {
+            ...cat,
+            type
+          } as Category
+        })
+        setCategories(processedCategories)
+      }
     }
     fetchCategories()
   }, [])
@@ -257,44 +311,14 @@ export default function EditAd() {
 
   useEffect(() => {
     getBrazilianStates().then(setBrazilianStates)
+
+    // Fetch pricing models
+    apiClient.get('/api/pricing-models')
+      .then(res => setPricingModels(res.data as any))
+      .catch(err => console.error('Error fetching pricing models', err));
   }, [])
 
-  // Generic handler to apply masks and preserve cursor
-  const handleMaskedChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    maskFn: (val: string) => string,
-    fieldName: keyof EditAdData
-  ) => {
-    const input = e.target
-    const start = input.selectionStart || 0
-    const value = input.value
 
-    const masked = maskFn(value)
-
-    // Explicitly update DOM value since we're overriding onChange in an uncontrolled-like setup
-    input.value = masked
-
-    setValue(fieldName, masked, { shouldValidate: true })
-
-    // Find new cursor position
-    const unmaskedLengthBefore = value.slice(0, start).replace(/\D/g, '').length
-
-    setTimeout(() => {
-      let newPos = 0
-      let tempDigits = 0
-      for (let i = 0; i < masked.length; i++) {
-        if (/\d/.test(masked[i])) {
-          tempDigits++
-        }
-        if (tempDigits === unmaskedLengthBefore) {
-          newPos = i + 1
-          break
-        }
-      }
-      if (unmaskedLengthBefore === 0) newPos = 0;
-      input.setSelectionRange(newPos, newPos)
-    }, 0)
-  }
 
 
   useEffect(() => {
@@ -308,7 +332,8 @@ export default function EditAd() {
   useEffect(() => {
     if (currentAd && !isLoading && categories.length > 0) {
       // Find the correct category to get the exact type
-      const matchedCategory = categories.find(c => c.id === currentAd.category_id)
+      // We convert both to string to ensure a match regardless of type (number vs string)
+      const matchedCategory = categories.find(c => String(c.id) === String(currentAd.category_id))
       const correctCategoryType = matchedCategory?.type || (currentAd.categories?.type?.toLowerCase() as any) || 'space'
 
       reset({
@@ -325,7 +350,7 @@ export default function EditAd() {
         number: currentAd.number || '',
         complement: currentAd.complement || '',
         postal_code: currentAd.postal_code || '',
-        reference_point: (currentAd.specifications?.reference_point as string) || '',
+        reference_point: (currentAd.specifications?.reference_point as string) || (currentAd.reference_point as string) || '',
         price: currentAd.price
           ? Math.floor(Number(currentAd.price)).toLocaleString('pt-BR')
           : '',
@@ -584,6 +609,8 @@ export default function EditAd() {
 
       const updateData = {
         category_id: data.category_id,
+        // Ensure type is sent in the format expected by backend (UPPERCASE)
+        type: watch('categoryType')?.toUpperCase(),
         title: data.title,
         description: data.description,
         capacity: data.capacity, // Send capacity at root level so backend updates the column correctly
@@ -599,6 +626,9 @@ export default function EditAd() {
         number: data.number,
         complement: data.complement || undefined,
         postal_code: data.postal_code || undefined,
+        // Enviar reference_point no specifications e também no address (se o backend suportar)
+        // ou garantir que esteja no specifications pois é lá que o EditAd busca
+        reference_point: data.reference_point || undefined,
         contact_phone: processPhone(data.contactPhone),
         contact_whatsapp: processPhone(data.contactWhatsapp),
         contact_whatsapp_alternative: processPhone(data.contactWhatsappAlternative),
@@ -606,7 +636,10 @@ export default function EditAd() {
         contact_instagram: data.contactInstagram || undefined,
         contact_facebook: data.contactFacebook || undefined,
         featured: data.featured || false,
-        specifications: Object.keys(specifications).length > 0 ? specifications : undefined,
+        specifications: {
+          ...(Object.keys(specifications).length > 0 ? specifications : {}),
+          reference_point: data.reference_point || undefined // Force save here too
+        },
         comfort: [
           ...selectedAmenities,
           ...selectedFeatures,
@@ -660,6 +693,85 @@ export default function EditAd() {
               </p>
             </div>
 
+            <div className="mb-8">
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Tipo do Anúncio
+              </label>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (watch('categoryType') !== 'space') {
+                      setValue('categoryType', 'space')
+                      setValue('category_id', undefined as unknown as number)
+                      setSelectedAmenities([])
+                      setSelectedFeatures([])
+                      setSelectedServices([])
+                      setCustomAmenities([])
+                      setCustomFeatures([])
+                      setCustomServices([])
+                    }
+                  }}
+                  className={`flex flex-col items-center p-4 rounded-xl border-2 transition-all ${watch('categoryType') === 'space'
+                    ? 'border-primary-500 bg-primary-50 text-primary-700'
+                    : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                    }`}
+                >
+                  <Building2 className={`w-8 h-8 mb-2 ${watch('categoryType') === 'space' ? 'text-primary-600' : 'text-gray-400'}`} />
+                  <span className="font-bold">Espaço</span>
+                  <span className="text-xs mt-1 text-center opacity-80">Salão, Sítio, Chácara</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (watch('categoryType') !== 'service') {
+                      setValue('categoryType', 'service')
+                      setValue('category_id', undefined as unknown as number)
+                      setSelectedAmenities([])
+                      setSelectedFeatures([])
+                      setSelectedServices([])
+                      setCustomAmenities([])
+                      setCustomFeatures([])
+                      setCustomServices([])
+                    }
+                  }}
+                  className={`flex flex-col items-center p-4 rounded-xl border-2 transition-all ${watch('categoryType') === 'service'
+                    ? 'border-primary-500 bg-primary-50 text-primary-700'
+                    : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                    }`}
+                >
+                  <Users className={`w-8 h-8 mb-2 ${watch('categoryType') === 'service' ? 'text-primary-600' : 'text-gray-400'}`} />
+                  <span className="font-bold">Serviço</span>
+                  <span className="text-xs mt-1 text-center opacity-80">Buffet, DJ, Fotografia</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (watch('categoryType') !== 'equipment') {
+                      setValue('categoryType', 'equipment')
+                      setValue('category_id', undefined as unknown as number)
+                      setSelectedAmenities([])
+                      setSelectedFeatures([])
+                      setSelectedServices([])
+                      setCustomAmenities([])
+                      setCustomFeatures([])
+                      setCustomServices([])
+                    }
+                  }}
+                  className={`flex flex-col items-center p-4 rounded-xl border-2 transition-all ${watch('categoryType') === 'equipment'
+                    ? 'border-primary-500 bg-primary-50 text-primary-700'
+                    : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                    }`}
+                >
+                  <Speaker className={`w-8 h-8 mb-2 ${watch('categoryType') === 'equipment' ? 'text-primary-600' : 'text-gray-400'}`} />
+                  <span className="font-bold">Equipamento</span>
+                  <span className="text-xs mt-1 text-center opacity-80">Som, Iluminação, Tendas</span>
+                </button>
+              </div>
+            </div>
+
             <FormSelect
               label="Categoria"
               options={categories
@@ -681,7 +793,7 @@ export default function EditAd() {
             <FormField
               label="Título do anúncio"
               type="text"
-              placeholder="Ex: Salão de Festas para 200 pessoas"
+              placeholder={PLACEHOLDERS[(watch('categoryType') || 'space') as keyof typeof PLACEHOLDERS]?.title || 'Título do anúncio'}
               error={errors.title}
               required
               hint={`${watch('title')?.length || 0}/100 caracteres`}
@@ -694,7 +806,7 @@ export default function EditAd() {
               </label>
               <textarea
                 rows={6}
-                placeholder="Exemplo: Chácara Recanto das Flores: Espaço ideal para casamentos e aniversários com 500m². Possuímos piscina aquecida, área de churrasqueira completa, salão de festas coberto para 200 pessoas e estacionamento para 50 carros. Ambiente familiar e aconchegante, perfeito para celebrar momentos especiais..."
+                placeholder={PLACEHOLDERS[(watch('categoryType') || 'space') as keyof typeof PLACEHOLDERS]?.description || 'Descreva seu anúncio...'}
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all shadow-sm"
                 {...register('description')}
               />
@@ -834,8 +946,9 @@ export default function EditAd() {
       case 3:
         const currentType = watch('categoryType') || 'space';
         const getStep3Title = () => {
-          if (currentType === 'service') return 'Diferenciais';
-          if (currentType === 'equipment') return 'Detalhes e Especificações';
+          const type = currentType;
+          if (type === 'service') return 'Diferenciais';
+          if (type === 'equipment') return 'Detalhes e Especificações';
           return 'Comodidades e Recursos';
         }
 
@@ -846,7 +959,12 @@ export default function EditAd() {
                 {getStep3Title()}
               </h2>
               <p className="text-gray-600">
-                Selecione os recursos disponíveis
+                {(() => {
+                  const type = currentType;
+                  if (type === 'service') return 'O que está incluso';
+                  if (type === 'equipment') return 'Especificações';
+                  return 'Selecione as comodidades e recursos disponíveis no seu espaço';
+                })()}
               </p>
             </div>
 
@@ -891,13 +1009,19 @@ export default function EditAd() {
                   </div>
                   <input
                     type="text"
-                    placeholder="0,00"
-                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    disabled={watch('priceType') === 'orcamento' || watch('priceType') === 'budget'}
+                    placeholder={watch('priceType') === 'orcamento' || watch('priceType') === 'budget' ? 'A Combinar' : '0,00'}
+                    className={`w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent ${watch('priceType') === 'orcamento' || watch('priceType') === 'budget' ? 'bg-gray-100 text-gray-500' : ''
+                      }`}
                     {...register('price')}
-                    onChange={(e) => handleMaskedChange(e, utilMaskMoney, 'price')}
+                    onChange={(e) => handleMaskedChange(e, utilMaskMoney, 'price', setValue)}
                   />
                 </div>
-                <p className="mt-1 text-xs text-gray-500">Informe o valor (Ex: 600 ou 600,00)</p>
+                {watch('priceType') && (
+                  <p className="mt-1 text-xs text-gray-500">
+                    {pricingModels.find(m => m.key === watch('priceType'))?.description || 'Informe o valor'}
+                  </p>
+                )}
                 {errors.price && (
                   <p className="mt-1 text-sm text-red-600">{String(errors.price.message || '')}</p>
                 )}
@@ -909,20 +1033,32 @@ export default function EditAd() {
                   // Try to find category in fetched categories first
                   const selectedCat = categories.find(c => c.id === Number(watch('category_id')))
 
+                  let options = [];
+
                   if (selectedCat && selectedCat.allowed_pricing_models && selectedCat.allowed_pricing_models.length > 0) {
-                    return selectedCat.allowed_pricing_models.map((m: any) => ({
+                    options = selectedCat.allowed_pricing_models.map((m: any) => ({
                       value: m.key,
                       label: m.label
                     }))
+                    // If we found options and the current value is valid, or even if not, return these options.
+                    // But if this list is empty, we fall through.
+                    if (options.length > 0) return options;
                   }
 
                   // Fallback: use category type if available
                   const currentCategoryType = (watch('categoryType') || 'space') as string
                   const allowedTypes = CATEGORY_PRICING_CONFIG[currentCategoryType.toLowerCase()] || DEFAULT_PRICING_OPTIONS
 
-                  return pricingModels
+                  options = pricingModels
                     .filter(m => allowedTypes.includes(m.key as PricingType))
                     .map(m => ({ value: m.key, label: m.label }))
+
+                  // Final fallback: if everything fails, return all pricing models to avoid empty dropdown
+                  if (options.length === 0) {
+                    return pricingModels.map(m => ({ value: m.key, label: m.label }))
+                  }
+
+                  return options;
                 })()}
                 error={errors.priceType}
                 required
@@ -993,14 +1129,14 @@ export default function EditAd() {
             </div>
 
             <FormField
-              label="Telefone para Ligações"
+              label="Telefone com DDD"
               type="tel"
-              placeholder="(11) 99999-9999"
+              placeholder="(00) 00000-0000"
               error={errors.contactPhone}
               required
               hint="Será usado para contato direto dos interessados"
               {...register('contactPhone')}
-              onChange={(e) => handleMaskedChange(e, utilMaskPhone, 'contactPhone')}
+              onChange={(e) => handleMaskedChange(e, utilMaskPhone, 'contactPhone', setValue)}
             />
 
             <FormField
@@ -1010,7 +1146,7 @@ export default function EditAd() {
               error={errors.contactWhatsapp}
               hint="Número principal para mensagens WhatsApp"
               {...register('contactWhatsapp')}
-              onChange={(e) => handleMaskedChange(e, utilMaskPhone, 'contactWhatsapp')}
+              onChange={(e) => handleMaskedChange(e, utilMaskPhone, 'contactWhatsapp', setValue)}
             />
 
             <FormField
@@ -1020,7 +1156,7 @@ export default function EditAd() {
               error={errors.contactWhatsappAlternative}
               hint="Número secundário para WhatsApp"
               {...register('contactWhatsappAlternative')}
-              onChange={(e) => handleMaskedChange(e, utilMaskPhone, 'contactWhatsappAlternative')}
+              onChange={(e) => handleMaskedChange(e, utilMaskPhone, 'contactWhatsappAlternative', setValue)}
             />
 
             <FormField
@@ -1060,149 +1196,187 @@ export default function EditAd() {
 
       case 7:
         return (
-          <div className="space-y-8">
-            <div className="text-center mb-10">
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">Revisão</h2>
+          <div className="space-y-6">
+            {/* Sumário de Erros para Debug (Opcional, mas útil se houver problema) */}
+            {Object.keys(errors).length > 0 && (
+              <div className="bg-red-50 border border-red-200 rounded-xl p-6 mb-6">
+                <div className="flex items-center gap-2 mb-4 text-red-800 font-bold">
+                  <AlertCircle className="w-5 h-5" />
+                  <h4>Existem erros no formulário:</h4>
+                </div>
+                <ul className="space-y-1 text-sm text-red-700 list-disc list-inside">
+                  {Object.entries(errors).map(([key, error]: [string, any]) => (
+                    <li key={key}>
+                      <span className="font-semibold">{key}:</span> {String(error?.message || 'Erro de validação')}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Revisão</h2>
               <p className="text-gray-600">Confirme as alterações antes de salvar</p>
             </div>
 
-            <div className="grid grid-cols-1 gap-6">
-              {/* Informações Básicas */}
-              <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
-                    <Building2 className="w-6 h-6 text-blue-600" />
+            {/* Imagens */}
+            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-2xl">📸</span>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Imagens ({(currentAd?.listing_images || []).filter(img => !removedExistingImageIds.includes(img.id)).length + images.length})
+                </h3>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {/* Show existing images */}
+                {(currentAd?.listing_images || []).filter(img => !removedExistingImageIds.includes(img.id)).map((img, index) => (
+                  <div key={img.id} className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 border-green-500">
+                    <img src={img.image_url} alt="Existente" className="w-full h-full object-cover" />
+                    <span className="absolute bottom-1 right-1 bg-green-500 text-white text-[10px] px-1 rounded">Mantida</span>
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900">Informações do Anúncio</h3>
-                </div>
+                ))}
+                {/* Show new images */}
+                {images.map((img, index) => (
+                  <div key={img.id} className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 border-blue-500">
+                    <img src={img.preview} alt="Nova" className="w-full h-full object-cover" />
+                    <span className="absolute bottom-1 right-1 bg-blue-500 text-white text-[10px] px-1 rounded">Nova</span>
+                  </div>
+                ))}
+              </div>
+              {((currentAd?.listing_images || []).filter(img => !removedExistingImageIds.includes(img.id)).length + images.length) === 0 && (
+                <p className="text-xs text-red-500 mt-2 font-medium">⚠️ Atenção: O anúncio ficará sem fotos.</p>
+              )}
+            </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div>
-                      <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Título</p>
-                      <p className="text-lg text-gray-900 font-medium break-words">{watch('title')}</p>
-                    </div>
+            {/* Informações Básicas */}
+            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-2xl">📋</span>
+                <h3 className="text-lg font-semibold text-gray-900">Informações Básicas</h3>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+                  <div className="flex-1 w-full min-w-0">
+                    <h4 className="text-2xl font-bold text-gray-900 mb-1 break-words">{watch('title')}</h4>
+                    <p className="text-sm text-gray-600">
+                      {categories.find(c => String(c.id) === String(watch('category_id')))?.name || 'Categoria não detectada'}
+                    </p>
                   </div>
-                  <div className="space-y-4">
-                    <div>
-                      <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Preço</p>
-                      <p className="text-lg font-bold text-primary-600">
-                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(watch('price') || 0)}
-                        <span className="text-sm font-normal text-gray-500 ml-1">
-                          /{watch('priceType') === 'daily' ? 'dia' : 'final de semana'}
-                        </span>
+                  <div className="text-left sm:text-right w-full sm:w-auto">
+                    <p className="text-3xl font-bold text-green-600">
+                      {watch('priceType') === 'orcamento' || watch('priceType') === 'budget' ? 'Consultar' :
+                        (typeof watch('price') === 'number'
+                          ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(watch('price'))
+                          : (watch('price') || 'R$ 0,00')
+                        )
+                      }
+                    </p>
+                    {watch('priceType') && pricingModels.find(m => m.key === watch('priceType'))?.unit && (
+                      <p className="text-sm text-gray-500">
+                        por {pricingModels.find(m => m.key === watch('priceType'))?.unit}
                       </p>
-                    </div>
-                    {watch('categoryType') === 'space' && (
-                      <div className="flex gap-4">
-                        <div>
-                          <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Capacidade</p>
-                          <p className="text-sm text-gray-900 font-medium">{watch('capacity') ?? '--'} pessoas</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Área</p>
-                          <p className="text-sm text-gray-900 font-medium">{watch('area_sqm') ?? '--'} m²</p>
-                        </div>
-                      </div>
+                    )}
+                    {watch('priceType') && !pricingModels.find(m => m.key === watch('priceType'))?.unit && (
+                      <p className="text-sm text-gray-500">
+                        {pricingModels.find(m => m.key === watch('priceType'))?.label || ''}
+                      </p>
                     )}
                   </div>
                 </div>
 
-                <div className="mt-6 pt-6 border-t border-gray-100">
-                  <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-2">Descrição</p>
-                  <p className="text-sm text-gray-700 leading-relaxed line-clamp-3 break-all">
+                <div className="border-t pt-4">
+                  <p className="text-sm font-medium text-gray-700 mb-2">Descrição:</p>
+                  <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap break-all">
                     {watch('description')}
                   </p>
                 </div>
-              </div>
 
-              {/* Localização */}
-              <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center">
-                    <span className="text-xl">📍</span>
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900">Localização</h3>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                  <p className="text-gray-700"><span className="font-bold">Endereço:</span> {watch('address')}</p>
-                  <p className="text-gray-700"><span className="font-bold">Bairro:</span> {watch('neighborhood')}</p>
-                  <p className="text-gray-700"><span className="font-bold">Cidade/Estado:</span> {watch('city')} / {watch('state')}</p>
-                  <p className="text-gray-700"><span className="font-bold">CEP:</span> {watch('postal_code')}</p>
-                </div>
-              </div>
-
-              {/* Comodidades e Imagens */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
-                  <div className="flex items-center gap-3 mb-4">
-                    <Star className="w-6 h-6 text-yellow-500 fill-current" />
-                    <h3 className="text-lg font-bold text-gray-900">Recursos</h3>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {[...selectedAmenities, ...selectedFeatures, ...selectedServices].slice(0, 10).map((item) => (
-                      <span key={item} className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-semibold">
-                        ✓ {translateItem(item)}
-                      </span>
-                    ))}
-                    {[...selectedAmenities, ...selectedFeatures, ...selectedServices].length > 10 && (
-                      <span className="text-xs text-gray-500 font-medium">
-                        +{[...selectedAmenities, ...selectedFeatures, ...selectedServices].length - 10} mais
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className="text-xl">📸</span>
-                    <h3 className="text-lg font-bold text-gray-900">Fotos</h3>
-                  </div>
-                  <div className="space-y-2">
-                    <p className="text-sm text-gray-700">
-                      <span className="font-bold">{(currentAd?.listing_images || []).filter(img => !removedExistingImageIds.includes(img.id)).length}</span> foto(s) já existente(s) mantida(s).
-                    </p>
-                    {images.length > 0 && (
-                      <p className="text-sm text-green-600 font-medium">
-                        + <span className="font-bold">{images.length}</span> nova(s) foto(s) adicionada(s).
-                      </p>
-                    )}
-                    <div className="pt-2 border-t border-gray-100 flex justify-between items-center">
-                      <span className="text-sm font-bold text-gray-900">Total no anúncio:</span>
-                      <span className="text-lg font-bold text-primary-600">
-                        {((currentAd?.listing_images || []).filter(img => !removedExistingImageIds.includes(img.id)).length + images.length)} fotos
-                      </span>
-                    </div>
-                  </div>
-                  {((currentAd?.listing_images || []).filter(img => !removedExistingImageIds.includes(img.id)).length + images.length) === 0 && (
-                    <p className="text-xs text-red-500 mt-2 font-medium">
-                      ⚠️ Atenção: Seu anúncio ficará sem fotos.
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Contato */}
-              <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center text-xl">
-                    📞
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900">Contato</h3>
-                </div>
-                <div className="flex flex-wrap gap-8">
-                  <div>
-                    <p className="text-xs text-gray-500 uppercase font-bold mb-1">Telefone</p>
-                    <p className="text-sm text-gray-900">{watch('contactPhone')}</p>
-                  </div>
-                  {watch('contactEmail') && (
+                {watch('categoryType') === 'space' && (
+                  <div className="border-t pt-4 grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-xs text-gray-500 uppercase font-bold mb-1">E-mail</p>
-                      <p className="text-sm text-gray-900">{watch('contactEmail')}</p>
+                      <p className="text-xs text-gray-500 uppercase font-semibold">Capacidade</p>
+                      <p className="text-sm text-gray-900">{watch('capacity') ?? '--'} pessoas</p>
                     </div>
-                  )}
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase font-semibold">Área</p>
+                      <p className="text-sm text-gray-900">{watch('area_sqm') ?? '--'} m²</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Localização */}
+            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-2xl">📍</span>
+                <h3 className="text-lg font-semibold text-gray-900">Localização</h3>
+              </div>
+              <div className="space-y-2">
+                <p className="text-sm text-gray-700">
+                  <span className="font-medium">Endereço:</span> {watch('address')}, {watch('number')}
+                  {watch('complement') && ` - ${watch('complement')}`}
+                </p>
+                <p className="text-sm text-gray-700">
+                  <span className="font-medium">Bairro:</span> {watch('neighborhood') || 'Não informado'}
+                </p>
+                <p className="text-sm text-gray-700">
+                  <span className="font-medium">Cidade/Estado:</span> {watch('city')}, {watch('state')}
+                </p>
+                <p className="text-sm text-gray-700">
+                  <span className="font-medium">CEP:</span> {watch('postal_code') || 'Não informado'}
+                </p>
+              </div>
+            </div>
+
+            {/* Comodidades */}
+            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-2xl">✨</span>
+                <h3 className="text-lg font-semibold text-gray-900">Recursos e Comodidades</h3>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {[...selectedAmenities, ...selectedFeatures, ...selectedServices].map((item) => (
+                  <span key={item} className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-semibold">
+                    ✓ {translateItem(item)}
+                  </span>
+                ))}
+                {[...selectedAmenities, ...selectedFeatures, ...selectedServices].length === 0 && (
+                  <span className="text-sm text-gray-500 italic">Nenhum recurso selecionado</span>
+                )}
+              </div>
+            </div>
+
+            {/* Contato */}
+            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-2xl">�</span>
+                <h3 className="text-lg font-semibold text-gray-900">Informações de Contato</h3>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-gray-500 uppercase font-bold mb-1">Telefone Principal</p>
+                  <p className="text-sm text-gray-900">{watch('contactPhone')}</p>
                 </div>
+                {watch('contactWhatsapp') && (
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase font-bold mb-1">WhatsApp</p>
+                    <p className="text-sm text-gray-900">{watch('contactWhatsapp')}</p>
+                  </div>
+                )}
+                {watch('contactEmail') && (
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase font-bold mb-1">E-mail</p>
+                    <p className="text-sm text-gray-900">{watch('contactEmail')}</p>
+                  </div>
+                )}
+                {watch('contactInstagram') && (
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase font-bold mb-1">Instagram</p>
+                    <p className="text-sm text-gray-900">{watch('contactInstagram')}</p>
+                  </div>
+                )}
               </div>
             </div>
 
