@@ -126,7 +126,7 @@ export default function StickyBookingCard({ ad, onWhatsApp, onCall, onShare }: S
           )}
 
           {/* Facebook Button - Secondary Social */}
-          {ad.contact_facebook && !ad.contact_instagram && (
+          {ad.contact_facebook && (
             <a
               href={ad.contact_facebook}
               target="_blank"

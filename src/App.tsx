@@ -12,6 +12,7 @@ import LoadingScreen from '@/components/ui/LoadingScreen'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import AdminProtectedRoute from './components/admin/AdminProtectedRoute'
 import AdminLayout from './components/admin/AdminLayout'
+import { ToastContainer } from './components/ui/ToastContainer'
 
 // Lazy load pages
 const Home = lazy(() => import('./pages/Home'))
@@ -127,6 +128,7 @@ function App() {
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </Suspense>
+              <ToastContainer />
               <Toaster position="top-right" />
             </div>
           </ToastProvider>

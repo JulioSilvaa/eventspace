@@ -125,7 +125,7 @@ const editAdSchema = z.object({
       return false
     }, 'Preço deve ser maior que zero'),
   price_per_weekend: z.any().optional(),
-  priceType: z.enum(['daily', 'hourly', 'event', 'weekend'], {
+  priceType: z.enum(Object.keys(PRICING_TYPES) as [string, ...string[]], {
     required_error: 'Selecione o tipo de preço'
   }),
 
@@ -176,6 +176,26 @@ const SPACE_CATEGORIES = [
   { id: 7, name: 'Som e Iluminação' },
 ]
 import { maskPhone as utilMaskPhone, maskMoneyFlexible as utilMaskMoney } from '@/utils/masks'
+import { apiClient } from '@/lib/api-client'
+import {
+  PRICING_TYPES,
+  CATEGORY_PRICING_CONFIG,
+  DEFAULT_PRICING_OPTIONS,
+  type PricingType
+} from '@/constants/pricing'
+
+const pricingModels = Object.entries(PRICING_TYPES).map(([key, value]) => ({
+  key,
+  ...value
+}))
+
+interface Category {
+  id: number
+  name: string
+  slug: string
+  type: 'space' | 'service' | 'equipment'
+  allowed_pricing_models?: { key: string; label: string }[]
+}
 
 const parseCurrency = (value: string | number) => {
   if (typeof value === 'number') return value
@@ -210,6 +230,17 @@ export default function EditAd() {
   const [customServices, setCustomServices] = useState<string[]>([])
   const [removedExistingImageIds, setRemovedExistingImageIds] = useState<string[]>([])
   const maxImages = 8
+
+  const [categories, setCategories] = useState<Category[]>([])
+
+  // Fetch categories
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const { data } = await apiClient.get<Category[]>('/api/categories')
+      if (data) setCategories(data)
+    }
+    fetchCategories()
+  }, [])
 
   const {
     register,
@@ -275,9 +306,13 @@ export default function EditAd() {
   }, [id, fetchAdById])
 
   useEffect(() => {
-    if (currentAd && !isLoading) {
+    if (currentAd && !isLoading && categories.length > 0) {
+      // Find the correct category to get the exact type
+      const matchedCategory = categories.find(c => c.id === currentAd.category_id)
+      const correctCategoryType = matchedCategory?.type || (currentAd.categories?.type?.toLowerCase() as any) || 'space'
+
       reset({
-        categoryType: (currentAd.categories?.type?.toLowerCase() as any) || 'space',
+        categoryType: correctCategoryType,
         title: currentAd.title,
         description: currentAd.description,
         category_id: currentAd.category_id || undefined,
@@ -357,7 +392,7 @@ export default function EditAd() {
         setCustomAmenities(custom) // Defaulting all unknown items to customAmenities (displayed as 'Outros' or similar)
       }
     }
-  }, [currentAd, isLoading, reset])
+  }, [currentAd, isLoading, categories, reset])
 
 
 
@@ -627,10 +662,13 @@ export default function EditAd() {
 
             <FormSelect
               label="Categoria"
-              options={SPACE_CATEGORIES.map(cat => ({
-                value: cat.id.toString(),
-                label: cat.name
-              }))}
+              options={categories
+                .filter(cat => cat.type === watch('categoryType'))
+                .map(cat => ({
+                  value: cat.id.toString(),
+                  label: cat.name
+                }))
+              }
               error={errors.category_id}
               required
               placeholder="Selecione a categoria"
@@ -867,10 +905,25 @@ export default function EditAd() {
 
               <FormSelect
                 label="Período"
-                options={[
-                  { value: 'daily', label: 'Por dia' },
-                  { value: 'weekend', label: 'Por final de semana' }
-                ]}
+                options={(() => {
+                  // Try to find category in fetched categories first
+                  const selectedCat = categories.find(c => c.id === Number(watch('category_id')))
+
+                  if (selectedCat && selectedCat.allowed_pricing_models && selectedCat.allowed_pricing_models.length > 0) {
+                    return selectedCat.allowed_pricing_models.map((m: any) => ({
+                      value: m.key,
+                      label: m.label
+                    }))
+                  }
+
+                  // Fallback: use category type if available
+                  const currentCategoryType = (watch('categoryType') || 'space') as string
+                  const allowedTypes = CATEGORY_PRICING_CONFIG[currentCategoryType.toLowerCase()] || DEFAULT_PRICING_OPTIONS
+
+                  return pricingModels
+                    .filter(m => allowedTypes.includes(m.key as PricingType))
+                    .map(m => ({ value: m.key, label: m.label }))
+                })()}
                 error={errors.priceType}
                 required
                 placeholder="Selecione o período"

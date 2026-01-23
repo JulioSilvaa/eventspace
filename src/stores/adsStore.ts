@@ -23,6 +23,7 @@ interface SpaceResponse {
   price_per_day?: number
   price_per_weekend?: number
   price_type?: string
+  type?: string // 'SPACE', 'SERVICE', 'EQUIPMENT'
   address: {
     street: string
     number: string
@@ -99,7 +100,7 @@ function mapSpaceToAd(space: SpaceResponse): Ad {
   return {
     id: space.id,
     user_id: space.owner_id,
-    category_id: space.category_id || 1,
+    category_id: space.category_id || 0, // 0 indicates missing or unknown
     title: space.title,
     description: space.description,
     price,
@@ -137,19 +138,19 @@ function mapSpaceToAd(space: SpaceResponse): Ad {
       created_at: space.created_at,
     })),
     categories: {
-      id: space.category_id || 1,
-      name: space.category_name || 'Espaço',
+      id: space.category_id || 0,
+      name: space.category_name || 'Desconhecido',
       type: (() => {
-        const lowerName = (space.category_name || '').toLowerCase();
-        if (['buffet', 'fotografia', 'foto', 'video', 'filmagem', 'cerimonial', 'segurança', 'limpeza', 'bar', 'garçom', 'dj', 'banda', 'música', 'assessoria', 'recepcionista', 'animador'].some(t => lowerName.includes(t))) {
-          return 'service';
-        } else if (['som', 'iluminação', 'luz', 'tendas', 'mesas', 'cadeiras', 'brinquedo', 'gerador', 'palco', 'telão', 'projetor', 'cobertura'].some(t => lowerName.includes(t))) {
-          if (lowerName.includes('decoração')) return 'service';
-          return 'equipment';
+        // Use the persisted type if available (converting from backend UPPERCASE to frontend lowercase)
+        if (space.type) {
+          const lowerType = space.type.toLowerCase()
+          if (['space', 'service', 'equipment'].includes(lowerType)) {
+            return lowerType as 'space' | 'service' | 'equipment'
+          }
         }
         return 'space';
       })(),
-      slug: 'espaco',
+      slug: 'outros',
     },
     specifications: {
       ...space.specifications,
