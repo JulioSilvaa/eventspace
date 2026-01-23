@@ -23,7 +23,9 @@ import {
 } from 'lucide-react'
 import Tooltip from '@/components/ui/Tooltip'
 import { useUserRealTimeMetrics } from '@/hooks/useRealTimeMetrics'
-import { formatPrice } from '@/lib/utils'
+import { formatPrice, formatCurrency } from '@/lib/utils'
+import { usePricingModels } from '@/hooks/usePricingModels'
+import { useMemo } from 'react'
 
 export default function MyAds() {
   const { user } = useAuth()
@@ -62,6 +64,19 @@ export default function MyAds() {
 
 
   const [userSubscriptions, setUserSubscriptions] = useState<Subscription[]>([])
+  const { data: pricingModels } = usePricingModels()
+
+  const unitMap = useMemo(() => {
+    const map: Record<string, string> = {}
+    if (pricingModels) {
+      pricingModels.forEach(pm => {
+        if (pm.unit) {
+          map[pm.key] = `/${pm.unit}`
+        }
+      })
+    }
+    return map
+  }, [pricingModels])
 
   useEffect(() => {
     if (user) {
@@ -409,7 +424,10 @@ export default function MyAds() {
                         </div>
 
                         <div className="flex flex-col items-center justify-center p-3 bg-gray-50/50 rounded-2xl border border-gray-100/50">
-                          <span className="text-sm font-bold text-gray-700 mb-1">{formatPrice(ad.price, ad.price_type)}</span>
+                          <span className="text-sm font-bold text-gray-700 mb-1">
+                            {ad.price ? formatCurrency(ad.price) : 'Consulte'}
+                            {unitMap[ad.price_type] || '/unid'}
+                          </span>
                           <span className="text-[10px] text-gray-400 uppercase font-black tracking-wider">Valor</span>
                         </div>
                       </div>
