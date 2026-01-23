@@ -357,7 +357,37 @@ export default function EditAd() {
         price_per_weekend: currentAd.price_per_weekend
           ? Math.floor(Number(currentAd.price_per_weekend)).toLocaleString('pt-BR')
           : undefined,
-        priceType: currentAd.price_type,
+        priceType: (() => {
+          const apiValue = currentAd.price_type;
+
+          // Map API values (from price_unit column) to pricing_model keys
+          // Map API values (from price_unit column) to pricing_model keys (DB uses Portuguese keys)
+          const valueMap: Record<string, string> = {
+            'day': 'diaria',
+            'daily': 'diaria',
+            'dia': 'diaria',
+            'hour': 'hora',
+            'hourly': 'hora',
+            'hora': 'hora',
+            'person': 'pessoa',
+            'pessoa': 'pessoa',
+            'weekend': 'final_de_semana',
+            'final_de_semana': 'final_de_semana',
+            'fim_de_semana': 'final_de_semana',
+            'event': 'evento',
+            'evento': 'evento',
+            'unit': 'unidade',
+            'unidade': 'unidade',
+            'set': 'conjunto',
+            'conjunto': 'conjunto',
+            'package': 'pacote',
+            'pacote': 'pacote',
+            'pernoite': 'pernoite',
+            'orcamento': 'orcamento'
+          };
+
+          return valueMap[apiValue?.toLowerCase()] || apiValue;
+        })(),
         contactPhone: utilMaskPhone((currentAd.contact_phone || '').replace(/^(\+?55|55)\s?/, '').replace(/^\+55/, '')),
         contactWhatsapp: utilMaskPhone((currentAd.contact_whatsapp || '').replace(/^(\+?55|55)\s?/, '').replace(/^\+55/, '')),
         contactWhatsappAlternative: utilMaskPhone((currentAd.contact_whatsapp_alternative || '').replace(/^(\+?55|55)\s?/, '').replace(/^\+55/, '')),
@@ -1055,9 +1085,12 @@ export default function EditAd() {
 
                   // Final fallback: if everything fails, return all pricing models to avoid empty dropdown
                   if (options.length === 0) {
+                    console.log('🔍 Using fallback - all pricing models:', pricingModels);
                     return pricingModels.map(m => ({ value: m.key, label: m.label }))
                   }
 
+                  console.log('🔍 Dropdown options:', options);
+                  console.log('🔍 Current priceType value:', watch('priceType'));
                   return options;
                 })()}
                 error={errors.priceType}
