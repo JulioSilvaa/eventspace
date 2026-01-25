@@ -106,7 +106,33 @@ function mapSpaceToAd(space: SpaceResponse): Ad {
     price,
     price_per_day: space.price_per_day,
     price_per_weekend: space.price_per_weekend,
-    price_type: space.price_type || 'diaria',
+    price_type: (() => {
+      const apiValue = space.price_type || 'diaria';
+      const valueMap: Record<string, string> = {
+        'day': 'diaria',
+        'daily': 'diaria',
+        'dia': 'diaria',
+        'hour': 'hora',
+        'hourly': 'hora',
+        'hora': 'hora',
+        'person': 'pessoa',
+        'pessoa': 'pessoa',
+        'weekend': 'final_de_semana',
+        'final_de_semana': 'final_de_semana',
+        'fim_de_semana': 'final_de_semana',
+        'event': 'evento',
+        'evento': 'evento',
+        'unit': 'unidade',
+        'unidade': 'unidade',
+        'set': 'conjunto',
+        'conjunto': 'conjunto',
+        'package': 'pacote',
+        'pacote': 'pacote',
+        'pernoite': 'pernoite',
+        'orcamento': 'orcamento'
+      };
+      return valueMap[apiValue.toLowerCase()] || apiValue.toLowerCase();
+    })(),
     capacity: space.capacity,
     state: space.address?.state || '',
     city: space.address?.city || '',
@@ -398,6 +424,8 @@ export const useAdsStore = create<AdsState>((set, get) => ({
 
     const { data, error } = await apiClient.get<SpacesListResponse>('/api/spaces', {
       owner_id: userId,
+      limit: 100, // Ensure we get all user ads
+      _t: Date.now() // Cache buster to force fresh data from server
     })
 
     if (error) {
@@ -494,15 +522,25 @@ export const useAdsStore = create<AdsState>((set, get) => ({
       return { error: error.message }
     }
 
-    // Update local state
-    set((state) => ({
-      userAds: state.userAds.map((ad) =>
-        ad.id === id ? { ...ad, ...adData } : ad
-      ),
-      currentAd: state.currentAd?.id === id
-        ? { ...state.currentAd, ...adData }
-        : state.currentAd,
-    }))
+    // Refetch to ensure we have the correct server-side data structure (images, etc)
+    await get().fetchAdById(id)
+
+    // Also refetch the user's ad list to ensure consistency in the "My Ads" view
+    // This fixes the issue where the list view shows stale data even if the detail view is updated
+    const currentUser = get().userAds.find(a => a.id === id)?.user_id
+    if (currentUser) {
+      await get().fetchUserAds(currentUser)
+    }
+
+    // Update local state (redundant but safe fallback)
+    const updatedAd = get().currentAd
+    if (updatedAd) {
+      set((state) => ({
+        userAds: state.userAds.map((ad) =>
+          ad.id === id ? updatedAd : ad
+        )
+      }))
+    }
 
     return {}
   },
