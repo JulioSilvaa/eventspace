@@ -24,8 +24,7 @@ class ApiClient {
    */
   setToken(token: string): void {
     this.accessToken = token
-    // Persist token for page refreshes
-    localStorage.setItem('accessToken', token)
+    this.accessToken = token
   }
 
   /**
@@ -40,9 +39,6 @@ class ApiClient {
    * Get current access token
    */
   getToken(): string | null {
-    if (!this.accessToken) {
-      this.accessToken = localStorage.getItem('accessToken')
-    }
     return this.accessToken
   }
 
