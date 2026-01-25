@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'react-hot-toast'
 import React, { Suspense, lazy } from 'react'
+import { Analytics as VercelAnalytics } from '@vercel/analytics/react'
 
 // Contexts
 import { ToastProvider } from './contexts/ToastContext'
@@ -130,6 +131,7 @@ function App() {
               </Suspense>
               <ToastContainer />
               <Toaster position="top-right" />
+              <VercelAnalytics />
             </div>
           </ToastProvider>
         </AdminAuthProvider>
