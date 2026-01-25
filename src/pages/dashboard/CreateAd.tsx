@@ -1412,9 +1412,9 @@ export default function CreateAd() {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-4 mb-6">
-            <Tooltip content="Voltar ao dashboard">
+            <Tooltip content={user ? "Voltar ao dashboard" : "Voltar ao início"}>
               <Link
-                to="/dashboard"
+                to={user ? "/dashboard" : "/"}
                 className="group p-2 hover:bg-primary-50 rounded-lg transition-all"
               >
                 <ArrowLeft className="w-6 h-6 text-gray-600 group-hover:text-primary-600 transition-colors" />
