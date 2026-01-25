@@ -50,28 +50,10 @@ import {
   Crown,
   Home,
   MessageCircle,
-  ChevronLeft
+  ChevronRight
 } from 'lucide-react'
 
 import { AMENITY_LABELS } from '@/constants/amenities'
-
-const AMENITIES_ICONS = {
-  wifi: Wifi,
-  parking: Car,
-  kitchen: Utensils,
-  bathrooms: Bath,
-  air_conditioning: Snowflake,
-  ventilation: Wind,
-  tv: Tv,
-  furniture: Sofa,
-  coffee_area: Coffee,
-  microwave: Microwave,
-  refrigerator: Refrigerator,
-  washing_machine: WashingMachine,
-  sound_basic: Speaker,
-  phone: Phone,
-  location_access: MapPin,
-}
 
 // Reuse existing ComfortItem logic but with updated styles
 function ComfortItem({ name }: { name: string }) {
@@ -98,8 +80,11 @@ function ComfortItem({ name }: { name: string }) {
     'microwave': Microwave,
     'tv': Tv,
     'piscina': Waves,
+    'pool': Waves,
     'churrasqueira': Flame,
+    'bbq': Flame,
     'estacionamento': Car,
+    'parking': Car,
     'segurança': Shield,
     'limpeza': Sparkles,
     'jogos': Gamepad2,
@@ -180,15 +165,19 @@ export default function AdDetails() {
   const shareAd = async () => {
     if (!ad) return
     try {
-      await navigator.share({
-        title: ad.title,
-        text: `${ad.title} - ${formatPrice(ad.price, ad.price_type)}`,
-        url: window.location.href,
-      })
-      toast.success('Compartilhado!', 'Anúncio compartilhado.')
+      if (navigator.share) {
+        await navigator.share({
+          title: ad.title,
+          text: `${ad.title} - ${formatPrice(ad.price, ad.price_type)}`,
+          url: window.location.href,
+        })
+        toast.success('Compartilhado!', 'Anúncio compartilhado.')
+      } else {
+        throw new Error('Share API not supported')
+      }
     } catch {
-      navigator.clipboard.writeText(window.location.href)
-      toast.success('Link copiado!')
+      await navigator.clipboard.writeText(window.location.href)
+      toast.success('Link copiado!', 'Link do anúncio copiado para a área de transferência.')
     }
   }
 
@@ -206,17 +195,13 @@ export default function AdDetails() {
   const specifications = ad.specifications || {}
   const amenities = Array.isArray(specifications.amenities) ? specifications.amenities : []
 
-  // Fallback: reference_point can be in ad.reference_point OR specifications.reference_point
-  const referencePoint = ad.reference_point || (specifications.reference_point as string) || undefined
-
   return (
     <div className="min-h-screen bg-[#F8F9FA] pb-32 md:pb-20">
       <Seo title={ad.title} description={ad.description.substring(0, 160)} image={ad.listing_images?.[0]?.image_url} />
 
       {/* Immersive Mobile Header / Desktop Header */}
       <div className="md:max-w-7xl md:mx-auto md:px-4 md:pt-6">
-        {/* Mobile: Full Width Gallery with Floating Nav */}
-        {/* Navigation Header - Moved outside image */}
+        {/* Navigation Header */}
         <div className="flex justify-between items-center px-4 py-4 md:px-0">
           <button
             onClick={() => navigate(-1)}
@@ -237,9 +222,8 @@ export default function AdDetails() {
           </div>
         </div>
 
-        {/* Mobile: Full Width Gallery */}
+        {/* Gallery */}
         <div className="relative md:rounded-[2.5rem] overflow-hidden shadow-2xl">
-          {/* Gallery Component */}
           <AdGallery title={ad.title} images={ad.listing_images || []} />
         </div>
       </div>
@@ -254,7 +238,7 @@ export default function AdDetails() {
             <div>
               <div className="flex flex-wrap gap-2 mb-4">
                 {ad.featured && <span className="bg-yellow-400 text-yellow-950 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 uppercase tracking-wider"><Crown className="w-3 h-3" /> Destaque</span>}
-                <span className="bg-secondary-900 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">{ad.categories?.name}</span>
+                <span className="bg-secondary-900 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">{ad.categories?.name || 'Espaço'}</span>
               </div>
 
               <h1 className="text-4xl md:text-5xl font-black text-secondary-950 mb-4 leading-tight">{ad.title}</h1>
@@ -263,13 +247,11 @@ export default function AdDetails() {
                 <div className="flex items-center gap-2">
                   <MapPin className="w-5 h-5 text-primary-500" />
                   <span className="font-medium">{ad.city}, {ad.state}</span>
-                  <MapPin className="w-5 h-5 text-primary-500 shrink-0" />
-                  <span className="font-medium break-words">{ad.city}, {ad.state}</span>
                 </div>
-                {!!specifications.capacity && (
+                {ad.capacity !== undefined && (
                   <div className="flex items-center gap-2">
                     <Users className="w-5 h-5 text-primary-500 shrink-0" />
-                    <span className="font-medium">Até {specifications.capacity} pessoas</span>
+                    <span className="font-medium">Até {String(ad.capacity)} pessoas</span>
                   </div>
                 )}
               </div>
@@ -311,16 +293,11 @@ export default function AdDetails() {
                   <p className="text-gray-500 text-base md:text-lg break-words">
                     {ad.neighborhood} • {ad.city}/{ad.state} {ad.postal_code && `• CEP ${ad.postal_code}`}
                   </p>
-                  {referencePoint && (
+                  {(ad.reference_point || specifications.reference_point) && (
                     <p className="text-gray-500 text-sm md:text-base mt-2 italic break-words">
-                      Ponto de referência: {referencePoint}
+                      Ponto de referência: {String(ad.reference_point || specifications.reference_point || '')}
                     </p>
                   )}
-                </div>
-                <div className="flex flex-col gap-2 shrink-0 md:hidden">
-                  <button className="px-6 py-2 bg-gray-50 hover:bg-gray-100 text-secondary-900 rounded-xl text-sm font-bold transition-colors w-full md:w-auto">
-                    Ver no Waze
-                  </button>
                 </div>
               </div>
 
