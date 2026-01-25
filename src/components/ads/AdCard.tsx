@@ -119,9 +119,9 @@ export default function AdCard({
     : 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=300&fit=crop'
 
   const cardClasses = {
-    small: 'bg-white rounded-lg shadow hover:shadow-md transition-shadow overflow-hidden flex flex-col h-full',
-    medium: 'bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow overflow-hidden flex flex-col h-full',
-    large: 'bg-white rounded-2xl shadow-xl hover:shadow-2xl transition-shadow overflow-hidden flex flex-col h-full'
+    small: 'bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-xl hover:border-gray-200 transition-all duration-300 overflow-hidden flex flex-col h-full',
+    medium: 'bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl hover:border-gray-200 transition-all duration-300 overflow-hidden flex flex-col h-full',
+    large: 'bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-2xl hover:border-gray-200 transition-all duration-300 overflow-hidden flex flex-col h-full'
   }
 
   const imageClasses = {
@@ -144,7 +144,7 @@ export default function AdCard({
           <img
             src={ad.listing_images?.[0]?.image_url || defaultImage}
             alt={ad.title}
-            className={imageClasses[size]}
+            className={`${imageClasses[size]} transform transition-transform duration-700 ease-out group-hover:scale-105`}
             loading="lazy"
             onError={(e) => {
               const target = e.target as HTMLImageElement
@@ -153,8 +153,8 @@ export default function AdCard({
           />
 
           {/* Badges: Category (Top Left) */}
-          <div className="absolute top-3 left-3 z-10">
-            <span className="bg-white/90 backdrop-blur-sm text-gray-900 text-xs px-2.5 py-1 rounded-lg font-semibold shadow-sm border border-white/20">
+          <div className="absolute top-4 left-4 z-10">
+            <span className="bg-white/80 backdrop-blur-md border border-white/40 text-gray-900 text-[10px] uppercase tracking-wider px-3 py-1.5 rounded-full font-bold shadow-sm backdrop-saturate-150">
               {ad.categories?.name || (isSpace ? 'Espaço' : 'Equipamento')}
             </span>
           </div>
@@ -169,8 +169,10 @@ export default function AdCard({
           )}
 
           {/* Price Badge */}
-          <div className="absolute bottom-3 left-3 bg-black bg-opacity-75 text-white px-3 py-1 rounded-full">
-            <span className="font-bold text-sm">{formatPrice(ad.price, ad.price_type)}</span>
+          <div className="absolute bottom-4 left-4">
+            <div className="bg-gray-900/80 backdrop-blur-md text-white px-3 py-1.5 rounded-xl border border-white/10 shadow-lg backdrop-saturate-150">
+              <span className="font-semibold text-sm">{formatPrice(ad.price, ad.price_type)}</span>
+            </div>
           </div>
 
           {/* Favorite Button */}
@@ -187,7 +189,8 @@ export default function AdCard({
         {/* Content */}
         <div className={paddingClasses[size]}>
           {/* Title */}
-          <h3 className={`font-bold text-gray-900 mb-2 group-hover:text-primary-600 transition-colors line-clamp-2 ${size === 'small' ? 'text-sm md:text-base' : size === 'medium' ? 'text-base md:text-lg' : 'text-lg md:text-xl'
+          {/* Title */}
+          <h3 className={`font-bold text-gray-900 mb-2 group-hover:text-primary-600 transition-colors line-clamp-2 ${size === 'small' ? 'text-sm md:text-base' : size === 'medium' ? 'text-lg md:text-xl' : 'text-xl md:text-2xl'
             }`}>
             {ad.title}
           </h3>
@@ -224,8 +227,8 @@ export default function AdCard({
                 const amenityName = AMENITY_LABELS[amenity] || AMENITY_LABELS[normalizedKey] || amenity
 
                 return (
-                  <div key={index} className="flex items-center gap-1 bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs">
-                    {IconComponent && <IconComponent className="w-3 h-3" />}
+                  <div key={index} className="flex items-center gap-1.5 bg-gray-50 border border-gray-100 text-gray-600 px-2.5 py-1 rounded-lg text-xs font-medium">
+                    {IconComponent && <IconComponent className="w-3.5 h-3.5 text-gray-400" />}
                     <span className="truncate max-w-[100px]">{amenityName}</span>
                   </div>
                 )
