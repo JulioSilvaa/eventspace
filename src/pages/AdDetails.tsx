@@ -293,7 +293,7 @@ export default function AdDetails() {
                   <p className="text-gray-500 text-base md:text-lg break-words">
                     {ad.neighborhood} • {ad.city}/{ad.state} {ad.postal_code && `• CEP ${ad.postal_code}`}
                   </p>
-                  {(ad.reference_point || specifications.reference_point) && (
+                  {!!(ad.reference_point || specifications.reference_point) && (
                     <p className="text-gray-500 text-sm md:text-base mt-2 italic break-words">
                       Ponto de referência: {String(ad.reference_point || specifications.reference_point || '')}
                     </p>
