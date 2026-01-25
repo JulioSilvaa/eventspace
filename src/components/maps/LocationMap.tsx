@@ -128,11 +128,10 @@ export default function LocationMap({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="h-full flex flex-col gap-4">
       {/* Map Container */}
       <div
-        className="rounded-lg overflow-hidden border border-gray-200 shadow-sm relative"
-        style={{ height }}
+        className="flex-1 min-h-0 rounded-lg overflow-hidden border border-gray-200 shadow-sm relative z-0"
       >
         <MapContainer
           center={[latitude, longitude]}

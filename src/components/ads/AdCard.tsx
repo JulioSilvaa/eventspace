@@ -140,11 +140,16 @@ export default function AdCard({
     <Link to={isSpace ? `/espacos/${ad.id}` : `/anunciantes/${ad.id}`} className="block group h-full">
       <div className={cardClasses[size]}>
         {/* Image */}
-        <div className="relative">
+        <div className="relative overflow-hidden isolate">
           <img
             src={ad.listing_images?.[0]?.image_url || defaultImage}
             alt={ad.title}
-            className={`${imageClasses[size]} transform transition-transform duration-700 ease-out group-hover:scale-105`}
+            style={{
+              WebkitMaskImage: '-webkit-radial-gradient(white, black)',
+              WebkitBackfaceVisibility: 'hidden',
+              backfaceVisibility: 'hidden'
+            }}
+            className={`${imageClasses[size]} transform transition-transform duration-[2000ms] ease-[cubic-bezier(0.25,1,0.5,1)] group-hover:scale-110`}
             loading="lazy"
             onError={(e) => {
               const target = e.target as HTMLImageElement

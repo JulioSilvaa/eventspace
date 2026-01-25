@@ -28,6 +28,7 @@ interface SpaceResponse {
     street: string
     number: string
     complement?: string
+    reference_point?: string
     neighborhood: string
     city: string
     state: string
@@ -140,7 +141,7 @@ function mapSpaceToAd(space: SpaceResponse): Ad {
     street: space.address?.street,
     number: space.address?.number,
     complement: space.address?.complement,
-    reference_point: space.address?.complement, // Mapping to complement as fallback or specifications check
+    reference_point: space.address?.reference_point,
     postal_code: space.address?.zipcode,
     status: (space.status || 'inactive') as 'active' | 'inactive' | 'pending' | 'rejected' | 'suspended',
     featured: space.featured || false,

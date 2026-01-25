@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, Link, useNavigate } from 'react-router-dom'
-import { TrendingUp, LogOut, Home } from 'lucide-react'
+import { TrendingUp, LogOut, Home, ArrowLeft } from 'lucide-react'
 import DashboardStats, { DashboardStatsData } from '@/components/dashboard/DashboardStats'
 import QuickActions from '@/components/dashboard/QuickActions'
 import RecentActivity from '@/components/dashboard/RecentActivity'
@@ -46,50 +46,40 @@ export default function Dashboard() {
     metrics: realTimeMetrics,
     isLoading: metricsLoading
   } = useUserRealTimeMetrics(user?.id, {
-    pollingInterval: 30000, // 30 segundos
-    enablePolling: true // Endpoint implementado!
+    pollingInterval: 30000,
+    enablePolling: true
   })
-
 
   // Carregar anúncios do usuário e refresh profile se voltando do checkout
   useEffect(() => {
     if (user) {
       fetchUserAds(user.id)
-
-      // Se vem de uma página de checkout, força refresh do perfil
       const urlParams = new URLSearchParams(window.location.search)
       const fromCheckout = urlParams.get('from_checkout') === 'true'
       if (fromCheckout) {
         refreshProfile()
-        // Remove o parâmetro da URL
         const newUrl = window.location.pathname
         window.history.replaceState({}, '', newUrl)
       }
     }
   }, [user, fetchUserAds, refreshProfile])
 
-  // Calcular estatísticas usando dados real-time quando disponíveis
+  // Calcular estatísticas
   useEffect(() => {
     if (userAds.length > 0) {
       const activeAds = userAds.filter(ad => ad.status === 'active')
       const inactiveAds = userAds.filter(ad => ad.status === 'inactive' || ad.status === 'pending')
-      const canceledAds = userAds.filter(ad => ad.status === 'suspended') // Assuming suspended maps to canceled logic for now
+      const canceledAds = userAds.filter(ad => ad.status === 'suspended')
 
-      // Usar métricas real-time se disponíveis, senão fallback para dados existentes
       let totalViews = 0
       let totalContacts = 0
 
       if (realTimeMetrics) {
-        // Usar dados consolidados real-time com proteção contra NaN
         totalViews = isNaN(realTimeMetrics.totalViews) ? 0 : (realTimeMetrics.totalViews || 0)
         totalContacts = isNaN(realTimeMetrics.totalContacts) ? 0 : (realTimeMetrics.totalContacts || 0)
       } else {
-        // Fallback para dados existentes
-        totalViews = userAds.reduce((sum, ad) => {
-          const views = isNaN(ad.views_count) ? 0 : (ad.views_count || 0)
-          return sum + views
-        }, 0)
-        totalContacts = Math.floor(totalViews * 0.08) // Simulado até termos dados reais
+        totalViews = userAds.reduce((sum, ad) => sum + (ad.views_count || 0), 0)
+        totalContacts = Math.floor(totalViews * 0.08)
       }
 
       const recentAds = userAds.slice(0, 3).map(ad => ({
@@ -97,14 +87,10 @@ export default function Dashboard() {
         title: ad.title,
         category: ad.categories?.name || 'Categoria não encontrada',
         status: ad.status,
-        views: ad.views_count || 0, // Default to 0 if views_count is undefined/null
+        views: ad.views_count || 0,
         contacts: Math.floor((ad.views_count || 0) * 0.08),
         createdAt: ad.created_at ? ad.created_at.split('T')[0] : new Date().toISOString().split('T')[0]
       }))
-
-      // Garantir que todos os valores são números válidos
-      const safeTotalViews = isNaN(totalViews) ? 0 : totalViews
-      const safeTotalContacts = isNaN(totalContacts) ? 0 : totalContacts
 
       setData({
         totalAds: userAds.length,
@@ -113,42 +99,27 @@ export default function Dashboard() {
         canceledAds: canceledAds.length,
         deletedAds: 0,
         canceledPlans: 0,
-        totalViews: safeTotalViews,
-        totalContacts: safeTotalContacts,
-        averageRating: 4.8, // Mock por enquanto
-        thisMonthViews: Math.floor(safeTotalViews * 0.6), // Mock - 60% do total
-        lastMonthViews: Math.floor(safeTotalViews * 0.4), // Mock - 40% do total
-        thisMonthContacts: Math.floor(safeTotalContacts * 0.6),
-        lastMonthContacts: Math.floor(safeTotalContacts * 0.4),
+        totalViews: totalViews,
+        totalContacts: totalContacts,
+        averageRating: 4.8,
+        thisMonthViews: Math.floor(totalViews * 0.6),
+        lastMonthViews: Math.floor(totalViews * 0.4),
+        thisMonthContacts: Math.floor(totalContacts * 0.6),
+        lastMonthContacts: Math.floor(totalContacts * 0.4),
         recentAds,
         quickStats: {
-          pendingMessages: Math.floor(totalContacts * 0.3), // 30% mensagens pendentes
+          pendingMessages: Math.floor(totalContacts * 0.3),
           expiringAds: userAds.filter(ad => ad.status === 'active').length > 0 ? 1 : 0,
-          recommendedActions: 2 // Mock
+          recommendedActions: 2
         }
       })
     } else {
-      // Dados vazios se não há anúncios
       setData({
-        totalAds: 0,
-        activeAds: 0,
-        inactiveAds: 0,
-        canceledAds: 0,
-        deletedAds: 0,
-        canceledPlans: 0,
-        totalViews: 0,
-        totalContacts: 0,
-        averageRating: 0,
-        thisMonthViews: 0,
-        lastMonthViews: 0,
-        thisMonthContacts: 0,
-        lastMonthContacts: 0,
+        totalAds: 0, activeAds: 0, inactiveAds: 0, canceledAds: 0, deletedAds: 0, canceledPlans: 0,
+        totalViews: 0, totalContacts: 0, averageRating: 0,
+        thisMonthViews: 0, lastMonthViews: 0, thisMonthContacts: 0, lastMonthContacts: 0,
         recentAds: [],
-        quickStats: {
-          pendingMessages: 0,
-          expiringAds: 0,
-          recommendedActions: 0
-        }
+        quickStats: { pendingMessages: 0, expiringAds: 0, recommendedActions: 0 }
       })
     }
     setLoadingData(false)
@@ -156,38 +127,37 @@ export default function Dashboard() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-[#F8F9FA]">
         <div className="text-center">
-          <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Carregando dashboard...</p>
+          <div className="w-10 h-10 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-500 font-medium">Carregando painel...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50/50">
+    <div className="min-h-screen bg-[#F8F9FA] selection:bg-primary-500 selection:text-white pb-20">
       {/* Header */}
-      <header className="bg-white border-b border-gray-100 sticky top-0 z-50">
+      <header className="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm backdrop-blur-xl bg-white/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row md:items-center justify-between py-5 md:py-6 gap-5">
+          <div className="flex flex-col md:flex-row md:items-center justify-between py-4 md:py-6 gap-4">
             <div className="flex-1">
-              <h1 className="text-xl md:text-3xl font-black text-gray-900 tracking-tight leading-tight">
-                {isWelcome ? '🎉 Bem-vindo!' : `Olá, ${profile?.full_name?.split(' ')[0] || 'Anunciante'}! 👋`}
+              <h1 className="text-2xl md:text-3xl font-black text-secondary-950 tracking-tight">
+                {isWelcome ? 'Bem-vindo!' : `Olá, ${profile?.full_name?.split(' ')[0] || 'Gestor'}!`}
               </h1>
-              <p className="text-gray-500 font-medium text-xs md:text-base mt-1 truncate max-w-[200px] md:max-w-none">
-                {userAds.length > 0 ? 'Acompanhe seu desempenho' : 'Gerencie seus espaços'}
+              <p className="text-gray-500 font-medium text-sm mt-1">
+                {userAds.length > 0 ? 'Aqui está o resumo dos seus espaços.' : 'Comece a anunciar seus espaços hoje.'}
               </p>
             </div>
 
-            <div className="flex items-center gap-2 sm:gap-3">
-              {/* Botão Voltar para Home */}
+            <div className="flex items-center gap-3">
               <Link
                 to="/"
-                className="flex items-center gap-2 px-3 py-2 text-sm font-bold text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 hover:text-primary-600 transition-all active:scale-95"
+                className="flex items-center gap-2 px-4 py-2.5 text-sm font-bold text-gray-600 bg-gray-50 rounded-xl hover:bg-white hover:text-primary-500 hover:shadow-md transition-all active:scale-95 border border-transparent hover:border-gray-100"
               >
                 <Home className="w-4 h-4" />
-                <span>Home</span>
+                <span className="hidden sm:inline">Home</span>
               </Link>
 
               <button
@@ -195,10 +165,10 @@ export default function Dashboard() {
                   navigate('/')
                   await signOut()
                 }}
-                className="flex items-center gap-2 px-3 py-2 text-sm font-bold text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-all active:scale-95"
+                className="flex items-center gap-2 px-4 py-2.5 text-sm font-bold text-gray-600 bg-gray-50 rounded-xl hover:bg-red-50 hover:text-red-600 transition-all active:scale-95 border border-transparent hover:border-red-100"
               >
                 <LogOut className="w-4 h-4" />
-                <span>Sair</span>
+                <span className="hidden sm:inline">Sair</span>
               </button>
             </div>
           </div>
@@ -206,37 +176,35 @@ export default function Dashboard() {
       </header>
 
       {/* Conteúdo principal */}
-      <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        {/* Mensagem de sucesso para novo anúncio */}
+      <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+
+        {/* Success Banner */}
         {isNewAd && (
-          <div className="mb-8 bg-white border border-green-100 rounded-2xl p-6 shadow-sm relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-green-50 rounded-full blur-3xl -translate-y-16 translate-x-16"></div>
-            <div className="relative flex flex-col sm:flex-row items-start gap-4">
-              <div className="bg-green-100 p-3 rounded-xl flex-shrink-0">
-                <svg className="h-6 w-6 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+          <div className="mb-8 bg-white border border-green-100 rounded-3xl p-6 md:p-8 shadow-lg shadow-green-500/5 relative overflow-hidden animate-fade-in">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-green-50 rounded-full blur-3xl -translate-y-32 translate-x-16 opacity-50"></div>
+            <div className="relative flex flex-col md:flex-row items-start gap-6">
+              <div className="bg-green-100 p-4 rounded-2xl flex-shrink-0 text-green-600 shadow-sm">
+                <TrendingUp className="w-8 h-8" />
               </div>
               <div className="flex-1">
-                <h3 className="text-lg font-bold text-gray-900 mb-1">
-                  🎉 Anúncio criado com sucesso!
+                <h3 className="text-xl font-bold text-secondary-950 mb-2">
+                  Anúncio Publicado! 🚀
                 </h3>
-                <p className="text-gray-600 font-medium mb-4 text-sm leading-relaxed">
-                  Seu anúncio foi publicado e já está disponível para visualização.
-                  Agora os interessados podem encontrá-lo e entrar em contato.
+                <p className="text-gray-600 font-medium mb-6 leading-relaxed max-w-2xl">
+                  Seu espaço já está visível para milhares de clientes. Acompanhe as visualizações e contatos por aqui.
                 </p>
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap gap-4">
                   <Link
                     to="/dashboard/meus-anuncios"
-                    className="flex-1 sm:flex-none justify-center bg-green-600 text-white px-5 py-2.5 rounded-xl hover:bg-green-700 shadow-lg shadow-green-500/20 transition-all text-sm font-bold active:scale-95"
+                    className="flex-1 sm:flex-none justify-center bg-green-600 text-white px-6 py-3 rounded-xl hover:bg-green-700 shadow-lg shadow-green-600/20 transition-all text-sm font-bold active:scale-95"
                   >
-                    Ver Meus Anúncios
+                    Gerenciar Anúncios
                   </Link>
                   <Link
                     to="/espacos"
-                    className="flex-1 sm:flex-none justify-center border border-green-200 text-green-700 bg-green-50 px-5 py-2.5 rounded-xl hover:bg-green-100 transition-all text-sm font-bold active:scale-95"
+                    className="flex-1 sm:flex-none justify-center border-2 border-green-100 text-green-700 bg-white px-6 py-3 rounded-xl hover:bg-green-50 hover:border-green-200 transition-all text-sm font-bold active:scale-95"
                   >
-                    Ver na Busca Pública
+                    Ver meu Anúncio
                   </Link>
                 </div>
               </div>
@@ -244,8 +212,7 @@ export default function Dashboard() {
           </div>
         )}
 
-
-        {/* Stats Cards */}
+        {/* Stats Grid */}
         <DashboardStats
           data={data || undefined}
           loading={loadingData}
@@ -253,64 +220,53 @@ export default function Dashboard() {
           lastUpdated={realTimeMetrics ? new Date() : null}
         />
 
-        {/* Main Content Grid */}
-        <div className="flex flex-col lg:grid lg:grid-cols-3 gap-6 md:gap-8 mt-6 md:mt-8">
-          {/* Quick Actions - Takes 1 column (Sidebar) */}
-          {/* Mobile: Order 1 (Top) | Desktop: Order 2 (Right Sidebar) */}
-          <div className="order-1 lg:order-2 lg:col-span-1 space-y-6">
-            <QuickActions userAds={userAds} />
-          </div>
+        <div className="flex flex-col lg:grid lg:grid-cols-3 gap-8 mt-8">
 
-          {/* Recent Activity & Tips - Takes 2 columns (Main Content) */}
-          {/* Mobile: Order 2 (Bottom) | Desktop: Order 1 (Left Content) */}
-          <div className="order-2 lg:order-1 lg:col-span-2 space-y-6 md:space-y-8">
-            <RecentActivity
-              userAds={userAds}
-            />
+          {/* Main Content Area */}
+          <div className="order-2 lg:order-1 lg:col-span-2 space-y-8">
+            <RecentActivity userAds={userAds} />
 
-            {/* Performance Tips */}
-            <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-5 md:p-6 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-green-50 to-transparent rounded-full blur-3xl -translate-y-32 translate-x-32 group-hover:translate-y-[-7rem] transition-transform duration-700"></div>
+            {/* Pro Tips Card */}
+            <div className="bg-secondary-950 rounded-[2.5rem] p-8 relative overflow-hidden text-white shadow-xl">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-primary-500 rounded-full blur-[80px] opacity-20 -translate-y-20 translate-x-20"></div>
+              <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500 rounded-full blur-[80px] opacity-20 translate-y-20 -translate-x-20"></div>
 
-              <div className="relative">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 bg-green-50 rounded-xl text-green-600">
-                    <TrendingUp className="w-5 h-5" />
+              <div className="relative z-10">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-3 bg-white/10 backdrop-blur-md rounded-xl">
+                    <TrendingUp className="w-6 h-6 text-primary-400" />
                   </div>
-                  <h3 className="text-lg font-bold text-gray-900">
-                    Dicas de Desempenho
-                  </h3>
+                  <h3 className="text-xl font-bold">Dicas de Especialista</h3>
                 </div>
 
-                <p className="text-sm text-gray-500 font-medium mb-5">
-                  Anúncios completos recebem até <strong className="text-green-600">5x mais contatos</strong>. Confira se você já seguiu estas dicas:
+                <p className="text-gray-300 font-medium mb-8 max-w-lg">
+                  Anúncios completos recebem até <strong className="text-white">5x mais contatos</strong>. Siga nosso checklist para turbinar seus resultados.
                 </p>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex items-center gap-3 text-sm font-medium text-gray-700 bg-gray-50 p-3 rounded-xl border border-gray-100">
-                    <div className="w-2.5 h-2.5 bg-green-500 rounded-full shadow-sm shadow-green-500/50"></div>
-                    Adicione pelo menos 5 fotos
-                  </div>
-                  <div className="flex items-center gap-3 text-sm font-medium text-gray-700 bg-gray-50 p-3 rounded-xl border border-gray-100">
-                    <div className="w-2.5 h-2.5 bg-green-500 rounded-full shadow-sm shadow-green-500/50"></div>
-                    Preencha todos os campos
-                  </div>
-                  <div className="flex items-center gap-3 text-sm font-medium text-gray-700 bg-gray-50 p-3 rounded-xl border border-gray-100">
-                    <div className="w-2.5 h-2.5 bg-amber-500 rounded-full shadow-sm shadow-amber-500/50"></div>
-                    Responda em até 1 hora
-                  </div>
-                  <div className="flex items-center gap-3 text-sm font-medium text-gray-700 bg-gray-50 p-3 rounded-xl border border-gray-100">
-                    <div className="w-2.5 h-2.5 bg-amber-500 rounded-full shadow-sm shadow-amber-500/50"></div>
-                    Mantenha o calendário atualizado
-                  </div>
+                  {[
+                    { text: 'Adicione 5+ fotos em alta', done: true },
+                    { text: 'Preencha todas as comodidades', done: true },
+                    { text: 'Responda rápido no WhatsApp', done: false },
+                    { text: 'Mantenha preços atualizados', done: false }
+                  ].map((item, i) => (
+                    <div key={i} className={`flex items-center gap-3 p-4 rounded-xl border ${item.done ? 'bg-primary-500/10 border-primary-500/20' : 'bg-white/5 border-white/10'}`}>
+                      <div className={`w-2 h-2 rounded-full ${item.done ? 'bg-primary-400' : 'bg-gray-600'}`}></div>
+                      <span className={`text-sm font-bold ${item.done ? 'text-primary-200' : 'text-gray-400'}`}>{item.text}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
           </div>
+
+          {/* Sidebar */}
+          <div className="order-1 lg:order-2 lg:col-span-1 space-y-8">
+            <QuickActions userAds={userAds} />
+          </div>
+
         </div>
-
       </main>
-
     </div>
   )
 }
