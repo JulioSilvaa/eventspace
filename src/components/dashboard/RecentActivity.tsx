@@ -11,6 +11,23 @@ import { useUserRealTimeMetrics } from '@/hooks/useRealTimeMetrics'
 import { ActivityEvent } from '@/services/realTimeService'
 import { Ad } from '@/types'
 
+const FIELD_TRANSLATIONS: Record<string, string> = {
+  price: 'preço',
+  comfort: 'comodidades',
+  specifications: 'especificações',
+  capacity: 'capacidade',
+  location: 'localização',
+  title: 'título',
+  description: 'descrição',
+  rules: 'regras',
+  category_id: 'categoria',
+  city: 'cidade',
+  state: 'estado',
+  listing_images: 'fotos',
+  contacts_info: 'contato',
+  amenities: 'comodidades',
+}
+
 interface ActivityDisplayProps {
   id: string
   type: 'view' | 'contact' | 'rating' | 'ad_created' |
@@ -145,7 +162,8 @@ export default function RecentActivity({
           activityType = 'listing_updated'
           title = '✏️ Anúncio Atualizado'
           const fields = (event.metadata?.changedFields as string[]) || []
-          description = `"${adTitle}" foi atualizado${fields.length > 0 ? ` (${fields.join(', ')})` : ''}`
+          const translatedFields = fields.map(f => FIELD_TRANSLATIONS[f] || f)
+          description = `"${adTitle}" foi atualizado${translatedFields.length > 0 ? ` (${translatedFields.join(', ')})` : ''}`
           break
         }
 
@@ -181,7 +199,8 @@ export default function RecentActivity({
           activityType = 'contact_updated'
           title = '📞 Contato Atualizado'
           const contactFields = (event.metadata?.updatedContactFields as string[]) || []
-          description = `Informações de contato de "${adTitle}" foram atualizadas${contactFields.length > 0 ? ` (${contactFields.join(', ')})` : ''}`
+          const translatedContactFields = contactFields.map(f => FIELD_TRANSLATIONS[f] || f)
+          description = `Informações de contato de "${adTitle}" foram atualizadas${translatedContactFields.length > 0 ? ` (${translatedContactFields.join(', ')})` : ''}`
           break
         }
 
