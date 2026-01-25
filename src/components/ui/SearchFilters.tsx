@@ -222,9 +222,9 @@ export default function SearchFiltersComponent({
 
   return (
     <div className={`max-w-4xl mx-auto mb-8 ${className}`}>
-      {/* Type Tabs */}
-      <div className="flex justify-center mb-6 z-10 relative">
-        <div className="bg-white p-1 rounded-full shadow-sm border border-gray-100 inline-flex">
+      {/* Type Tabs - Modern Segmented Control */}
+      <div className="flex justify-center mb-8 z-10 relative px-4">
+        <div className="bg-gray-100/50 p-1.5 rounded-2xl flex w-full md:w-auto overflow-x-auto snap-x">
           {[
             { id: 'space', label: 'Espaços' },
             { id: 'service', label: 'Serviços' },
@@ -233,9 +233,9 @@ export default function SearchFiltersComponent({
             <button
               key={type.id}
               onClick={() => onUpdateFilter('type', filters.type === type.id ? undefined : type.id)}
-              className={`px-6 py-2 rounded-full text-sm font-semibold transition-all ${filters.type === type.id
-                  ? 'bg-primary-600 text-white shadow-md'
-                  : 'text-gray-600 hover:bg-gray-50'
+              className={`flex-1 md:flex-none px-4 md:px-8 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap snap-center ${filters.type === type.id
+                ? 'bg-white text-primary-600 shadow-sm ring-1 ring-black/5'
+                : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'
                 }`}
             >
               {type.label}
@@ -245,43 +245,28 @@ export default function SearchFiltersComponent({
       </div>
 
       {/* Busca Principal */}
-      <form onSubmit={handleSearch} className="mb-6 relative z-10">
-        <div className="flex gap-2 shadow-lg rounded-2xl p-2 bg-white border border-gray-100 focus-within:ring-4 focus-within:ring-primary-100 transition-all">
+      <form onSubmit={handleSearch} className="mb-6 relative z-10 mx-4 md:mx-0">
+        <div className="flex gap-2 shadow-xl shadow-gray-200/50 rounded-2xl p-2 bg-white border border-gray-100 focus-within:ring-4 focus-within:ring-primary-100 transition-all">
           <div className="flex-1 relative">
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder={`O que você procura? Ex: ${filters.type === 'advertiser' ? 'Buffet, DJ...' : 'Chácara com piscina...'}`}
-              className="w-full pl-12 pr-4 py-3 bg-transparent border-none focus:ring-0 text-gray-900 placeholder-gray-400 text-lg"
+              placeholder={`O que você procura?`}
+              className="w-full pl-12 pr-4 py-3 bg-transparent border-none focus:ring-0 text-gray-900 placeholder-gray-400 text-base md:text-lg font-medium"
             />
           </div>
           <button
             type="submit"
             disabled={loading}
-            className="bg-primary-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-primary-700 transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-primary-200"
+            className="bg-primary-600 text-white px-4 md:px-8 py-2 md:py-3 rounded-xl font-bold hover:bg-primary-700 transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary-200 flex items-center gap-2"
           >
-            {loading ? 'Buscando...' : 'Buscar'}
+            <Search className="w-5 h-5 md:hidden" />
+            <span className="hidden md:inline">{loading ? 'Buscando...' : 'Buscar'}</span>
           </button>
         </div>
       </form>
-
-      {/* Sugestões de Busca Rápida */}
-      <div className="mb-8 flex flex-wrap items-center gap-3 justify-center">
-        <p className="text-sm font-medium text-gray-500">Busca rápida:</p>
-        <div className="flex flex-wrap gap-2">
-          {suggestions.map(suggestion => (
-            <button
-              key={suggestion}
-              onClick={() => handleQuickSearch(suggestion)}
-              className="text-sm px-4 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-full hover:border-primary-300 hover:text-primary-700 hover:bg-primary-50 transition-all shadow-sm"
-            >
-              {suggestion}
-            </button>
-          ))}
-        </div>
-      </div>
 
       {/* Toggle Filtros Avançados */}
       <div className="flex items-center justify-center">

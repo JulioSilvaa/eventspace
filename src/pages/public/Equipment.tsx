@@ -66,7 +66,7 @@ export default function Equipment() {
         {/* Toggle de Visualização */}
         <div className="mb-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+            <div className="hidden sm:flex items-center gap-4">
               <span className="text-sm text-gray-600">Visualizar:</span>
               <div className="flex bg-gray-100 rounded-lg p-1">
                 <button className="px-3 py-1 text-sm font-medium bg-white text-gray-900 rounded-md shadow-sm">

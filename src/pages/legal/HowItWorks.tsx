@@ -43,19 +43,19 @@ export default function HowItWorks() {
       {/* Hero Section */}
       <section className="pt-32 pb-20 bg-gray-900 text-white relative overflow-hidden">
         {/* Background Gradients */}
-        <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-blue-900/20 to-transparent"></div>
+        <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-primary-900/20 to-transparent"></div>
         <div className="absolute bottom-0 left-0 w-1/2 h-full bg-gradient-to-t from-gray-900 to-transparent"></div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
           <div className="flex items-center justify-center gap-2 text-sm text-gray-400 mb-8 font-medium tracking-wide uppercase">
             <Link to="/" className="hover:text-white transition-colors">Início</Link>
             <ChevronRight className="w-4 h-4" />
-            <span className="text-blue-400">Como funciona</span>
+            <span className="text-primary-400">Como funciona</span>
           </div>
 
-          <h1 className="text-4xl md:text-6xl font-extrabold mb-6 tracking-tight leading-tight">
+          <h1 className="text-4xl md:text-6xl font-extrabold mb-6 tracking-tight leading-tight text-white">
             Do cadastro ao primeiro cliente <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-green-400">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-primary-200">
               em 3 passos simples
             </span>
           </h1>
@@ -104,7 +104,7 @@ export default function HowItWorks() {
           <div className="mt-20 text-center">
             <Link
               to="/anuncie/novo"
-              className="inline-flex items-center gap-3 bg-blue-600 text-white px-10 py-4 rounded-xl font-bold text-lg hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-500/30 transform hover:-translate-y-1"
+              className="inline-flex items-center gap-3 bg-primary-600 text-white px-10 py-4 rounded-xl font-bold text-lg hover:bg-primary-700 transition-all shadow-lg hover:shadow-primary-500/30 transform hover:-translate-y-1"
             >
               Começar Agora
               <ArrowRight className="w-5 h-5" />

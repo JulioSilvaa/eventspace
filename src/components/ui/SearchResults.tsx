@@ -159,10 +159,10 @@ export default function SearchResults({
         {results.map((result, index) => (
           <Fragment key={result.id}>
             {index === 6 && import.meta.env.VITE_ENABLE_SPONSORS === 'true' && <FeedSponsor />}
-            <div className={`group bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ${viewMode === 'list' ? 'flex flex-col md:flex-row h-auto md:h-64' : 'flex flex-col h-full'}`}>
+            <div className={`group bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:border-primary-100 transition-all duration-300 ${viewMode === 'list' ? 'flex flex-col md:flex-row h-auto md:h-64' : 'flex flex-col h-full'}`}>
               {/* Imagem do Anúncio */}
               <div className={`relative bg-gray-100 overflow-hidden group shrink-0 ${viewMode === 'list' ? 'w-full md:w-80 h-56 md:h-full' : 'h-48 md:h-56 w-full'}`}>
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10" />
+                <div className="absolute inset-0 bg-gradient-to-t from-secondary-950/60 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-300 z-10" />
                 {result.listing_images && result.listing_images.length > 0 && result.listing_images[0].image_url ? (
                   <img
                     src={result.listing_images[0].image_url}
@@ -189,68 +189,76 @@ export default function SearchResults({
                 )}
 
                 {/* Badges */}
-                <div className="absolute top-3 left-3 flex flex-wrap gap-2 max-w-[80%]">
+                <div className="absolute top-3 left-3 flex flex-wrap gap-2 max-w-[80%] z-20">
+                  <span className="bg-white/90 backdrop-blur-md text-secondary-950 text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-lg shadow-sm border border-white/20">
+                    {result.category_name}
+                  </span>
                   {result.featured && (
-                    <span className="bg-yellow-400/90 backdrop-blur-sm text-yellow-950 text-xs px-2.5 py-1 rounded-lg font-bold flex items-center gap-1 shadow-sm">
+                    <span className="bg-yellow-400 text-yellow-950 text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-lg flex items-center gap-1 shadow-sm">
                       <Star className="w-3 h-3 fill-current" />
                       Destaque
                     </span>
                   )}
-                  <span className="bg-white/90 backdrop-blur-sm text-gray-900 text-xs px-2.5 py-1 rounded-lg font-semibold shadow-sm border border-white/20">
-                    {result.category_name}
-                  </span>
                 </div>
 
-                {/* Preço */}
-                <div className="absolute bottom-3 right-3 bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-lg shadow-lg border border-gray-100">
-                  <span className="text-base font-bold text-primary-700">
-                    {result.price ? formatCurrency(result.price) : 'Consulte'}
-                    {unitMap[result.price_type] || '/unid'}
-                  </span>
+                {/* Preço - Now Dark and Compact */}
+                <div className="absolute bottom-3 right-3 z-20">
+                  <div className="bg-secondary-950/90 backdrop-blur-md text-white px-3 py-1.5 rounded-xl border border-white/10 shadow-lg">
+                    <span className="text-sm font-bold">
+                      {result.price ? formatCurrency(result.price).split(',')[0] : 'Consulte'}
+                      <span className="text-xs font-normal text-gray-300 ml-0.5">
+                        {result.price ? ',' + formatCurrency(result.price).split(',')[1] : ''}
+                        {unitMap[result.price_type] || ''}
+                      </span>
+                    </span>
+                  </div>
                 </div>
               </div>
 
               {/* Conteúdo do Card */}
-              <div className="p-4 md:p-5 flex-1 flex flex-col">
-                {/* Título */}
-                <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2 line-clamp-1 group-hover:text-primary-600 transition-colors">
-                  {result.title}
-                </h3>
+              <div className="p-4 md:p-5 flex-1 flex flex-col justify-between">
+                <div>
+                  {/* Título */}
+                  <div className="mb-2">
+                    <h3 className="text-lg font-bold text-gray-900 leading-tight mb-1 line-clamp-1 group-hover:text-primary-600 transition-colors">
+                      {result.title}
+                    </h3>
 
-                {/* Localização */}
-                <div className="flex items-center text-gray-600 text-sm mb-2">
-                  <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
-                  <span className="truncate">
-                    {result.neighborhood ? `${result.neighborhood}, ` : ''}
-                    {result.city || 'Cidade não informada'}
-                    {result.state ? `, ${result.state}` : ''}
-                  </span>
+                    {/* Localização */}
+                    <div className="flex items-center text-gray-500 text-xs font-medium">
+                      <MapPin className="w-3.5 h-3.5 mr-1 flex-shrink-0 text-gray-400" />
+                      <span className="truncate">
+                        {result.neighborhood ? `${result.neighborhood}, ` : ''}
+                        {result.city || 'Cidade não informada'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Descrição */}
+                  <p className="text-gray-500 text-sm mb-4 line-clamp-2 leading-relaxed">
+                    {result.description}
+                  </p>
+
+                  {/* Conforto / Amenities */}
+                  {result.category_type === 'space' && result.comfort && result.comfort.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mb-4">
+                      {result.comfort.slice(0, 3).map((item, i) => (
+                        <ComfortIcon key={i} name={item} />
+                      ))}
+                      {result.comfort.length > 3 && (
+                        <span className="text-[10px] text-gray-500 bg-gray-50 px-2 py-1 rounded-md border border-gray-100 font-medium">
+                          +{result.comfort.length - 3}
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
 
-                {/* Descrição */}
-                <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                  {result.description}
-                </p>
-
-                {/* Conforto / Amenities */}
-                {result.category_type === 'space' && result.comfort && result.comfort.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {result.comfort.slice(0, 3).map((item, i) => (
-                      <ComfortIcon key={i} name={item} />
-                    ))}
-                    {result.comfort.length > 3 && (
-                      <span className="text-[10px] text-gray-500 bg-gray-50 px-2 py-1 rounded-md border border-gray-100 font-medium">
-                        +{result.comfort.length - 3}
-                      </span>
-                    )}
-                  </div>
-                )}
-
                 {/* Ações */}
-                <div className="flex gap-2 mt-auto pt-2">
+                <div className="pt-2 mt-auto">
                   <Link
                     to={`/${result.category_type === 'advertiser' ? 'anunciantes' : 'espacos'}/${result.id}`}
-                    className="flex-1 bg-gray-900 text-white text-center py-2.5 px-4 rounded-xl hover:bg-primary-600 transition-all font-semibold shadow-sm hover:shadow-md"
+                    className="block w-full bg-white border-2 border-gray-100 text-gray-700 hover:border-primary-500 hover:text-primary-600 font-bold text-center py-2.5 rounded-xl transition-all shadow-sm hover:shadow-md text-sm"
                   >
                     Ver Detalhes
                   </Link>

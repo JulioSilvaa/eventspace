@@ -101,7 +101,7 @@ export default function Anunciantes() {
                 )}
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="hidden sm:flex items-center gap-3">
                 <span className="text-sm text-gray-400">Visualizar:</span>
                 <div className="flex bg-white border border-gray-200 rounded-lg p-1 shadow-sm">
                   <button

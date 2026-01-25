@@ -16,10 +16,8 @@ import Seo from '@/components/common/Seo'
 import {
   ArrowLeft,
   MapPin,
-  Calendar,
   Users,
   Share2,
-  Ruler,
   Wifi,
   Car,
   Utensils,
@@ -51,7 +49,8 @@ import {
   Phone,
   Crown,
   Home,
-  MessageCircle
+  MessageCircle,
+  ChevronLeft
 } from 'lucide-react'
 
 import { AMENITY_LABELS } from '@/constants/amenities'
@@ -74,24 +73,7 @@ const AMENITIES_ICONS = {
   location_access: MapPin,
 }
 
-const AMENITIES_LABELS = {
-  wifi: 'Wi-Fi',
-  parking: 'Estacionamento',
-  kitchen: 'Cozinha',
-  bathrooms: 'Banheiros',
-  air_conditioning: 'Ar Condicionado',
-  ventilation: 'Ventilação',
-  tv: 'TV/Televisão',
-  furniture: 'Mobiliário',
-  coffee_area: 'Área de Café',
-  microwave: 'Micro-ondas',
-  refrigerator: 'Geladeira/Frigobar',
-  washing_machine: 'Máquina de Lavar',
-  sound_basic: 'Som Básico',
-  phone: 'Telefone',
-  location_access: 'Fácil Acesso',
-}
-
+// Reuse existing ComfortItem logic but with updated styles
 function ComfortItem({ name }: { name: string }) {
   const normalized = name.toLowerCase().trim()
   const label = AMENITY_LABELS[name] || AMENITY_LABELS[normalized] || name
@@ -101,12 +83,9 @@ function ComfortItem({ name }: { name: string }) {
     'wi-fi': Wifi,
     'internet': Wifi,
     'ar condicionado': Snowflake,
-    'ar-condicionado': Snowflake,
     'ar_conditioning': Snowflake,
-    'climatização': Snowflake,
     'ventilation': Wind,
     'som': Speaker,
-    'sound_basic': Speaker,
     'iluminação': Lightbulb,
     'cadeiras': Armchair,
     'mesas': Armchair,
@@ -117,50 +96,29 @@ function ComfortItem({ name }: { name: string }) {
     'geladeira': Refrigerator,
     'refrigerator': Refrigerator,
     'microwave': Microwave,
-    'coffee_area': Coffee,
-    'washing_machine': WashingMachine,
-    'phone': Phone,
-    'location_access': MapPin,
     'tv': Tv,
     'piscina': Waves,
-    'pool': Waves,
     'churrasqueira': Flame,
-    'bbq': Flame,
     'estacionamento': Car,
-    'parking': Car,
     'segurança': Shield,
-    'security': Shield,
     'limpeza': Sparkles,
-    'cleaning': Sparkles,
     'jogos': Gamepad2,
-    'game_room': Gamepad2,
     'futebol': Users,
-    'soccer_field': Users,
     'garden': TreePine,
-    'gym': Dumbbell,
-    'sound_system': Music,
-    'lighting': Lightbulb,
-    'decoration': Palette,
-    'professional_sound': Volume2,
-    'lighting_system': Lightbulb,
-    'decoration_items': Palette,
-    'recording_equipment': Camera,
-    'waitstaff': UserCheck,
-    'catering': UtensilsCrossed,
-    'setup': Users,
   }
 
   let Icon = icons[name] || icons[normalized]
-
   if (!Icon) {
     const key = Object.keys(icons).find(k => normalized.includes(k))
     Icon = key ? icons[key] : Sparkles
   }
 
   return (
-    <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border border-gray-100 h-full">
-      <Icon className="w-4 h-4 text-gray-500 flex-shrink-0" />
-      <span className="text-gray-700 font-medium text-[11px] sm:text-xs md:text-sm break-words leading-tight">{label}</span>
+    <div className="flex items-center gap-3 p-3 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all">
+      <div className="p-2 bg-primary-50 rounded-xl text-primary-500">
+        <Icon className="w-5 h-5 flex-shrink-0" />
+      </div>
+      <span className="text-secondary-900 font-medium text-sm leading-tight">{label}</span>
     </div>
   )
 }
@@ -176,11 +134,6 @@ export default function AdDetails() {
   const [reviewsRefreshTrigger, setReviewsRefreshTrigger] = useState(0)
   const viewTrackedRef = useRef(false)
   const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null)
-  const [isGeocodingLoading, setIsGeocodingLoading] = useState(false)
-
-  const images = ad?.listing_images
-    ?.sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
-    ?.map(img => img.image_url) || []
 
   useEffect(() => {
     if (id && (!ad || ad.id !== id)) {
@@ -198,351 +151,229 @@ export default function AdDetails() {
     }
   }, [ad, id])
 
-  // Geocode the ad location
   useEffect(() => {
     if (ad && !coordinates && ad.city && ad.state) {
-      const geocodeLocation = async () => {
-        setIsGeocodingLoading(true)
-        try {
-          let result = await geocodingService.geocodeCity(
-            ad.city,
-            ad.state,
-            ad.neighborhood
-          )
-
-          if (!result && ad.neighborhood) {
-            result = await geocodingService.geocodeCity(ad.city, ad.state)
-          }
-
-          if (result) {
-            setCoordinates({ lat: result.latitude, lng: result.longitude })
-          }
-        } catch (error) {
-          console.error('Erro ao buscar coordenadas:', error)
-        } finally {
-          setIsGeocodingLoading(false)
-        }
-      }
-
-      geocodeLocation()
+      geocodingService.geocodeCity(ad.city, ad.state, ad.neighborhood)
+        .then(res => res && setCoordinates({ lat: res.latitude, lng: res.longitude }))
+        .catch(console.error)
     }
-  }, [ad, coordinates])
+  }, [ad, ad?.city, ad?.state, ad?.neighborhood])
 
   const openWhatsApp = () => {
     const phone = ad?.contact_whatsapp || ad?.contact_phone
-    if (!phone) {
-      toast.warning('WhatsApp não disponível', 'Este anunciante não cadastrou um número de WhatsApp para este espaço.')
-      return
-    }
-
+    if (!phone) return toast.warning('WhatsApp não disponível')
     trackWhatsAppContact()
     toast.success('Redirecionando...', 'Abrindo conversa no WhatsApp')
-
     const cleanPhone = phone.replace(/\D/g, '')
-    const message = encodeURIComponent(`Olá! Vi seu anúncio no EventSpace: ${ad?.title}. Gostaria de mais informações.`)
+    const message = encodeURIComponent(`Olá! Vi seu anúncio no EventSpace: ${ad?.title}.`)
     window.open(`https://wa.me/55${cleanPhone}?text=${message}`, '_blank')
   }
 
   const callPhone = () => {
     const phone = ad?.contact_phone || ad?.contact_whatsapp
-    if (!phone) {
-      toast.warning('Telefone não disponível', 'Este anunciante não cadastrou um número de telefone para este espaço.')
-      return
-    }
-
+    if (!phone) return toast.warning('Telefone não disponível')
     trackPhoneContact()
-    const cleanPhone = phone.replace(/\D/g, '')
     toast.success('Ligando...', 'Iniciando chamada para o anunciante.')
-    window.open(`tel:${cleanPhone}`, '_self')
+    window.open(`tel:${phone.replace(/\D/g, '')}`, '_self')
   }
 
   const shareAd = async () => {
     if (!ad) return
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: ad.title,
-          text: `${ad.title} - ${formatPrice(ad.price, ad.price_type)}`,
-          url: window.location.href,
-        })
-        toast.success('Compartilhado!', 'Anúncio compartilhado com sucesso.')
-      } catch {
-        // User cancelled sharing - no need to show error
-      }
-    } else {
-      try {
-        await navigator.clipboard.writeText(window.location.href)
-        toast.success('Link copiado!', 'Link do anúncio copiado para a área de transferência.')
-      } catch {
-        toast.error('Erro ao copiar', 'Não foi possível copiar o link. Tente novamente.')
-      }
+    try {
+      await navigator.share({
+        title: ad.title,
+        text: `${ad.title} - ${formatPrice(ad.price, ad.price_type)}`,
+        url: window.location.href,
+      })
+      toast.success('Compartilhado!', 'Anúncio compartilhado.')
+    } catch {
+      navigator.clipboard.writeText(window.location.href)
+      toast.success('Link copiado!')
     }
   }
 
   if (isLoading || !ad) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        {isLoading ? (
-          <div className="animate-pulse flex flex-col items-center">
-            <div className="h-4 bg-gray-200 rounded w-48 mb-4"></div>
-            <div className="h-2 bg-gray-200 rounded w-32"></div>
-          </div>
-        ) : (
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Anúncio não encontrado</h1>
-            <p className="text-gray-600 mb-6">O anúncio que você está procurando não existe ou foi removido.</p>
-            <Link to="/" className="bg-primary-600 text-white px-6 py-3 rounded-lg hover:bg-primary-700 transition-colors">
-              Voltar ao início
-            </Link>
-          </div>
-        )}
+      <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center">
+        <div className="animate-pulse flex flex-col items-center">
+          <div className="w-12 h-12 bg-gray-200 rounded-full mb-4"></div>
+          <div className="h-4 bg-gray-200 rounded w-48 mb-4"></div>
+        </div>
       </div>
     )
   }
 
   const specifications = ad.specifications || {}
   const amenities = Array.isArray(specifications.amenities) ? specifications.amenities : []
-  const features = Array.isArray(specifications.features) ? specifications.features : []
-  const services = Array.isArray(specifications.services) ? specifications.services : []
+
+  // Fallback: reference_point can be in ad.reference_point OR specifications.reference_point
+  const referencePoint = ad.reference_point || (specifications.reference_point as string) || undefined
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#F8F9FA] pb-32 md:pb-20">
+      <Seo title={ad.title} description={ad.description.substring(0, 160)} image={ad.listing_images?.[0]?.image_url} />
 
-        {/* Navigation & Actions Header */}
-        <div className="flex items-center justify-between mb-6">
-          <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors font-medium">
-            <ArrowLeft className="w-5 h-5" /> Voltar
+      {/* Immersive Mobile Header / Desktop Header */}
+      <div className="md:max-w-7xl md:mx-auto md:px-4 md:pt-6">
+        {/* Mobile: Full Width Gallery with Floating Nav */}
+        {/* Navigation Header - Moved outside image */}
+        <div className="flex justify-between items-center px-4 py-4 md:px-0">
+          <button
+            onClick={() => navigate(-1)}
+            className="p-3 bg-white border border-gray-100 rounded-full text-secondary-950 hover:bg-gray-50 transition-all shadow-sm active:scale-95"
+          >
+            <ArrowLeft className="w-5 h-5" />
           </button>
-
-          <div className="flex items-center gap-2">
-            <button onClick={shareAd} className="p-2 text-gray-600 hover:bg-white hover:text-blue-600 rounded-full transition-all" title="Compartilhar">
+          <div className="flex gap-3">
+            <button
+              onClick={shareAd}
+              className="p-3 bg-white border border-gray-100 rounded-full text-secondary-950 hover:text-primary-600 hover:bg-primary-50 transition-all shadow-sm active:scale-95"
+            >
               <Share2 className="w-5 h-5" />
             </button>
-            <FavoriteButton adId={ad.id} size="md" variant="button" className="hover:bg-white" />
+            <div className="bg-white border border-gray-100 rounded-full shadow-sm">
+              <FavoriteButton adId={ad.id} size="lg" variant="button" className="text-secondary-950 hover:text-red-500" />
+            </div>
           </div>
         </div>
 
-        {/* Cinematic Gallery */}
-        <div className="mb-8">
+        {/* Mobile: Full Width Gallery */}
+        <div className="relative md:rounded-[2.5rem] overflow-hidden shadow-2xl">
+          {/* Gallery Component */}
           <AdGallery title={ad.title} images={ad.listing_images || []} />
         </div>
+      </div>
 
-        {/* Main Content Grid */}
-        <Seo
-          title={ad.title}
-          description={ad.description.substring(0, 160)}
-          image={ad.listing_images?.[0]?.image_url || undefined}
-        />
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 relative">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
 
-          {/* Left Column: Details */}
-          <div className="lg:col-span-2 space-y-8">
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-10">
 
-            {/* Header Info */}
-            <div className="border-b border-gray-200 pb-6">
-              <div className="flex flex-wrap gap-2 mb-3">
-                {ad.featured && (
-                  <span className="bg-yellow-100 text-yellow-800 text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
-                    <Crown className="w-3 h-3" /> Destaque
-                  </span>
-                )}
-                <span className="bg-blue-50 text-blue-700 text-xs font-bold px-2 py-1 rounded-full">
-                  {ad.categories?.name || 'Espaço'}
-                </span>
+            {/* Title & Key Stats */}
+            <div>
+              <div className="flex flex-wrap gap-2 mb-4">
+                {ad.featured && <span className="bg-yellow-400 text-yellow-950 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 uppercase tracking-wider"><Crown className="w-3 h-3" /> Destaque</span>}
+                <span className="bg-secondary-900 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">{ad.categories?.name}</span>
               </div>
 
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{ad.title}</h1>
+              <h1 className="text-4xl md:text-5xl font-black text-secondary-950 mb-4 leading-tight">{ad.title}</h1>
 
-              <div className="flex items-center text-gray-500 text-sm gap-4">
-                <span className="flex items-center gap-1">
-                  <MapPin className="w-4 h-4" /> {ad.city}, {ad.state}
-                </span>
+              <div className="flex flex-wrap items-center gap-6 text-gray-500 text-lg">
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-5 h-5 text-primary-500" />
+                  <span className="font-medium">{ad.city}, {ad.state}</span>
+                  <MapPin className="w-5 h-5 text-primary-500 shrink-0" />
+                  <span className="font-medium break-words">{ad.city}, {ad.state}</span>
+                </div>
                 {!!specifications.capacity && (
-                  <span className="flex items-center gap-1">
-                    <Users className="w-4 h-4" /> Até {String(specifications.capacity)} pessoas
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <Users className="w-5 h-5 text-primary-500 shrink-0" />
+                    <span className="font-medium">Até {specifications.capacity} pessoas</span>
+                  </div>
                 )}
               </div>
             </div>
 
             {/* Description */}
-            <div className="py-2">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Sobre este espaço</h2>
-              <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">{ad.description}</p>
+            <div className="bg-white p-6 md:p-8 rounded-[2rem] border border-gray-100 shadow-sm">
+              <h2 className="text-2xl font-bold text-secondary-950 mb-6">Sobre o espaço</h2>
+              <div className="prose prose-lg text-gray-600 leading-relaxed whitespace-pre-wrap break-words max-w-none">
+                {ad.description}
+              </div>
             </div>
 
-            {/* Amenities Section */}
-            {(ad.comfort && ad.comfort.length > 0 || amenities.length > 0) && (
-              <div className="py-6 border-t border-gray-200">
-                <h2 className="text-xl font-semibold text-gray-900 mb-6">O que esse lugar oferece</h2>
-                <div className="grid grid-cols-2 gap-4">
-                  {ad.comfort && ad.comfort.map((item: string) => (
-                    <ComfortItem key={item} name={item} />
-                  ))}
-                  {!ad.comfort && amenities.map((item: any) => (
-                    <ComfortItem key={String(item)} name={String(item)} />
-                  ))}
+            {/* Amenities */}
+            {((ad.comfort && ad.comfort.length > 0) || amenities.length > 0) && (
+              <div>
+                <h2 className="text-2xl font-bold text-secondary-950 mb-6">Comodidades</h2>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  {ad.comfort?.map((item: string) => <ComfortItem key={item} name={item} />)}
+                  {!ad.comfort && amenities.map((item: any) => <ComfortItem key={String(item)} name={String(item)} />)}
                 </div>
               </div>
             )}
 
-            {/* Location Map */}
-            <div className="py-6 border-t border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">Onde você vai estar</h2>
+            {/* Location Section */}
+            <div>
+              <h2 className="text-2xl font-bold text-secondary-950 mb-6">Localização</h2>
 
-              <div className="space-y-4 mb-8">
-                {/* City/State (Main) */}
-                <div className="flex items-start gap-4 p-4 bg-blue-50 rounded-xl">
-                  <div className="p-2 bg-blue-100 rounded-full text-blue-600 mt-1">
-                    <MapPin className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p className="font-bold text-blue-900 text-lg">{ad.city}, {ad.state}</p>
-                    <p className="text-blue-700 text-sm">Localização principal</p>
-                  </div>
+              {/* Address Card */}
+              <div className="bg-white p-5 md:p-8 rounded-[2rem] border border-gray-100 shadow-sm mb-6 flex flex-col md:flex-row md:items-center gap-6">
+                <div className="w-14 h-14 bg-primary-50 rounded-2xl flex items-center justify-center text-primary-600 shrink-0">
+                  <MapPin className="w-7 h-7" />
                 </div>
-
-                {/* Location Details Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Bairro */}
-                  {ad.neighborhood && (
-                    <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                      <div className="flex items-center gap-3 mb-1">
-                        <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600">
-                          <Home className="w-4 h-4" />
-                        </div>
-                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Bairro</span>
-                      </div>
-                      <p className="text-gray-900 font-medium ml-11">{ad.neighborhood}</p>
-                    </div>
-                  )}
-
-                  {/* CEP */}
-                  {ad.postal_code && (
-                    <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                      <div className="flex items-center gap-3 mb-1">
-                        <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
-                          <Share2 className="w-4 h-4 rotate-90" />
-                        </div>
-                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">CEP</span>
-                      </div>
-                      <p className="text-gray-900 font-medium ml-11">{ad.postal_code}</p>
-                    </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Endereço do Espaço</p>
+                  <p className="text-lg md:text-2xl font-bold text-secondary-950 mb-1 break-words leading-snug">
+                    {ad.street}{ad.number && `, ${ad.number}`}{ad.complement && ` - ${ad.complement}`}
+                  </p>
+                  <p className="text-gray-500 text-base md:text-lg break-words">
+                    {ad.neighborhood} • {ad.city}/{ad.state} {ad.postal_code && `• CEP ${ad.postal_code}`}
+                  </p>
+                  {referencePoint && (
+                    <p className="text-gray-500 text-sm md:text-base mt-2 italic break-words">
+                      Ponto de referência: {referencePoint}
+                    </p>
                   )}
                 </div>
-
-                {/* Full Address Card */}
-                <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">
-                      <MapPin className="w-4 h-4" />
-                    </div>
-                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Endereço Completo</span>
-                  </div>
-                  <div className="ml-11 space-y-1">
-                    <p className="text-gray-900 font-medium text-lg">
-                      {ad.street}, {ad.number}
-                    </p>
-                    {ad.complement && (
-                      <p className="text-gray-600">
-                        <span className="font-medium">Complemento:</span> {ad.complement}
-                      </p>
-                    )}
-                  </div>
+                <div className="flex flex-col gap-2 shrink-0 md:hidden">
+                  <button className="px-6 py-2 bg-gray-50 hover:bg-gray-100 text-secondary-900 rounded-xl text-sm font-bold transition-colors w-full md:w-auto">
+                    Ver no Waze
+                  </button>
                 </div>
+              </div>
 
-                {/* Reference Point */}
-                {(ad.reference_point || String(specifications.reference_point || '')) && (
-                  <div className="p-4 bg-orange-50 rounded-xl border border-orange-100">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">
-                        <MapPin className="w-4 h-4" />
-                      </div>
-                      <span className="text-xs font-bold text-orange-800 uppercase tracking-wider">Ponto de Referência</span>
-                    </div>
-                    <p className="text-orange-900 ml-11 leading-relaxed">
-                      {ad.reference_point || String(specifications.reference_point || '')}
-                    </p>
-                  </div>
+              {/* Map Box */}
+              <div className="rounded-[2.5rem] overflow-hidden border border-gray-100 shadow-lg h-[300px] md:h-[400px] relative z-0">
+                {coordinates ? (
+                  <LocationMap latitude={coordinates.lat} longitude={coordinates.lng} title={ad.title} address={`${ad.street}, ${ad.city}`} height="100%" />
+                ) : (
+                  <LocationFallback city={ad.city} state={ad.state} neighborhood={ad.neighborhood} />
                 )}
               </div>
-
-              {coordinates ? (
-                <LocationMap
-                  latitude={coordinates.lat}
-                  longitude={coordinates.lng}
-                  title={ad.title}
-                  address={`${ad.street}, ${ad.number} - ${ad.city}, ${ad.state}`}
-                  height="400px"
-                />
-              ) : (
-                <LocationFallback city={ad.city} state={ad.state} neighborhood={ad.neighborhood} />
-              )}
             </div>
 
-
             {/* Reviews */}
-            <div className="py-6 border-t border-gray-200">
+            <div className="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm">
               <ReviewsList listingId={ad.id} />
-              <div className="mt-8">
-                <h3 className="text-lg font-semibold mb-4">Avaliar este espaço</h3>
-                <ReviewForm listingId={ad.id} onReviewSubmitted={() => setReviewsRefreshTrigger(prev => prev + 1)} />
+              <div className="mt-8 pt-8 border-t border-gray-100">
+                <h3 className="text-xl font-bold mb-6">Avalie sua experiência</h3>
+                <ReviewForm listingId={ad.id} onReviewSubmitted={() => setReviewsRefreshTrigger(p => p + 1)} />
               </div>
             </div>
 
           </div>
 
-          {/* Right Column: Sticky Booking Card */}
-          <div className="lg:col-span-1 hidden lg:block">
-            <StickyBookingCard
-              ad={ad}
-              onWhatsApp={openWhatsApp}
-              onCall={callPhone}
-              onShare={shareAd}
-            />
-          </div>
-
-        </div>
-      </div>
-
-      {/* Mobile Sticky Bottom Bar */}
-      {/* Mobile Sticky Bottom Bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-3 lg:hidden z-[9999] pb-safe shadow-[0_-4px_10px_-1px_rgba(0,0,0,0.1)]">
-        <div className="flex items-center justify-between gap-3 max-w-7xl mx-auto">
-          <div className="flex flex-col">
-            <span className="text-[10px] text-gray-500 font-medium uppercase tracking-wide">Valor Total</span>
-            <div className="flex items-baseline gap-1">
-              <span className="text-lg font-bold text-gray-900 leading-tight">
-                {formatPrice(ad.price, ad.price_type).split('/')[0]}
-              </span>
-              <span className="text-[10px] text-gray-500">/{ad.price_type === 'hourly' ? 'h' : 'dia'}</span>
+          {/* Desktop Sticky Sidebar */}
+          <div className="hidden lg:block lg:col-span-1">
+            <div className="sticky top-24">
+              <StickyBookingCard ad={ad} onWhatsApp={openWhatsApp} onCall={callPhone} onShare={shareAd} />
             </div>
           </div>
 
-          <div className="flex gap-2 shrink-0">
-            {(ad.contact_phone || ad.contact_whatsapp) && (
-              <button
-                onClick={callPhone}
-                className="p-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-700 hover:bg-gray-100 disabled:opacity-50 transition-colors"
-                aria-label="Ligar"
-              >
-                <Phone className="w-5 h-5" />
-              </button>
-            )}
-
-            {(ad.contact_whatsapp || ad.contact_phone) && (
-              <button
-                onClick={openWhatsApp}
-                className="bg-[#25D366] text-white px-5 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-[#128C7E] transition-colors shadow-sm text-sm"
-              >
-                <MessageCircle className="w-4 h-4" />
-                WhatsApp
-              </button>
-            )}
-          </div>
         </div>
       </div>
+
+      {/* Mobile Sticky Action Bar */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 lg:hidden z-50 pb-safe shadow-[0_-5px_20px_rgba(0,0,0,0.1)]">
+        <div className="flex items-center justify-between gap-4 max-w-7xl mx-auto">
+          <div>
+            <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">A partir de</p>
+            <div className="flex items-baseline gap-1">
+              <span className="text-2xl font-black text-secondary-950">{formatPrice(ad.price, ad.price_type).split('/')[0]}</span>
+              <span className="text-xs font-bold text-gray-400">/{ad.price_type === 'hourly' ? 'h' : 'dia'}</span>
+            </div>
+          </div>
+          {(ad.contact_whatsapp || ad.contact_phone) && (
+            <button onClick={openWhatsApp} className="flex-1 bg-primary-500 text-white px-6 py-4 rounded-xl font-bold text-lg hover:bg-primary-600 transition-all shadow-lg shadow-primary-500/30 active:scale-95 flex items-center justify-center gap-2">
+              <MessageCircle className="w-5 h-5" />
+              Reservar
+            </button>
+          )}
+        </div>
+      </div>
+
     </div>
   )
 }

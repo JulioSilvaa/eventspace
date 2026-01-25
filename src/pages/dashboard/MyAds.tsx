@@ -349,189 +349,154 @@ export default function MyAds() {
         ) : (
           <div className="grid gap-6">
             {userAds.map((ad) => (
-              <div key={ad.id} className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg hover:shadow-gray-200/50 transition-all duration-300 group">
-                <div className="flex flex-col md:flex-row">
-                  {/* Thumbnail Section */}
-                  <div className="w-full md:w-72 h-56 md:h-auto relative bg-gray-100 shrink-0 overflow-hidden">
-                    {ad.listing_images && ad.listing_images.length > 0 ? (
-                      <img
-                        src={ad.listing_images[0].image_url}
-                        alt={ad.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gray-50">
-                        <Star className="w-10 h-10 text-gray-300" />
-                      </div>
-                    )}
-                    {ad.status && (
-                      <div className="absolute top-4 left-4">
-                        <span className={`text-[10px] uppercase tracking-wider px-3 py-1.5 rounded-lg font-bold shadow-sm backdrop-blur-md bg-white/90 ${ad.status === 'active' ? 'text-green-700' :
-                          ad.status === 'inactive' ? 'text-yellow-700' : 'text-gray-700'
-                          }`}>
-                          {getStatusText(ad.status)}
-                        </span>
-                      </div>
-                    )}
-                    {/* Mobile Overlay Gradient for text readability if needed, but text is outside */}
+              <div key={ad.id} className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg hover:shadow-gray-200/50 transition-all duration-300 group flex flex-col md:flex-row">
+                {/* Thumbnail Section */}
+                <div className="w-full md:w-64 h-48 md:h-auto relative bg-gray-100 shrink-0 overflow-hidden">
+                  {ad.listing_images && ad.listing_images.length > 0 ? (
+                    <img
+                      src={ad.listing_images[0].image_url}
+                      alt={ad.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gray-50">
+                      <Star className="w-10 h-10 text-gray-300" />
+                    </div>
+                  )}
 
-                    {/* Founder Badge */}
-                    {(() => {
-                      const activeSub = userSubscriptions.find(s => s.space_id === ad.id && s.status === 'active');
-                      if (activeSub?.plan === 'founder') {
-                        return (
-                          <div className="absolute top-4 right-4 z-20">
-                            <div className="bg-yellow-400 text-yellow-900 p-1.5 rounded-full shadow-lg flex items-center justify-center" title="Parceiro Fundador">
-                              <Crown size={14} fill="currentColor" />
-                            </div>
-                          </div>
-                        )
-                      }
-                      return null;
-                    })()}
+                  {/* Status Badge */}
+                  <div className="absolute top-3 left-3">
+                    <span className={`text-[10px] uppercase tracking-wider px-2.5 py-1 rounded-lg font-bold shadow-sm backdrop-blur-md bg-white/95 border border-white/20 ${ad.status === 'active' ? 'text-green-700' :
+                      ad.status === 'inactive' ? 'text-yellow-700' : 'text-gray-700'
+                      }`}>
+                      {getStatusText(ad.status)}
+                    </span>
                   </div>
 
-                  {/* Content Section */}
-                  <div className="flex-1 p-5 md:p-7 flex flex-col justify-between">
-                    <div>
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex-1 min-w-0">
-                          <h3 className="text-xl md:text-2xl font-bold text-gray-900 truncate group-hover:text-primary-600 transition-colors">
-                            {ad.title}
-                          </h3>
-                          <div className="flex items-center gap-3 mt-2 flex-wrap text-sm">
-                            <span className="font-semibold text-gray-500 bg-gray-50 px-2 py-1 rounded-md border border-gray-100">
-                              {ad.categories?.name || 'Geral'}
-                            </span>
-                            <span className="text-gray-400 font-medium flex items-center gap-1.5">
-                              <MapPin className="w-3.5 h-3.5" />
-                              {ad.city}, {ad.state}
-                            </span>
+                  {/* Founder Badge */}
+                  {(() => {
+                    const activeSub = userSubscriptions.find(s => s.space_id === ad.id && s.status === 'active');
+                    if (activeSub?.plan === 'founder') {
+                      return (
+                        <div className="absolute top-3 right-3 z-20">
+                          <div className="bg-yellow-400 text-yellow-900 p-1.5 rounded-full shadow-lg flex items-center justify-center" title="Parceiro Fundador">
+                            <Crown size={12} fill="currentColor" />
                           </div>
                         </div>
-                      </div>
+                      )
+                    }
+                    return null;
+                  })()}
+                </div>
 
-                      {/* Stats Grid */}
-                      <div className="grid grid-cols-3 gap-3 mt-6">
-                        <div className="flex flex-col items-center justify-center p-3 bg-blue-50/50 rounded-2xl border border-blue-100/50">
-                          <span className="text-xl font-bold text-blue-600 mb-0.5">{ad.views_count || 0}</span>
-                          <span className="text-[10px] text-blue-400 uppercase font-black tracking-wider">Views</span>
-                        </div>
-
-                        <div className="flex flex-col items-center justify-center p-3 bg-green-50/50 rounded-2xl border border-green-100/50">
-                          <span className="text-xl font-bold text-green-600 mb-0.5">{ad.contacts_count || 0}</span>
-                          <span className="text-[10px] text-green-500 uppercase font-black tracking-wider">Contatos</span>
-                        </div>
-
-                        <div className="flex flex-col items-center justify-center p-3 bg-gray-50/50 rounded-2xl border border-gray-100/50">
-                          <span className="text-sm font-bold text-gray-700 mb-1">
-                            {ad.price ? formatCurrency(ad.price) : 'Consulte'}
-                            {unitMap[ad.price_type] || '/unid'}
+                {/* Content Section */}
+                <div className="flex-1 p-5 md:p-6 flex flex-col justify-between min-w-0">
+                  <div>
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1 min-w-0 pr-4">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full uppercase tracking-wide">
+                            {ad.categories?.name || 'Geral'}
                           </span>
-                          <span className="text-[10px] text-gray-400 uppercase font-black tracking-wider">Valor</span>
+                          {ad.featured && <span className="text-[10px] font-bold text-yellow-700 bg-yellow-100 px-2 py-0.5 rounded-full uppercase tracking-wide flex items-center gap-1"><Star size={10} fill="currentColor" /> Destaque</span>}
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-900 truncate group-hover:text-primary-600 transition-colors" title={ad.title}>
+                          {ad.title}
+                        </h3>
+                        <div className="flex items-center gap-1.5 mt-1 text-xs font-medium text-gray-500 truncate">
+                          <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
+                          {ad.city}, {ad.state}
                         </div>
                       </div>
                     </div>
 
-                    <div className="mt-6 pt-5 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
-                      <div className="flex flex-col gap-1 order-2 sm:order-1 w-full sm:w-auto items-center sm:items-start">
-                        <div className="flex items-center gap-2 text-xs font-semibold text-gray-400 justify-center sm:justify-start">
-                          <Calendar className="w-3.5 h-3.5" />
-                          Publicado em {ad.created_at ? new Date(ad.created_at).toLocaleDateString('pt-BR') : 'Recente'}
-                        </div>
-                        {(() => {
-                          const activeSub = userSubscriptions.find(s => s.space_id === ad.id && s.status === 'active');
-                          if (activeSub?.cancel_at_period_end) {
-                            const dateToUse = activeSub.next_billing_date || activeSub.current_period_end;
-                            const dateObj = new Date(dateToUse);
-                            const isValidDate = !isNaN(dateObj.getTime());
-                            const endDate = isValidDate ? dateObj.toLocaleDateString('pt-BR') : '';
-                            return (
-                              <div className="text-xs text-red-600 font-medium bg-red-50 text-center px-2 py-0.5 rounded border border-red-100 dark:bg-red-900/10 mb-1">
-                                Cancelado. Ativo até {endDate}
-                              </div>
-                            )
-                          }
-                          return null;
-                        })()}
+                    {/* Compact Stats Grid */}
+                    <div className="grid grid-cols-3 gap-2 mt-4">
+                      <div className="flex flex-col items-center justify-center p-2 bg-blue-50/50 rounded-xl border border-blue-100/50">
+                        <span className="text-lg font-black text-blue-600 leading-none mb-1">{ad.views_count || 0}</span>
+                        <span className="text-[10px] text-blue-400 uppercase font-bold tracking-wider">Views</span>
                       </div>
 
-                      <div className="flex items-center gap-2 w-full sm:w-auto order-1 sm:order-2">
-                        <Tooltip content="Editar anúncio">
-                          <Link
-                            to={`/dashboard/anuncios/${ad.id}/editar`}
-                            className="flex-1 sm:flex-none flex items-center justify-center h-11 px-4 text-gray-600 hover:text-primary-600 hover:bg-primary-50 border border-gray-200 hover:border-primary-200 rounded-xl transition-all font-bold"
-                          >
-                            <span className="sm:hidden mr-2 text-sm">Editar</span>
-                            <Edit className="w-4 h-4" />
-                          </Link>
-                        </Tooltip>
+                      <div className="flex flex-col items-center justify-center p-2 bg-green-50/50 rounded-xl border border-green-100/50">
+                        <span className="text-lg font-black text-green-600 leading-none mb-1">{ad.contacts_count || 0}</span>
+                        <span className="text-[10px] text-green-500 uppercase font-bold tracking-wider">Contatos</span>
+                      </div>
 
-                        {/* Activate Button for Inactive/Suspended Ads */}
-                        {(ad.status === 'inactive' || ad.status === 'suspended') && (
-                          <Tooltip content="Ativar Anúncio">
-                            <button
-                              onClick={() => handleToggleStatus(ad.id, ad.status)}
-                              className="flex-1 sm:flex-none flex items-center justify-center h-11 px-6 text-white bg-green-600 hover:bg-green-700 shadow-lg shadow-green-500/20 rounded-xl transition-all font-bold hover:-translate-y-0.5"
-                            >
-                              <span className="mr-2 text-sm">Ativar</span>
-                              <Play className="w-4 h-4 fill-current" />
-                            </button>
-                          </Tooltip>
-                        )}
+                      <div className="flex flex-col items-center justify-center p-2 bg-gray-50/50 rounded-xl border border-gray-100/50 relative overflow-hidden">
+                        <span className="text-sm font-black text-gray-700 leading-none mb-1 truncate max-w-full px-1">
+                          {ad.price > 0 ? formatCurrency(ad.price).split(',')[0] : 'Consulte'}
+                          <span className="text-[10px] font-normal text-gray-400 align-top">
+                            {ad.price > 0 ? ',' + formatCurrency(ad.price).split(',')[1] : ''}
+                          </span>
+                        </span>
+                        <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Valor</span>
+                      </div>
+                    </div>
+                  </div>
 
-                        {/* Pause Button for Active Ads */}
-                        {ad.status === 'active' && (
-                          <Tooltip content="Pausar Anúncio">
-                            <button
-                              onClick={() => handleToggleStatus(ad.id, ad.status)}
-                              className="flex-1 sm:flex-none flex items-center justify-center h-11 px-4 text-gray-500 hover:text-yellow-600 hover:bg-yellow-50 border border-gray-200 hover:border-yellow-200 rounded-xl transition-all"
-                            >
-                              <span className="sm:hidden mr-2 text-sm">Pausar</span>
-                              <Pause className="w-4 h-4" />
-                            </button>
-                          </Tooltip>
-                        )}
+                  <div className="mt-5 pt-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="hidden sm:flex items-center gap-2 text-xs font-semibold text-gray-400">
+                      <Calendar className="w-3.5 h-3.5" />
+                      {ad.created_at ? new Date(ad.created_at).toLocaleDateString('pt-BR') : 'Recente'}
+                    </div>
 
-                        {/* Cancel Subscription Button */}
-                        {(() => {
-                          const activeSub = userSubscriptions.find(s => s.space_id === ad.id && s.status === 'active');
-                          if (activeSub && !activeSub.cancel_at_period_end) {
-                            return (
-                              <Tooltip content="Cancelar Assinatura Mensal">
-                                <button
-                                  onClick={() => handleCancelSubscription(ad.id)}
-                                  className="flex-1 sm:flex-none flex items-center justify-center h-11 px-4 text-gray-400 hover:text-red-500 hover:bg-red-50 border border-gray-200 hover:border-red-100 rounded-xl transition-all"
-                                >
-                                  <span className="sm:hidden mr-2 text-sm font-bold">Cancelar Assinatura</span>
-                                  <XCircle className="w-4 h-4" />
-                                </button>
-                              </Tooltip>
-                            )
-                          }
-                          return null;
-                        })()}
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                      <Tooltip content="Editar">
+                        <Link
+                          to={`/dashboard/anuncios/${ad.id}/editar`}
+                          className="flex-1 sm:flex-none flex items-center justify-center w-10 h-10 text-gray-600 hover:text-primary-600 hover:bg-primary-50 border border-gray-200 hover:border-primary-200 rounded-lg transition-all"
+                          title="Editar"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Link>
+                      </Tooltip>
 
-                        <Tooltip content="Ver anúncio público">
-                          <Link
-                            to={`/espacos/${ad.id}`}
-                            className="flex-1 sm:flex-none flex items-center justify-center h-11 px-4 text-gray-400 hover:text-blue-600 hover:bg-blue-50 border border-gray-200 hover:border-blue-100 rounded-xl transition-all"
-                          >
-                            <span className="sm:hidden mr-2 text-sm font-bold">Ver</span>
-                            <Eye className="w-4 h-4" />
-                          </Link>
-                        </Tooltip>
-
-                        <Tooltip content="Excluir anúncio">
+                      {(ad.status === 'inactive' || ad.status === 'suspended') && (
+                        <Tooltip content="Ativar">
                           <button
-                            onClick={() => handleDeleteAd(ad.id)}
-                            className="flex-1 sm:flex-none flex items-center justify-center h-11 px-4 text-gray-400 hover:text-red-600 hover:bg-red-50 border border-gray-200 hover:border-red-100 rounded-xl transition-all"
+                            onClick={() => handleToggleStatus(ad.id, ad.status)}
+                            className="flex-1 sm:flex-none flex items-center justify-center px-4 h-10 text-white bg-green-600 hover:bg-green-700 shadow-sm shadow-green-500/20 rounded-lg transition-all font-bold hover:-translate-y-0.5 text-sm"
+                            title="Ativar"
                           >
-                            <span className="sm:hidden mr-2 text-sm font-bold">Excluir</span>
-                            <Trash2 className="w-4 h-4" />
+                            <Play className="w-3.5 h-3.5 fill-current mr-1.5" />
+                            Ativar
                           </button>
                         </Tooltip>
-                      </div>
+                      )}
+
+                      {ad.status === 'active' && (
+                        <Tooltip content="Pausar">
+                          <button
+                            onClick={() => handleToggleStatus(ad.id, ad.status)}
+                            className="flex-1 sm:flex-none flex items-center justify-center w-10 h-10 text-gray-500 hover:text-yellow-600 hover:bg-yellow-50 border border-gray-200 hover:border-yellow-200 rounded-lg transition-all"
+                            title="Pausar"
+                          >
+                            <Pause className="w-4 h-4" />
+                          </button>
+                        </Tooltip>
+                      )}
+
+                      <Tooltip content="Ver Público">
+                        <Link
+                          to={`/espacos/${ad.id}`}
+                          className="flex-1 sm:flex-none flex items-center justify-center w-10 h-10 text-gray-400 hover:text-blue-600 hover:bg-blue-50 border border-gray-200 hover:border-blue-100 rounded-lg transition-all"
+                          title="Ver Anúncio"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Link>
+                      </Tooltip>
+
+                      <div className="w-[1px] h-8 bg-gray-200 mx-1 hidden sm:block"></div>
+
+                      <Tooltip content="Excluir">
+                        <button
+                          onClick={() => handleDeleteAd(ad.id)}
+                          className="flex-1 sm:flex-none flex items-center justify-center w-10 h-10 text-gray-300 hover:text-red-600 hover:bg-red-50 border border-gray-200 hover:border-red-100 rounded-lg transition-all"
+                          title="Excluir"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </Tooltip>
                     </div>
                   </div>
                 </div>
