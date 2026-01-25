@@ -1,7 +1,6 @@
-
 import { MapPin, Star, Eye, Wifi, Wind, Speaker, Armchair, Utensils, Music, Waves, Snowflake, Lightbulb } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import type { SearchResult } from '@/lib/api/search'
+import type { SearchResult } from '@/services/search'
 import { formatPrice, formatCurrency } from '@/lib/utils'
 import { useEffect, useRef, Fragment, useMemo } from 'react'
 import { AMENITY_LABELS } from '@/constants/amenities'

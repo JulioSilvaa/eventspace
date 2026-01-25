@@ -6,7 +6,7 @@ import ReviewsList from '@/components/reviews/ReviewsList'
 import FavoriteButton from '@/components/favorites/FavoriteButton'
 import LocationMap, { LocationFallback } from '@/components/maps/LocationMap'
 import { geocodingService } from '@/services/geocodingService'
-import { useToast } from '@/contexts/ToastContext'
+import { toast } from 'react-hot-toast'
 import { useEventTracking } from '@/hooks/useRealTimeMetrics'
 import { formatPrice } from '@/lib/utils'
 import AdGallery from '@/components/ads/AdGallery'
@@ -112,7 +112,6 @@ export default function AdDetails() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { currentAd: ad, fetchAdById, isLoading: storeLoading } = useAdsStore()
-  const toast = useToast()
   const { trackView, trackWhatsAppContact, trackPhoneContact } = useEventTracking(id)
 
   const [isLoading, setIsLoading] = useState(true)
@@ -146,9 +145,9 @@ export default function AdDetails() {
 
   const openWhatsApp = () => {
     const phone = ad?.contact_whatsapp || ad?.contact_phone
-    if (!phone) return toast.warning('WhatsApp não disponível')
+    if (!phone) return toast.error('WhatsApp não disponível')
     trackWhatsAppContact()
-    toast.success('Redirecionando...', 'Abrindo conversa no WhatsApp')
+    toast('Abrindo conversa no WhatsApp', { icon: '⚠️' })
     const cleanPhone = phone.replace(/\D/g, '')
     const message = encodeURIComponent(`Olá! Vi seu anúncio no EventSpace: ${ad?.title}.`)
     window.open(`https://wa.me/55${cleanPhone}?text=${message}`, '_blank')
@@ -156,9 +155,9 @@ export default function AdDetails() {
 
   const callPhone = () => {
     const phone = ad?.contact_phone || ad?.contact_whatsapp
-    if (!phone) return toast.warning('Telefone não disponível')
+    if (!phone) return toast.error('Telefone não disponível')
     trackPhoneContact()
-    toast.success('Ligando...', 'Iniciando chamada para o anunciante.')
+    toast('Iniciando chamada para o anunciante.', { icon: '⚠️' })
     window.open(`tel:${phone.replace(/\D/g, '')}`, '_self')
   }
 
@@ -171,13 +170,13 @@ export default function AdDetails() {
           text: `${ad.title} - ${formatPrice(ad.price, ad.price_type)}`,
           url: window.location.href,
         })
-        toast.success('Compartilhado!', 'Anúncio compartilhado.')
+        toast.success('Anúncio compartilhado.')
       } else {
         throw new Error('Share API not supported')
       }
     } catch {
       await navigator.clipboard.writeText(window.location.href)
-      toast.success('Link copiado!', 'Link do anúncio copiado para a área de transferência.')
+      toast.success('Link do anúncio copiado para a área de transferência.')
     }
   }
 

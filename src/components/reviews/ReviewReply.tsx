@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { reviewReplyService, type ReviewReply, type CreateReplyData } from '@/services/reviewReplyService'
 import { MessageCircle, Send, Edit2, Trash2, X } from 'lucide-react'
-import { useToast } from '@/contexts/ToastContext'
+import { toast } from 'react-hot-toast'
 
 interface ReviewReplyProps {
   reviewId: string
@@ -26,13 +26,12 @@ export default function ReviewReply({
   const [isEditing, setIsEditing] = useState(false)
   const [replyText, setReplyText] = useState(existingReply?.reply_text || '')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const toast = useToast()
 
   const handleCreateReply = async () => {
     if (!replyText.trim() || isSubmitting) return
 
     setIsSubmitting(true)
-    
+
     const createData: CreateReplyData = {
       review_id: reviewId,
       listing_id: listingId,
@@ -40,16 +39,16 @@ export default function ReviewReply({
     }
 
     const { data, error } = await reviewReplyService.createReply(createData)
-    
+
     if (error) {
-      toast.error('Erro ao enviar resposta', error)
+      toast.error(`Erro ao enviar resposta: ${error}`)
     } else if (data) {
-      toast.success('Resposta enviada!', 'Sua resposta foi publicada com sucesso.')
+      toast.success('Sua resposta foi publicada com sucesso.')
       onReplyCreated(data)
       setReplyText('')
       setIsReplying(false)
     }
-    
+
     setIsSubmitting(false)
   }
 
@@ -57,13 +56,13 @@ export default function ReviewReply({
     if (!existingReply || !replyText.trim() || isSubmitting) return
 
     setIsSubmitting(true)
-    
+
     const { error } = await reviewReplyService.updateReply(existingReply.id, replyText.trim())
-    
+
     if (error) {
-      toast.error('Erro ao atualizar resposta', error)
+      toast.error(`Erro ao atualizar resposta: ${error}`)
     } else {
-      toast.success('Resposta atualizada!', 'Suas alterações foram salvas.')
+      toast.success('Suas alterações foram salvas.')
       const updatedReply: ReviewReply = {
         ...existingReply,
         reply_text: replyText.trim(),
@@ -72,7 +71,7 @@ export default function ReviewReply({
       onReplyUpdated(updatedReply)
       setIsEditing(false)
     }
-    
+
     setIsSubmitting(false)
   }
 
@@ -82,16 +81,16 @@ export default function ReviewReply({
     if (!confirm('Tem certeza que deseja excluir esta resposta?')) return
 
     setIsSubmitting(true)
-    
+
     const { error } = await reviewReplyService.deleteReply(existingReply.id)
-    
+
     if (error) {
-      toast.error('Erro ao excluir resposta', error)
+      toast.error(`Erro ao excluir resposta: ${error}`)
     } else {
-      toast.success('Resposta excluída!', 'A resposta foi removida com sucesso.')
+      toast.success('A resposta foi removida com sucesso.')
       onReplyDeleted(existingReply.id)
     }
-    
+
     setIsSubmitting(false)
   }
 

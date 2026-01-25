@@ -7,7 +7,7 @@ import { useAuth } from '@/hooks/useAuth'
 // import { useUpgradeModal } from '@/hooks/useUpgradeModal'
 // import UpgradeModal from '@/components/modals/UpgradeModal'
 import { useAdsStore } from '@/stores/adsStore'
-import { useToast } from '@/contexts/ToastContext'
+import { toast } from 'react-hot-toast'
 import { paymentService } from '@/services/paymentService'
 
 import {
@@ -25,7 +25,7 @@ import { FormField, FormButton, FormSelect } from '@/components/forms'
 import ImageUpload from '@/components/forms/ImageUpload'
 import AmenitiesSelector from '@/components/forms/AmenitiesSelector'
 import { AMENITY_LABELS } from '@/constants/amenities'
-import { getBrazilianStates } from '@/lib/api/search'
+import { getBrazilianStates } from '@/services/search'
 import Tooltip from '@/components/ui/Tooltip'
 import { maskPhone as utilMaskPhone, maskCEP as utilMaskCEP, maskMoneyFlexible } from '@/utils/masks'
 import { handleMaskedChange, parseCurrency } from '@/utils/formUtils'
@@ -251,7 +251,6 @@ export default function CreateAd() {
   const { user, profile, canCreateAd } = useAuth()
   // const { isOpen, context, openModal, closeModal } = useUpgradeModal()
   const { createAd } = useAdsStore()
-  const toast = useToast()
   const [brazilianStates, setBrazilianStates] = useState<Array<{ code: string, name: string, region: string }>>([])
   const [categories, setCategories] = useState<Array<{ id: number, name: string, type: 'space' | 'service' | 'equipment' | 'advertiser', allowed_pricing_models?: any[], parent_id?: number }>>([])
   const [error, setError] = useState<string | null>(null)
@@ -407,7 +406,7 @@ export default function CreateAd() {
       case 5:
         // Validate images manually since it's not a simple field
         if (images.length === 0) {
-          toast.error('Imagens obrigatórias', 'Adicione pelo menos uma foto do seu espaço.')
+          toast.error("Adicione pelo menos uma foto do seu espaço.")
           return
         }
         break
@@ -427,7 +426,7 @@ export default function CreateAd() {
       // Show generic error if standard validation fails
       const errorsList = Object.keys(errors)
       if (errorsList.length > 0) {
-        toast.error('Verifique os campos', 'Preencha todos os campos obrigatórios corretamente.')
+        toast.error("Preencha todos os campos obrigatórios corretamente.")
       }
     }
   }
@@ -562,17 +561,17 @@ export default function CreateAd() {
             localStorage.setItem('ad_draft_images', JSON.stringify(imagesToBase64))
           } catch (imgErr) {
             console.error('Error saving images draft', imgErr)
-            toast.warning('Aviso', 'Algumas imagens não puderam ser salvas no rascunho.')
+            toast('Algumas imagens não puderam ser salvas no rascunho.', { icon: '⚠️' })
           }
         }
 
-        toast.success('Rascunho salvo!', 'Crie sua conta para publicar seu anúncio.', { duration: 5000 })
+        toast.success('Crie sua conta para publicar seu anúncio.', { duration: 5000 })
         // Use a slight delay to allow toast to be seen? No need.
         navigate('/cadastro?returnTo=/anuncie/novo')
         return
       }
 
-      loadingToastId = toast.loading('Criando anúncio...', 'Aguarde enquanto processamos seus dados')
+      loadingToastId = toast('Aguarde enquanto processamos seus dados', { icon: '⚠️' })
 
       // Combinar todas as comodidades em um único array
       const allComfort = [
@@ -616,7 +615,7 @@ export default function CreateAd() {
       })
 
       if (imageFiles.length === 0) {
-        toast.error('Erro de validação', 'É necessário fornecer pelo menos uma imagem.')
+        toast.error('É necessário fornecer pelo menos uma imagem.')
         setIsSubmitting(false)
         return
       }
@@ -659,8 +658,8 @@ export default function CreateAd() {
       const result = await createAd(listingData, imageFiles);
 
       if (result.error) {
-        if (loadingToastId) toast.removeToast(String(loadingToastId));
-        toast.error('Erro ao Criar Anúncio', result.error);
+        if (loadingToastId) toast.dismiss(String(loadingToastId));
+        toast.error('Erro ao Criar Anúncio')
         return;
       }
 
@@ -669,9 +668,8 @@ export default function CreateAd() {
       localStorage.removeItem('ad_draft_images')
       localStorage.removeItem('ad_draft_step')
 
-      if (loadingToastId) toast.removeToast(String(loadingToastId));
-
-      toast.success('Anúncio criado!', 'Redirecionando para ativação do plano...');
+      if (loadingToastId) toast.dismiss(loadingToastId)
+      toast.success('Redirecionando para ativação do plano...')
 
       if (result.data?.id) {
         await paymentService.createSubscriptionCheckout(result.data.id);
@@ -679,9 +677,9 @@ export default function CreateAd() {
         navigate('/dashboard?newListing=true');
       }
     } catch (error) {
-      if (loadingToastId) toast.removeToast(String(loadingToastId))
+      if (loadingToastId) toast.dismiss(String(loadingToastId))
       const errorMessage = error instanceof Error ? error.message : 'Erro inesperado ao criar anúncio'
-      toast.error('Erro ao criar anúncio', errorMessage)
+      toast.error(errorMessage)
       setError(errorMessage)
     } finally {
       setIsSubmitting(false)

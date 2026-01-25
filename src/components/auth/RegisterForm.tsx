@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { FormField, FormButton } from '@/components/forms'
 import { useAuthStore } from '@/stores/authStore'
-import { useToast } from '@/contexts/ToastContext'
+import { toast } from 'react-hot-toast'
 import { DOCUMENT_VERSIONS } from '@/types'
 import { maskPhone } from '@/utils/masks'
 
@@ -44,7 +44,6 @@ export default function RegisterForm() {
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
-  const toast = useToast()
   const { signUp } = useAuthStore()
 
   const form = useForm<RegisterForm>({
@@ -60,7 +59,7 @@ export default function RegisterForm() {
 
     setIsLoading(true)
 
-    const loadingToast = toast.loading('Criando sua conta...', 'Aguarde um momento')
+    const loadingToast = toast.loading('Criando sua conta...')
 
     try {
       const { error } = await signUp(
@@ -76,19 +75,11 @@ export default function RegisterForm() {
       )
 
       if (error) {
-        toast.updateToast(loadingToast, {
-          type: 'error',
-          title: 'Erro no cadastro',
-          message: error
-        })
+        toast.error(error, { id: loadingToast })
         return
       }
 
-      toast.updateToast(loadingToast, {
-        type: 'success',
-        title: 'Conta criada com sucesso!',
-        message: 'Bem-vindo ao EventSpace'
-      })
+      toast.success('Conta criada com sucesso!', { id: loadingToast })
 
       // Redirecionar para a home ou dashboard (ou url de retorno)
       const searchParams = new URLSearchParams(location.search)
@@ -96,11 +87,7 @@ export default function RegisterForm() {
       navigate(returnTo)
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro ao criar conta'
-      toast.updateToast(loadingToast, {
-        type: 'error',
-        title: 'Erro no cadastro',
-        message: errorMessage
-      })
+      toast.error(errorMessage, { id: loadingToast })
     } finally {
       setIsLoading(false)
     }

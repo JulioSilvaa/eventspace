@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { getPricingModels } from '@/lib/api/pricing';
+import { getPricingModels } from '@/services/pricing';
 
 export function usePricingModels() {
   return useQuery({

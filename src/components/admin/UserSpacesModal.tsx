@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { X, Loader2, Play, Pause, ExternalLink } from 'lucide-react';
 import adminApi from '../../services/adminApi';
-import { useToast } from '../../contexts/ToastContext';
+import { toast } from 'react-hot-toast'
 
 interface Space {
   id: string;
@@ -31,7 +31,6 @@ export default function UserSpacesModal({ isOpen, onClose, userId, userName }: U
   const [spaces, setSpaces] = useState<Space[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const toast = useToast();
 
   useEffect(() => {
     if (isOpen && userId) {
@@ -48,7 +47,7 @@ export default function UserSpacesModal({ isOpen, onClose, userId, userName }: U
       setSpaces(response.data.data);
     } catch (error) {
       console.error('Error loading user spaces:', error);
-      toast.error('Erro', 'Não foi possível carregar os anúncios do usuário');
+      toast.error('Não foi possível carregar os anúncios do usuário');
     } finally {
       setLoading(false);
     }
@@ -64,10 +63,10 @@ export default function UserSpacesModal({ isOpen, onClose, userId, userName }: U
         s.id === space.id ? { ...s, status: newStatus } : s
       ));
 
-      toast.success('Sucesso', `Anúncio ${newStatus === 'active' ? 'ativado' : 'desativado'} com sucesso`);
+      toast.success(`Anúncio ${newStatus === 'active' ? 'ativado' : 'desativado'} com sucesso`);
     } catch (error) {
       console.error('Error updating space status:', error);
-      toast.error('Erro', 'Erro ao atualizar status do anúncio');
+      toast.error('Erro ao atualizar status do anúncio');
     } finally {
       setActionLoading(null);
     }
