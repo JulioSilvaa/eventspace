@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import {
   ArrowLeft,
   Eye,
@@ -32,6 +32,10 @@ import DashboardCard from '@/components/dashboard/DashboardCard'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 
 export default function Analytics() {
+  const [searchParams] = useSearchParams()
+  const specificListingId = searchParams.get('listing')
+  const specificType = searchParams.get('type')
+
   const { user } = useAuth()
   const { metrics, isLoading } = useUserRealTimeMetrics(user?.id)
   const { userAds, fetchUserAds } = useAdsStore()
@@ -52,10 +56,22 @@ export default function Analytics() {
     // Create map of existing data for quick lookup
     const dataMap = new Map()
     if (metrics.dailyMetrics) {
-      metrics.dailyMetrics.forEach(item => {
-        const dateKey = new Date(item.date).toISOString().split('T')[0]
-        dataMap.set(dateKey, item)
-      })
+      metrics.dailyMetrics
+        .filter(item => !specificListingId || item.listing_id === specificListingId)
+        .forEach(item => {
+          const dateKey = new Date(item.date).toISOString().split('T')[0]
+
+          if (dataMap.has(dateKey)) {
+            const existing = dataMap.get(dateKey)
+            dataMap.set(dateKey, {
+              ...existing,
+              views_count: existing.views_count + item.views_count,
+              contacts_count: existing.contacts_count + item.contacts_count
+            })
+          } else {
+            dataMap.set(dateKey, item)
+          }
+        })
     }
 
     // Generate last N days
@@ -76,7 +92,7 @@ export default function Analytics() {
     }
 
     return result
-  }, [metrics.dailyMetrics, timeRange])
+  }, [metrics.dailyMetrics, timeRange, specificListingId])
 
   // Calculate stats based on filtered data
   const stats = useMemo(() => {
@@ -140,8 +156,17 @@ export default function Analytics() {
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Relatórios de Desempenho</h1>
-              <p className="text-gray-500 text-sm">Acompanhe métricas detalhadas do seu anúncio</p>
+              <h1 className="text-2xl font-bold text-gray-900">
+                {specificListingId
+                  ? `Desempenho: ${userAds.find(a => a.id === specificListingId)?.title || 'Anúncio'}`
+                  : 'Relatórios de Desempenho'
+                }
+              </h1>
+              <p className="text-sm text-blue-600 font-medium mt-1">
+                {specificType === 'contact' && '📌 Focado em conversões e contatos'}
+                {specificListingId && !specificType && '📊 Visualizando dados deste anúncio'}
+                {!specificListingId && '🌍 Visão geral de todos os seus anúncios'}
+              </p>
             </div>
           </div>
 
@@ -271,9 +296,11 @@ export default function Analytics() {
         {/* Recent Events Table */}
         <div className="mt-8 bg-white rounded-xl shadow-sm border overflow-hidden">
           <div className="px-6 py-4 border-b flex items-center justify-between">
-            <h3 className="text-lg font-bold text-gray-900">Atividade Recente</h3>
+            <h3 className="text-lg font-bold text-gray-900">
+              {specificType === 'contact' ? 'Contatos Recentes' : 'Atividade Recente'}
+            </h3>
             <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-              Últimos 50 eventos
+              {specificListingId ? 'Filtrado por anúncio' : 'Últimos 50 eventos'}
             </span>
           </div>
           <div className="overflow-x-auto">
@@ -286,37 +313,45 @@ export default function Analytics() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 italic">
-                {metrics.recentEvents.slice(0, 10).map((event) => {
-                  const ad = userAds.find(a => a.id === event.listing_id);
-                  const adTitle = ad?.title || event.metadata?.adTitle || event.listing_id.slice(0, 8) + '...';
+                {metrics.recentEvents
+                  .filter(event => !specificListingId || event.listing_id === specificListingId)
+                  .filter(event => {
+                    if (specificType === 'contact') {
+                      return event.event_type.startsWith('contact')
+                    }
+                    return true
+                  })
+                  .slice(0, 10).map((event) => {
+                    const ad = userAds.find(a => a.id === event.listing_id);
+                    const adTitle = ad?.title || event.metadata?.adTitle || event.listing_id.slice(0, 8) + '...';
 
-                  return (
-                    <tr key={event.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          {event.event_type === 'view' ? (
-                            <div className="bg-blue-100 text-blue-600 p-1.5 rounded-md">
-                              <Eye className="w-3.5 h-3.5" />
-                            </div>
-                          ) : (
-                            <div className="bg-green-100 text-green-600 p-1.5 rounded-md">
-                              <MessageCircle className="w-3.5 h-3.5" />
-                            </div>
-                          )}
-                          <span className="text-sm font-medium text-gray-900">
-                            {event.event_type === 'view' ? 'Visualização' : 'Novo Contato'}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-500">
-                        {new Date(event.created_at).toLocaleString('pt-BR')}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-900 font-medium not-italic">
-                        {adTitle}
-                      </td>
-                    </tr>
-                  );
-                })}
+                    return (
+                      <tr key={event.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            {event.event_type === 'view' ? (
+                              <div className="bg-blue-100 text-blue-600 p-1.5 rounded-md">
+                                <Eye className="w-3.5 h-3.5" />
+                              </div>
+                            ) : (
+                              <div className="bg-green-100 text-green-600 p-1.5 rounded-md">
+                                <MessageCircle className="w-3.5 h-3.5" />
+                              </div>
+                            )}
+                            <span className="text-sm font-medium text-gray-900">
+                              {event.event_type === 'view' ? 'Visualização' : 'Novo Contato'}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-500">
+                          {new Date(event.created_at).toLocaleString('pt-BR')}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-900 font-medium not-italic">
+                          {adTitle}
+                        </td>
+                      </tr>
+                    );
+                  })}
               </tbody>
             </table>
           </div>

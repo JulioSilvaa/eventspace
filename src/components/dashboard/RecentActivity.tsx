@@ -534,11 +534,18 @@ export default function RecentActivity({
                       <Link
                         to={activity.type === 'rating'
                           ? `/dashboard/avaliacoes?listing=${activity.metadata.listingId}`
-                          : `/dashboard/analytics?listing=${activity.metadata.listingId}`
+                          : activity.type === 'view'
+                            ? `/espacos/${activity.metadata.listingId}`
+                            : `/dashboard/analytics?listing=${activity.metadata.listingId}&type=contact`
                         }
                         className="text-xs text-blue-600 hover:text-blue-700 font-medium"
                       >
-                        {activity.type === 'rating' ? 'Ver avaliações →' : 'Ver estatísticas →'}
+                        {activity.type === 'rating'
+                          ? 'Ver avaliações →'
+                          : activity.type === 'view'
+                            ? 'Ver no site →'
+                            : 'Ver contatos →'
+                        }
                       </Link>
                     )}
                   </div>
