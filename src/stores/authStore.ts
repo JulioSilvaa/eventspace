@@ -79,8 +79,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
         apiClient.setToken(data.accessToken)
       }
 
-      // Store user ID for session persistence
-      localStorage.setItem('userId', data.user.id)
+
 
       // Fetch full user profile
       const { data: profileResponse, error: profileError } = await apiClient.get<{ data: User }>(`/api/user/${data.user.id}`)
@@ -138,8 +137,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
         apiClient.setToken(data.accessToken)
       }
 
-      // Store user ID for session persistence
-      localStorage.setItem('userId', data.user.id)
+
 
       set({
         user: { id: data.user.id, email: data.user.email },
@@ -160,7 +158,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
   signOut: async () => {
     await apiClient.post('/auth/logout')
     apiClient.clearToken()
-    localStorage.removeItem('userId')
+
     set({
       user: null,
       profile: null,
@@ -209,26 +207,15 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     set({ isLoading: true })
 
     try {
-      // Check if we have a stored user ID
-      const storedUserId = localStorage.getItem('userId')
-
-      if (!storedUserId) {
-        set({
-          user: null,
-          profile: null,
-          isAuthenticated: false,
-          isLoading: false,
-          initialized: true,
-        })
-        return
-      }
-
-      // Try to fetch user profile (cookies will be sent automatically)
-      const { data: profileResponse, error: profileError } = await apiClient.get<{ data: User }>(`/api/user/${storedUserId}`)
+      // Try to fetch current user (cookies will be sent automatically)
+      const { data: profileData, error: profileError } = await apiClient.get<User>('/auth/me')
 
       if (profileError) {
-        console.error('Erro ao verificar profile:', profileError.message)
-        localStorage.removeItem('userId')
+        // Silent error if 401 (not authenticated), otherwise log
+        if (profileError.status !== 401) {
+          console.warn('Erro ao verificar autenticação:', profileError.message)
+        }
+
         set({
           user: null,
           profile: null,
@@ -238,9 +225,6 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
         })
         return
       }
-
-      // Extract profile from nested data property
-      const profileData = profileResponse?.data
 
       if (profileData) {
         set({
@@ -254,7 +238,6 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
       }
 
       // No profile data, clear auth
-      localStorage.removeItem('userId')
       set({
         user: null,
         profile: null,
@@ -262,6 +245,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
         isLoading: false,
         initialized: true,
       })
+
     } catch (error) {
       console.warn('Erro ao verificar autenticação:', error)
       set({
