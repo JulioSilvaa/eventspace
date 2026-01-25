@@ -401,7 +401,7 @@ export default function Home() {
                   Cadastre-se e seja um dos primeiros a aparecer!
                 </p>
                 <Link
-                  to="/cadastro"
+                  to="/anuncie/novo"
                   className="inline-flex items-center gap-2 bg-primary-600 text-white px-6 py-3 rounded-lg hover:bg-primary-700 transition-colors font-medium"
                 >
                   Anunciar Agora
@@ -590,7 +590,7 @@ export default function Home() {
 
           <div className="text-center mt-16">
             <Link
-              to="/cadastro"
+              to="/anuncie/novo"
               className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium text-lg"
             >
               Começar Agora
@@ -697,7 +697,7 @@ export default function Home() {
               Buscar Espaços
             </Link>
             <Link
-              to="/cadastro"
+              to="/anuncie/novo"
               className="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-all duration-300 hover:shadow-lg"
             >
               Anunciar Agora

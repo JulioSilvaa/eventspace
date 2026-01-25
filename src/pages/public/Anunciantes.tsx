@@ -153,7 +153,7 @@ export default function Anunciantes() {
                 </p>
                 <div className="flex justify-center">
                   <a
-                    href="/cadastro"
+                    href="/anuncie/novo"
                     className="border border-blue-600 text-blue-600 px-6 py-2 rounded-lg hover:bg-blue-50 transition-colors font-medium"
                   >
                     Criar Conta Grátis
