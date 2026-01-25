@@ -7,7 +7,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useAdsStore } from '@/stores/adsStore'
 import { useEventTracking } from '@/hooks/useRealTimeMetrics'
 import { uploadAdImages, deleteSpecificAdImages } from '@/services/imageService'
-import { useToast } from '@/contexts/ToastContext'
+import { toast } from 'react-hot-toast'
 import {
   ArrowLeft,
   ArrowRight,
@@ -22,7 +22,7 @@ import {
 import { FormField, FormButton, FormSelect } from '@/components/forms'
 import ImageUpload from '@/components/forms/ImageUpload'
 import AmenitiesSelector from '@/components/forms/AmenitiesSelector'
-import { getBrazilianStates } from '@/lib/api/search'
+import { getBrazilianStates } from '@/services/search'
 import Tooltip from '@/components/ui/Tooltip'
 
 // Mapas de tradução das comodidades
@@ -240,7 +240,6 @@ export default function EditAd() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const { currentAd, fetchAdById, updateAd } = useAdsStore()
-  const toast = useToast()
   const {
     trackListingUpdated,
     trackPriceUpdated,
@@ -535,7 +534,7 @@ export default function EditAd() {
         setCurrentStep(currentStep + 1)
       }
     } else {
-      toast.error('Verifique os campos', 'Preencha todos os campos obrigatórios corretamente.')
+      toast.error('Preencha todos os campos obrigatórios corretamente.')
     }
   }
 
@@ -552,6 +551,7 @@ export default function EditAd() {
     setError(null)
 
     let loadingToastId: string | number | undefined
+    let setupToastId: string | undefined
 
     try {
       // Combinar comodidades selecionadas com customizadas
@@ -584,7 +584,6 @@ export default function EditAd() {
         return digits.startsWith('55') && digits.length > 11 ? `+${digits}` : `+55${digits}`
       }
 
-      loadingToastId = toast.loading('Processando alterações...', 'Preparando o anúncio')
 
       let finalImages: string[] = []
 
@@ -600,7 +599,7 @@ export default function EditAd() {
       try {
         // 2. Upload new images if any
         if (images.length > 0) {
-          toast.updateToast(String(loadingToastId), { title: 'Enviando novas imagens...', message: `Otimizando e enviando ${images.length} foto${images.length > 1 ? 's' : ''}` })
+          setupToastId = toast.loading(`Otimizando e enviando ${images.length} foto${images.length > 1 ? 's' : ''}`)
 
           // Prepare images with their optimized versions
           // The ImageUpload component attaches 'optimized' property to the image objects
@@ -632,8 +631,8 @@ export default function EditAd() {
         }
 
       } catch (error: any) {
-        toast.removeToast(String(loadingToastId))
-        toast.error('Erro no upload', 'Falha ao processar imagens. Tente novamente.')
+        toast.dismiss(setupToastId)
+        toast.error('Falha ao processar imagens. Tente novamente.')
         console.error(error)
         return
       }
@@ -682,28 +681,31 @@ export default function EditAd() {
         images: finalImages // Include the complete list of images
       }
 
-      toast.updateToast(String(loadingToastId), { title: 'Salvando anúncio...', message: 'Finalizando atualizações' })
+      if (setupToastId) {
+        toast.loading('Salvando anúncio...', { id: setupToastId })
+      } else {
+        setupToastId = toast.loading('Salvando anúncio...')
+      }
 
       const result = await updateAd(id, updateData)
 
       if (result.error) {
-        toast.removeToast(String(loadingToastId))
-        toast.error('Erro ao atualizar anúncio', result.error)
+        toast.dismiss(setupToastId)
+        const message = result.error
+        toast.error(message || 'Erro ao salvar alterações.')
         setError(result.error)
         return
       }
 
 
 
-      // Tracking de eventos agora é feito pelo backend para garantir consistência
-
-      toast.removeToast(String(loadingToastId))
-      toast.success('Anúncio atualizado com sucesso!', 'Suas alterações foram salvas e já estão disponíveis.')
+      if (setupToastId) toast.dismiss(setupToastId)
+      toast.success('Anúncio atualizado com sucesso!')
       navigate('/dashboard/meus-anuncios?updated=true')
     } catch (error) {
-      if (loadingToastId) toast.removeToast(String(loadingToastId))
+      if (setupToastId) toast.dismiss(setupToastId)
       const errorMessage = error instanceof Error ? error.message : 'Erro inesperado ao atualizar anúncio'
-      toast.error('Erro ao atualizar anúncio', errorMessage)
+      toast.error(errorMessage)
       setError(errorMessage)
     } finally {
       setIsSubmitting(false)

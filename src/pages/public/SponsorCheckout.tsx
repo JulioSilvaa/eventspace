@@ -3,11 +3,11 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { ArrowLeft, ArrowRight, Upload, Check, AlertCircle, Loader2 } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Upload, Check, Loader2 } from 'lucide-react'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
 import { useAuth } from '@/hooks/useAuth'
-import { useToast } from '@/contexts/ToastContext'
+import { toast } from 'react-hot-toast'
 import { sponsorService } from '@/services/sponsorService'
 import { stripe } from '@/lib/stripe'
 
@@ -41,7 +41,6 @@ const FileUpload = ({
   expectedHeight: number
 }) => {
   const [preview, setPreview] = useState<string | null>(null)
-  const toast = useToast()
 
   useEffect(() => {
     if (!file) {
@@ -125,7 +124,6 @@ export default function SponsorCheckout() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { user } = useAuth()
-  const toast = useToast()
 
   const plan = searchParams.get('plan') as keyof typeof PLANS
   const currentPlan = PLANS[plan] || PLANS.Silver

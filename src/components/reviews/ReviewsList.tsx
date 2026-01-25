@@ -3,7 +3,7 @@ import { reviewService } from '@/services/reviewService'
 import StarRating from './StarRating'
 import ReviewReply from './ReviewReply'
 import { reviewReplyService, type ReviewReply as ReviewReplyType } from '@/services/reviewReplyService'
-import { useToast } from '@/contexts/ToastContext'
+import { toast } from 'react-hot-toast'
 import { useAuth } from '@/hooks/useAuth'
 
 interface Review {
@@ -26,7 +26,6 @@ export default function ReviewsList({ listingId, refreshTrigger }: ReviewsListPr
   const [isLoading, setIsLoading] = useState(true)
   const [averageRating, setAverageRating] = useState(0)
   const [isOwner, setIsOwner] = useState(false)
-  const { error: toastError, success: toastSuccess, warning: toastWarning } = useToast()
   const { user } = useAuth()
 
   const fetchReviews = useCallback(async () => {
@@ -34,7 +33,7 @@ export default function ReviewsList({ listingId, refreshTrigger }: ReviewsListPr
       const { data, error } = await reviewService.getListingReviews(listingId, 50) // Fetch up to 50 reviews
 
       if (error) {
-        toastError('Erro ao carregar avaliações', 'Não foi possível carregar as avaliações. Tente recarregar a página.')
+        toast.error('Não foi possível carregar as avaliações. Tente recarregar a página.')
         return
       }
 
@@ -55,12 +54,12 @@ export default function ReviewsList({ listingId, refreshTrigger }: ReviewsListPr
         setReplies([])
       }
 
-    } catch {
-      toastError('Erro inesperado', 'Ocorreu um erro ao carregar as avaliações.')
+    } catch (error) {
+      toast.error('Ocorreu um erro ao carregar as avaliações.')
     } finally {
       setIsLoading(false)
     }
-  }, [listingId, toastError])
+  }, [listingId])
 
   const checkOwnership = useCallback(async () => {
     // Only check ownership if user is authenticated

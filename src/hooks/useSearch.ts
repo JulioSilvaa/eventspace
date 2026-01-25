@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { searchAdsWithCache, getCategories, type SearchFilters, type SearchResponse } from '@/lib/api/search'
+import { searchAdsWithCache, getCategories, type SearchFilters, type SearchResponse } from '@/services/search'
 
 export function useSearch(initialFilters: SearchFilters = {}) {
   const [searchParams, setSearchParams] = useSearchParams()

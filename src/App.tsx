@@ -5,15 +5,13 @@ import React, { Suspense, lazy } from 'react'
 import { Analytics as VercelAnalytics } from '@vercel/analytics/react'
 
 // Contexts
-import { ToastProvider } from './contexts/ToastContext'
 import { AdminAuthProvider } from './contexts/admin/AdminAuthContext'
 
 // Components
-import LoadingScreen from '@/components/ui/LoadingScreen'
+import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import AdminProtectedRoute from './components/admin/AdminProtectedRoute'
 import AdminLayout from './components/admin/AdminLayout'
-import { ToastContainer } from './components/ui/ToastContainer'
 
 // Lazy load pages
 const Home = lazy(() => import('./pages/Home'))
@@ -27,7 +25,6 @@ const Analytics = lazy(() => import('./pages/dashboard/Analytics'))
 const Settings = lazy(() => import('./pages/dashboard/Settings'))
 const ReviewsManagement = lazy(() => import('./pages/dashboard/ReviewsManagement'))
 const PlanSelection = lazy(() => import('./pages/public/Plans'))
-// const Checkout = lazy(() => import('./pages/dashboard/Checkout'))
 const PaymentSuccess = lazy(() => import('./pages/public/PaymentSuccess'))
 const Favorites = lazy(() => import('./pages/Favorites'))
 const Spaces = lazy(() => import('./pages/public/Spaces'))
@@ -57,85 +54,83 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <Router>
         <AdminAuthProvider>
-          <ToastProvider>
-            <div className="app-container">
-              <Suspense fallback={<LoadingScreen />}>
-                <Routes>
-                  {/* Public Routes */}
-                  <Route path="/" element={<Home />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/cadastro" element={<Register />} />
-                  <Route path="/espacos" element={<Spaces />} />
-                  <Route path="/espacos/:id" element={<AdDetails />} />
-                  <Route path="/anunciantes" element={<Anunciantes />} />
-                  <Route path="/anunciantes/:id" element={<AdDetails />} />
-                  <Route path="/anunciante/:id" element={<AdDetails />} />
-                  <Route path="/como-funciona" element={<HowItWorks />} />
+          <div className="app-container">
+            <Suspense fallback={<LoadingSpinner fullScreen />}>
+              <Routes>
+                {/* Public Routes */}
+                <Route path="/" element={<Home />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/cadastro" element={<Register />} />
+                <Route path="/espacos" element={<Spaces />} />
+                <Route path="/espacos/:id" element={<AdDetails />} />
+                <Route path="/anunciantes" element={<Anunciantes />} />
 
-                  {/* Sponsor Checkout */}
-                  <Route path="/checkout/sponsor" element={
-                    <ProtectedRoute>
-                      <SponsorCheckout />
-                    </ProtectedRoute>
-                  } />
+                {/* Consolidate advertiser routes */}
+                <Route path="/anunciantes/:id" element={<AdDetails />} />
+                <Route path="/anunciante/:id" element={<AdDetails />} />
 
-                  {/* Dashboard Routes (Protected) */}
-                  <Route path="/dashboard/*" element={
-                    <ProtectedRoute>
+                <Route path="/como-funciona" element={<HowItWorks />} />
+
+                {/* Sponsor Checkout */}
+                <Route path="/checkout/sponsor" element={
+                  <ProtectedRoute>
+                    <SponsorCheckout />
+                  </ProtectedRoute>
+                } />
+
+                {/* Dashboard Routes (Protected) */}
+                <Route path="/dashboard/*" element={
+                  <ProtectedRoute>
+                    <Routes>
+                      <Route index element={<Dashboard />} />
+                      <Route path="criar-anuncio" element={<CreateAd />} />
+                      <Route path="meus-anuncios" element={<MyAds />} />
+                      <Route path="anuncios/:id/editar" element={<EditAd />} />
+                      <Route path="analytics" element={<Analytics />} />
+                      <Route path="favoritos" element={<Favorites />} />
+                      <Route path="configuracoes" element={<Settings />} />
+                      <Route path="avaliacoes" element={<ReviewsManagement />} />
+                      <Route path="pagamento/sucesso" element={<PaymentSuccess />} />
+                    </Routes>
+                  </ProtectedRoute>
+                } />
+
+                {/* Advertiser Profile Route for logged in users fallback */}
+                <Route path="/perfil" element={
+                  <ProtectedRoute>
+                    <Settings />
+                  </ProtectedRoute>
+                } />
+
+                {/* Public Plans Route */}
+                <Route path="/planos" element={<PlanSelection />} />
+                <Route path="/anuncie/novo" element={<CreateAd />} />
+
+                {/* Admin Routes */}
+                <Route path="/admin/login" element={<AdminLogin />} />
+                <Route path="/admin/*" element={
+                  <AdminProtectedRoute>
+                    <AdminLayout>
                       <Routes>
-                        <Route index element={<Dashboard />} />
-                        <Route path="criar-anuncio" element={<CreateAd />} />
-                        <Route path="meus-anuncios" element={<MyAds />} />
-                        <Route path="anuncios/:id/editar" element={<EditAd />} />
-                        <Route path="analytics" element={<Analytics />} />
-                        <Route path="favoritos" element={<Favorites />} />
-                        <Route path="configuracoes" element={<Settings />} />
-                        <Route path="avaliacoes" element={<ReviewsManagement />} />
-
-                        {/* <Route path="checkout/:planId" element={<Checkout />} /> */}
-                        <Route path="pagamento/sucesso" element={<PaymentSuccess />} />
+                        <Route index element={<AdminDashboard />} />
+                        <Route path="users" element={<AdminUsersPage />} />
+                        <Route path="ads" element={<AdminAdsPage />} />
+                        <Route path="config" element={<AdminConfigPage />} />
                       </Routes>
-                    </ProtectedRoute>
-                  } />
+                    </AdminLayout>
+                  </AdminProtectedRoute>
+                } />
 
-                  {/* Advertiser Profile Route for logged in users fallback */}
-                  <Route path="/perfil" element={
-                    <ProtectedRoute>
-                      <Settings />
-                    </ProtectedRoute>
-                  } />
+                {/* Payment Success Callback */}
+                <Route path="/payment/success" element={<PaymentSuccess />} />
 
-                  {/* Public Plans Route */}
-                  <Route path="/planos" element={<PlanSelection />} />
-                  <Route path="/anuncie/novo" element={<CreateAd />} />
-
-                  {/* Admin Routes */}
-                  <Route path="/admin/login" element={<AdminLogin />} />
-                  <Route path="/admin/*" element={
-                    <AdminProtectedRoute>
-                      <AdminLayout>
-                        <Routes>
-                          <Route index element={<AdminDashboard />} />
-                          <Route path="users" element={<AdminUsersPage />} />
-                          <Route path="ads" element={<AdminAdsPage />} />
-                          <Route path="config" element={<AdminConfigPage />} />
-                        </Routes>
-                      </AdminLayout>
-                    </AdminProtectedRoute>
-                  } />
-
-                  {/* Payment Success Callback */}
-                  <Route path="/payment/success" element={<PaymentSuccess />} />
-
-                  {/* Catch all */}
-                  <Route path="*" element={<Navigate to="/" replace />} />
-                </Routes>
-              </Suspense>
-              <ToastContainer />
-              <Toaster position="top-right" />
-              <VercelAnalytics />
-            </div>
-          </ToastProvider>
+                {/* Catch all */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </Suspense>
+            <Toaster position="top-right" />
+            <VercelAnalytics />
+          </div>
         </AdminAuthProvider>
       </Router>
     </QueryClientProvider>

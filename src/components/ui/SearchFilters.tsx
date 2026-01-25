@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Search, Filter, X, MapPin, DollarSign } from 'lucide-react'
-import { getBrazilianStates } from '@/lib/api/search'
-import type { SearchFilters } from '@/lib/api/search'
+import { getBrazilianStates } from '@/services/search'
+import type { SearchFilters } from '@/services/search'
 
 interface SearchFiltersProps {
   filters: SearchFilters
