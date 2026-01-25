@@ -429,6 +429,11 @@ export const useAdsStore = create<AdsState>((set, get) => ({
     })
 
     if (error) {
+      if (error.message?.includes('preço por fim de semana') || error.status === 400) {
+        console.warn('Backend returned validation error on listing (likely zombie data). Treating as empty list for now.')
+        set({ userAds: [], isLoading: false })
+        return
+      }
       console.error('Error fetching user ads:', error)
       set({ isLoading: false })
       return
@@ -466,6 +471,7 @@ export const useAdsStore = create<AdsState>((set, get) => ({
       // Price mapping (backend uses price_per_day and price_per_weekend)
       price_per_day: adData.price_per_day,
       price_per_weekend: adData.price_per_weekend,
+      price_type: adData.price_unit || adData.price_type || 'diaria', // Send price_type so backend knows if it's budget
 
       // Comfort array (backend combines all amenities/features/services)
       comfort: adData.comfort || [],
