@@ -1,4 +1,3 @@
-import { apiClient } from '@/lib/api-client'
 import { useState, useEffect } from 'react'
 import { useSearchParams, Link, useNavigate } from 'react-router-dom'
 import { TrendingUp, LogOut, Home } from 'lucide-react'
@@ -55,18 +54,6 @@ export default function Dashboard() {
   // Carregar anúncios do usuário e refresh profile se voltando do checkout
   useEffect(() => {
     if (user) {
-      // Clean Zombie Ad (Temporary Fix)
-      const ZOMBIE_ID = '84d549d0-b220-4d92-8df2-d6fb610423eb'
-      if (!localStorage.getItem('zombie_killed_' + ZOMBIE_ID)) {
-        apiClient.delete('/api/spaces/' + ZOMBIE_ID)
-          .then(() => {
-            console.log('Zombie ad removed successfully')
-            localStorage.setItem('zombie_killed_' + ZOMBIE_ID, 'true')
-            fetchUserAds(user.id) // Refetch after clean
-          })
-          .catch(err => console.error('Failed to remove zombie ad', err))
-      }
-
       fetchUserAds(user.id)
 
       // Se vem de uma página de checkout, força refresh do perfil

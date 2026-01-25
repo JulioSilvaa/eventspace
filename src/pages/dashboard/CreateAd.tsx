@@ -168,20 +168,7 @@ const createListingSchema = z.object({
   // Images (será tratado separadamente no estado)
   images: z.array(z.any()).optional()
 }).superRefine((data, ctx) => {
-  // Allow zero price ONLY if priceUnit/priceType is explicit 'orcamento', 'budget' or 'a combinar'
-  // Using robust check 
-  const unit = (data.priceUnit || '').toLowerCase();
-  const type = (data.priceType || '').toLowerCase();
-
-  const isBudget = ['orcamento', 'budget', 'a combinar'].includes(unit) ||
-    ['orcamento', 'budget', 'a combinar'].includes(type) ||
-    unit === '' || // orcamento unit is empty in constants
-    unit.includes('combinar') ||
-    unit.includes('consultar') ||
-    type.includes('combinar') ||
-    type.includes('consultar');
-
-  if (!isBudget) {
+  if (data.priceUnit !== 'orcamento') {
     const val = data.price;
     let isValid = false;
 
@@ -656,7 +643,7 @@ export default function CreateAd() {
         },
 
         capacity: data.capacity,
-        price_per_day: finalPrice, // Use finalPrice directly as it handles 0 correctly (0 is falsy but valid)
+        price_per_day: data.price ? finalPrice : undefined, // Always save price here as base value
         price_unit: data.priceUnit, // New field
         comfort: allComfort,
         contact_phone: formattedPhone,

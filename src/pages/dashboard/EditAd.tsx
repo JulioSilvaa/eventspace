@@ -144,20 +144,12 @@ const editAdSchema = z.object({
   images: z.array(z.any()).optional()
 }).superRefine((data, ctx) => {
   // Budget/Orcamento doesn't require price
-  // Check for 'orcamento', 'budget' or 'a combinar' logic or partial matches
-  const type = (data.priceType || '').toLowerCase();
-  const isBudget = ['orcamento', 'budget', 'a combinar'].includes(type) ||
-    type.includes('combinar') ||
-    type.includes('consultar');
-
-  if (!isBudget) {
+  if (data.priceType !== 'orcamento' && data.priceType !== 'budget') {
     const val = data.price;
     let isValid = false;
 
     if (typeof val === 'number' && val > 0) isValid = true;
     else if (typeof val === 'string') {
-      // Allow for "0,00" or similar if logic dictates, but generally standard requires > 0
-      // But if user typed 0.00 and it's NOT budget, we fail.
       const num = parseFloat(val.replace(/[^\d,]/g, '').replace(',', '.'));
       if (!isNaN(num) && num > 0) isValid = true;
     }
@@ -655,10 +647,7 @@ export default function EditAd() {
         capacity: data.capacity, // Send capacity at root level so backend updates the column correctly
         price: parseCurrency(data.price),
         // Send separate fields for clarity, though price_type helps backend decide
-        // Force 0/value for orcamento to prevent backend errors with "undefined" or null
-        price_per_day: data.priceType === 'diaria' || ['orcamento', 'budget', 'a combinar'].includes(data.priceType?.toLowerCase() || '')
-          ? parseCurrency(data.price)
-          : undefined,
+        price_per_day: data.priceType === 'diaria' ? parseCurrency(data.price) : undefined,
         price_per_weekend: data.priceType === 'final_de_semana' ? parseCurrency(data.price) : undefined,
         price_type: data.priceType,
         state: data.state,
