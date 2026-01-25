@@ -25,6 +25,7 @@ const EditAd = lazy(() => import('./pages/dashboard/EditAd'))
 const MyAds = lazy(() => import('./pages/dashboard/MyAds'))
 const Analytics = lazy(() => import('./pages/dashboard/Analytics'))
 const Settings = lazy(() => import('./pages/dashboard/Settings'))
+const ReviewsManagement = lazy(() => import('./pages/dashboard/ReviewsManagement'))
 const PlanSelection = lazy(() => import('./pages/public/Plans'))
 // const Checkout = lazy(() => import('./pages/dashboard/Checkout'))
 const PaymentSuccess = lazy(() => import('./pages/public/PaymentSuccess'))
@@ -89,6 +90,7 @@ function App() {
                         <Route path="analytics" element={<Analytics />} />
                         <Route path="favoritos" element={<Favorites />} />
                         <Route path="configuracoes" element={<Settings />} />
+                        <Route path="avaliacoes" element={<ReviewsManagement />} />
 
                         {/* <Route path="checkout/:planId" element={<Checkout />} /> */}
                         <Route path="pagamento/sucesso" element={<PaymentSuccess />} />

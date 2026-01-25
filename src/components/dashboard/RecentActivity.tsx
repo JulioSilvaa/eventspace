@@ -530,12 +530,15 @@ export default function RecentActivity({
                     <p className="text-xs text-gray-500 break-words line-clamp-1 flex-1 min-w-0">
                       Anúncio: <span className="text-gray-700">{activity.metadata.adTitle}</span>
                     </p>
-                    {activity.metadata?.listingId && (activity.type === 'view' || activity.type === 'contact' || activity.type === 'rating') && (
+                    {activity.metadata?.listingId && (
                       <Link
-                        to={`/dashboard/avaliacoes?listing=${activity.metadata.listingId}`}
+                        to={activity.type === 'rating'
+                          ? `/dashboard/avaliacoes?listing=${activity.metadata.listingId}`
+                          : `/dashboard/analytics?listing=${activity.metadata.listingId}`
+                        }
                         className="text-xs text-blue-600 hover:text-blue-700 font-medium"
                       >
-                        Ver avaliações →
+                        {activity.type === 'rating' ? 'Ver avaliações →' : 'Ver estatísticas →'}
                       </Link>
                     )}
                   </div>
