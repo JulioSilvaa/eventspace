@@ -453,7 +453,7 @@ export default function AdDetails() {
                 </div>
 
                 {/* Reference Point */}
-                {(ad.reference_point || String(specifications.reference_point || '')) && (
+                {!!(ad.reference_point || specifications.reference_point) && (
                   <div className="p-4 bg-orange-50 rounded-xl border border-orange-100">
                     <div className="flex items-center gap-3 mb-2">
                       <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">
