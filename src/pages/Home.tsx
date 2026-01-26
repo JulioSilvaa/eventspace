@@ -6,7 +6,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { ChevronRight, MapPin, Star, Check, ChevronLeft, Building2, Search, PartyPopper } from 'lucide-react'
 import { useAdsStore } from '@/stores/adsStore'
 import { AdCard } from '@/components/ads'
-import { AMENITY_LABELS } from '@/constants/amenities'
+
 import { LazyLoadImage } from 'react-lazy-load-image-component'
 import 'react-lazy-load-image-component/src/effects/blur.css'
 import SponsorHero from '@/components/sponsors/SponsorHero'
@@ -276,7 +276,7 @@ export default function Home() {
                             WebkitBackfaceVisibility: 'hidden',
                             backfaceVisibility: 'hidden'
                           }}
-                          className="relative h-[300px] md:h-[450px] rounded-[2.5rem] overflow-hidden shadow-2xl group cursor-pointer transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:-translate-y-2"
+                          className="relative h-[400px] md:h-[450px] rounded-[2.5rem] overflow-hidden shadow-2xl group cursor-pointer transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:-translate-y-2"
                         >
 
                           {/* Full Background Image */}
@@ -296,14 +296,14 @@ export default function Home() {
                           <div className="absolute bottom-0 left-0 right-0 p-6 md:px-20 md:py-12 text-white z-10 flex flex-col justify-end h-full">
 
                             {/* Top Badges */}
-                            <div className="absolute top-8 left-8 flex gap-3 transform transition-transform duration-500 group-hover:-translate-y-1">
-                              <span className="flex items-center gap-2 bg-white/10 backdrop-blur-xl border border-white/20 text-white px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider shadow-xl">
-                                <Building2 className="w-4 h-4 text-blue-400" />
+                            <div className="absolute top-4 left-4 md:top-8 md:left-8 flex gap-2 md:gap-3 transform transition-transform duration-500 group-hover:-translate-y-1 z-20">
+                              <span className="flex items-center gap-1.5 md:gap-2 bg-white/10 backdrop-blur-xl border border-white/20 text-white px-3 py-1.5 md:px-4 md:py-2 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider shadow-xl">
+                                <Building2 className="w-3 h-3 md:w-4 md:h-4 text-blue-400" />
                                 {ad.categories?.name || 'Espaço'}
                               </span>
                               {ad.rating ? (
-                                <span className="flex items-center gap-1.5 bg-yellow-400 text-yellow-950 px-3 py-1.5 rounded-full text-xs font-black shadow-lg">
-                                  <Star className="w-3.5 h-3.5 fill-current" />
+                                <span className="flex items-center gap-1 bg-yellow-400 text-yellow-950 px-2.5 py-1.5 md:px-3 md:py-1.5 rounded-full text-[10px] md:text-xs font-black shadow-lg">
+                                  <Star className="w-3 h-3 md:w-3.5 md:h-3.5 fill-current" />
                                   {ad.rating.toFixed(1)}
                                 </span>
                               ) : (
@@ -316,7 +316,7 @@ export default function Home() {
 
                             {/* Main Info */}
                             <div className="transform transition-all duration-500 ease-out group-hover:-translate-y-4">
-                              <h3 className="text-2xl md:text-5xl font-black mb-3 md:mb-5 leading-[1.1] text-white tracking-tight drop-shadow-2xl">
+                              <h3 className="text-2xl md:text-5xl font-black mb-3 md:mb-5 leading-tight md:leading-[1.1] text-white tracking-tight drop-shadow-2xl line-clamp-2 md:line-clamp-none">
                                 {ad.title}
                               </h3>
 
@@ -438,7 +438,7 @@ export default function Home() {
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 min-[375px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
               {popularSpaces.slice(0, 8).map((space) => (
                 <AdCard
                   key={space.id}

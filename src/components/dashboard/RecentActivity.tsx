@@ -78,7 +78,7 @@ export default function RecentActivity({
   const [activities, setActivities] = useState<ActivityDisplayProps[]>([])
 
   // Helper para validar data antes de formatar
-  const safeFormatDistanceToNow = (date: any) => {
+  const safeFormatDistanceToNow = (date: string | number | Date) => {
     try {
       const d = new Date(date)
       if (isNaN(d.getTime())) {
@@ -88,7 +88,7 @@ export default function RecentActivity({
         addSuffix: true,
         locale: ptBR
       })
-    } catch (e) {
+    } catch {
       return 'recentemente'
     }
   }
@@ -525,10 +525,13 @@ export default function RecentActivity({
               </div>
 
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1 w-full">
+                <div className="flex items-start justify-between gap-2 mb-1 w-full">
                   <p className="text-sm font-medium text-gray-900 break-words line-clamp-2">
                     {activity.title}
                   </p>
+                  <span className="text-[10px] sm:text-xs text-gray-400 whitespace-nowrap flex-shrink-0 mt-0.5">
+                    {safeFormatDistanceToNow(activity.timestamp)}
+                  </span>
                 </div>
 
                 <p className="text-xs mt-1 text-gray-600 break-words line-clamp-3">
@@ -544,29 +547,24 @@ export default function RecentActivity({
                   </div>
                 )}
 
-                {activity.metadata?.adTitle && (
-                  <div className="flex items-center justify-between mt-1">
-                    <p className="text-xs text-gray-500 break-words line-clamp-1 flex-1 min-w-0">
-                      Anúncio: <span className="text-gray-700">{activity.metadata.adTitle}</span>
-                    </p>
-                    {activity.metadata?.listingId && (
-                      <Link
-                        to={activity.type === 'rating'
-                          ? `/dashboard/avaliacoes?listing=${activity.metadata.listingId}`
-                          : activity.type === 'view'
-                            ? `/espacos/${activity.metadata.listingId}`
-                            : `/dashboard/analytics?listing=${activity.metadata.listingId}&type=contact`
-                        }
-                        className="text-xs text-blue-600 hover:text-blue-700 font-medium"
-                      >
-                        {activity.type === 'rating'
-                          ? 'Ver avaliações →'
-                          : activity.type === 'view'
-                            ? 'Ver no site →'
-                            : 'Ver contatos →'
-                        }
-                      </Link>
-                    )}
+                {activity.metadata?.listingId && (
+                  <div className="flex justify-end mt-2">
+                    <Link
+                      to={activity.type === 'rating'
+                        ? `/dashboard/avaliacoes?listing=${activity.metadata.listingId}`
+                        : activity.type === 'view'
+                          ? `/espacos/${activity.metadata.listingId}`
+                          : `/dashboard/analytics?listing=${activity.metadata.listingId}&type=contact`
+                      }
+                      className="text-xs text-blue-600 hover:text-blue-700 font-bold whitespace-nowrap bg-blue-50 px-3 py-1.5 rounded-md hover:bg-blue-100 transition-colors"
+                    >
+                      {activity.type === 'rating'
+                        ? 'Ver avaliações →'
+                        : activity.type === 'view'
+                          ? 'Ver no site →'
+                          : 'Ver contatos →'
+                      }
+                    </Link>
                   </div>
                 )}
 
@@ -595,12 +593,6 @@ export default function RecentActivity({
                     ))}
                   </div>
                 )}
-              </div>
-
-              <div className="flex-shrink-0">
-                <p className="text-xs text-gray-500">
-                  {safeFormatDistanceToNow(activity.timestamp)}
-                </p>
               </div>
             </div>
           ))}
