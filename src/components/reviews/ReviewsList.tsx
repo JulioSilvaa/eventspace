@@ -27,6 +27,26 @@ export default function ReviewsList({ listingId, refreshTrigger }: ReviewsListPr
   const [averageRating, setAverageRating] = useState(0)
   const [isOwner, setIsOwner] = useState(false)
   const { user } = useAuth()
+  const [expandedReviews, setExpandedReviews] = useState<Set<string>>(new Set())
+  const [visibleCount, setVisibleCount] = useState(3)
+
+  const handleShowMore = () => {
+    setVisibleCount(prev => prev + 5)
+  }
+
+  const visibleReviews = reviews.slice(0, visibleCount)
+
+  const toggleReviewExpand = (reviewId: string) => {
+    setExpandedReviews(prev => {
+      const next = new Set(prev)
+      if (next.has(reviewId)) {
+        next.delete(reviewId)
+      } else {
+        next.add(reviewId)
+      }
+      return next
+    })
+  }
 
   const fetchReviews = useCallback(async () => {
     try {
@@ -105,6 +125,8 @@ export default function ReviewsList({ listingId, refreshTrigger }: ReviewsListPr
     )
   }
 
+
+
   return (
     <div className="space-y-6">
       {/* Resumo das avaliações */}
@@ -136,40 +158,69 @@ export default function ReviewsList({ listingId, refreshTrigger }: ReviewsListPr
         </div>
       ) : (
         <div className="space-y-4">
-          {reviews.map((review) => (
-            <div key={review.id} className="bg-white border border-gray-200 rounded-lg p-4">
-              <div className="flex items-start gap-3">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="font-medium text-gray-900">
-                      {review.reviewer_name}
-                    </span>
-                    <StarRating rating={review.rating} readonly size="sm" />
-                    <span className="text-xs text-gray-500">
-                      {new Date(review.created_at).toLocaleDateString('pt-BR')}
-                    </span>
+          {visibleReviews.map((review) => {
+            const isExpanded = expandedReviews.has(review.id)
+            const comment = review.comment || ''
+            const shouldTruncate = comment.length > 150
+
+            return (
+              <div key={review.id} className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4">
+                <div className="flex items-start gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-gray-900 text-sm">
+                          {review.reviewer_name}
+                        </span>
+                        <StarRating rating={review.rating} readonly size="sm" />
+                      </div>
+                      <span className="text-xs text-gray-500">
+                        {new Date(review.created_at).toLocaleDateString('pt-BR')}
+                      </span>
+                    </div>
+
+                    {review.comment && (
+                      <div className="relative">
+                        <p className={`text-gray-700 text-sm leading-relaxed ${!isExpanded ? 'line-clamp-3' : ''}`}>
+                          {review.comment}
+                        </p>
+                        {shouldTruncate && (
+                          <button
+                            onClick={() => toggleReviewExpand(review.id)}
+                            className="text-primary-600 text-xs mt-1 font-medium hover:underline focus:outline-none"
+                          >
+                            {isExpanded ? 'Ler menos' : 'Ler mais'}
+                          </button>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Componente de resposta */}
+                    <ReviewReply
+                      reviewId={review.id}
+                      listingId={listingId}
+                      existingReply={getReplyForReview(review.id)}
+                      isOwner={isOwner}
+                      onReplyCreated={handleReplyCreated}
+                      onReplyUpdated={handleReplyUpdated}
+                      onReplyDeleted={handleReplyDeleted}
+                    />
                   </div>
-
-                  {review.comment && (
-                    <p className="text-gray-700 text-sm leading-relaxed">
-                      {review.comment}
-                    </p>
-                  )}
-
-                  {/* Componente de resposta */}
-                  <ReviewReply
-                    reviewId={review.id}
-                    listingId={listingId}
-                    existingReply={getReplyForReview(review.id)}
-                    isOwner={isOwner}
-                    onReplyCreated={handleReplyCreated}
-                    onReplyUpdated={handleReplyUpdated}
-                    onReplyDeleted={handleReplyDeleted}
-                  />
                 </div>
               </div>
+            )
+          })}
+
+          {reviews.length > visibleCount && (
+            <div className="text-center pt-2">
+              <button
+                onClick={handleShowMore}
+                className="text-primary-600 font-medium text-sm hover:text-primary-700 hover:underline focus:outline-none transition-colors border border-primary-200 bg-primary-50 px-4 py-2 rounded-full"
+              >
+                Ver mais avaliações ({reviews.length - visibleCount} restantes)
+              </button>
             </div>
-          ))}
+          )}
         </div>
       )}
     </div>
