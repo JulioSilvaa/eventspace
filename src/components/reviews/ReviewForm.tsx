@@ -176,16 +176,7 @@ export default function ReviewForm({ listingId, onReviewSubmitted }: ReviewFormP
           {isSubmitting ? 'Enviando...' : 'Enviar Avaliação'}
         </button>
 
-        {!user && (
-          <div className="text-center pt-2">
-            <p className="text-xs text-gray-500">
-              Quer verificar sua avaliação?{' '}
-              <a href="/cadastro" className="text-primary-600 hover:text-primary-700 font-medium">
-                Crie uma conta gratuita
-              </a>
-            </p>
-          </div>
-        )}
+        {/* Removed misleading account creation prompt as per user request */}
       </form>
     </div>
   )

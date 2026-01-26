@@ -128,11 +128,9 @@ export default function LocationMap({
   }
 
   return (
-    <div className="h-full flex flex-col gap-4">
-      {/* Map Container */}
-      <div
-        className="flex-1 min-h-0 rounded-lg overflow-hidden border border-gray-200 shadow-sm relative z-0"
-      >
+    <div className="h-full w-full relative group isolate">
+      {/* Map Container - Full Height */}
+      <div className="absolute inset-0 z-0">
         <MapContainer
           center={[latitude, longitude]}
           zoom={15}
@@ -149,53 +147,30 @@ export default function LocationMap({
               <div className="text-center p-2">
                 <h4 className="font-semibold text-gray-900 mb-1">{title}</h4>
                 <p className="text-sm text-gray-600 mb-3">{address}</p>
-                <div className="flex gap-2">
-                  <button
-                    onClick={openGoogleMaps}
-                    className="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition-colors"
-                  >
-                    Google Maps
-                  </button>
-                  <button
-                    onClick={openAppleMaps}
-                    className="text-xs bg-gray-600 text-white px-3 py-1 rounded hover:bg-gray-700 transition-colors"
-                  >
-                    Apple Maps
-                  </button>
-                </div>
               </div>
             </Popup>
           </Marker>
         </MapContainer>
-
-        {/* External link button overlay */}
-        <div className="absolute top-3 right-3 z-[1000]">
-          <button
-            onClick={openGoogleMaps}
-            className="bg-white/90 backdrop-blur-sm border border-gray-300 rounded-lg p-2 hover:bg-white hover:shadow-md transition-all duration-200"
-            title="Abrir no Google Maps"
-          >
-            <ExternalLink className="w-4 h-4 text-gray-600" />
-          </button>
-        </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="flex flex-wrap gap-2 justify-center">
-        <button
-          onClick={openGoogleMaps}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          <ExternalLink className="w-4 h-4" />
-          Google Maps
-        </button>
-        <button
-          onClick={openAppleMaps}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 transition-colors"
-        >
-          <ExternalLink className="w-4 h-4" />
-          Apple Maps
-        </button>
+      {/* Floating Action Dock - Integrated & Clean */}
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[1000] w-max max-w-[95%]">
+        <div className="flex items-center gap-3 p-2 bg-white/90 backdrop-blur-md border border-gray-200/50 shadow-[0_8px_30px_rgba(0,0,0,0.15)] rounded-xl">
+          <button
+            onClick={openGoogleMaps}
+            className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 hover:shadow-lg hover:-translate-y-0.5 transition-all active:scale-95"
+          >
+            <ExternalLink className="w-4 h-4" />
+            <span className="whitespace-nowrap">Google Maps</span>
+          </button>
+          <button
+            onClick={openAppleMaps}
+            className="flex items-center gap-2 px-5 py-2.5 bg-gray-100 text-gray-700 text-sm font-bold rounded-lg hover:bg-gray-200 hover:text-gray-900 hover:shadow-lg hover:-translate-y-0.5 transition-all active:scale-95"
+          >
+            <ExternalLink className="w-4 h-4" />
+            <span className="whitespace-nowrap">Apple Maps</span>
+          </button>
+        </div>
       </div>
     </div>
   )

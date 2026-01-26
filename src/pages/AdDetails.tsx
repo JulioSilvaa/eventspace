@@ -222,7 +222,7 @@ export default function AdDetails() {
         </div>
 
         {/* Gallery */}
-        <div className="relative md:rounded-[2.5rem] overflow-hidden shadow-2xl">
+        <div className="relative md:rounded-3xl overflow-hidden shadow-2xl">
           <AdGallery title={ad.title} images={ad.listing_images || []} />
         </div>
       </div>
@@ -257,7 +257,7 @@ export default function AdDetails() {
             </div>
 
             {/* Description */}
-            <div className="bg-white p-6 md:p-8 rounded-[2rem] border border-gray-100 shadow-sm">
+            <div className="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-sm">
               <h2 className="text-2xl font-bold text-secondary-950 mb-6">Sobre o espaço</h2>
               <div className="prose prose-lg text-gray-600 leading-relaxed whitespace-pre-wrap break-words max-w-none">
                 {ad.description}
@@ -280,7 +280,7 @@ export default function AdDetails() {
               <h2 className="text-2xl font-bold text-secondary-950 mb-6">Localização</h2>
 
               {/* Address Card */}
-              <div className="bg-white p-5 md:p-8 rounded-[2rem] border border-gray-100 shadow-sm mb-6 flex flex-col md:flex-row md:items-center gap-6">
+              <div className="bg-white p-5 md:p-8 rounded-3xl border border-gray-100 shadow-sm mb-6 flex flex-col md:flex-row md:items-center gap-6">
                 <div className="w-14 h-14 bg-primary-50 rounded-2xl flex items-center justify-center text-primary-600 shrink-0">
                   <MapPin className="w-7 h-7" />
                 </div>
@@ -301,7 +301,7 @@ export default function AdDetails() {
               </div>
 
               {/* Map Box */}
-              <div className="rounded-[2.5rem] overflow-hidden border border-gray-100 shadow-lg h-[300px] md:h-[400px] relative z-0">
+              <div className="rounded-3xl overflow-hidden border border-gray-100 shadow-lg h-[300px] md:h-[400px] relative z-0">
                 {coordinates ? (
                   <LocationMap latitude={coordinates.lat} longitude={coordinates.lng} title={ad.title} address={`${ad.street}, ${ad.city}`} height="100%" />
                 ) : (
@@ -311,7 +311,7 @@ export default function AdDetails() {
             </div>
 
             {/* Reviews */}
-            <div className="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm">
+            <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
               <ReviewsList listingId={ad.id} />
               <div className="mt-8 pt-8 border-t border-gray-100">
                 <h3 className="text-xl font-bold mb-6">Avalie sua experiência</h3>
