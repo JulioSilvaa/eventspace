@@ -438,15 +438,16 @@ export default function Home() {
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+            <div className="flex overflow-x-auto pb-8 gap-4 snap-x -mx-4 px-4 sm:grid sm:grid-cols-2 sm:gap-6 sm:overflow-visible sm:pb-0 sm:mx-0 sm:px-0 md:grid-cols-3 lg:grid-cols-4 scrollbar-hide">
               {popularSpaces.slice(0, 8).map((space) => (
-                <AdCard
-                  key={space.id}
-                  ad={space}
-                  size="small"
-                  showViewCount={false}
-                  showDate={false}
-                />
+                <div key={space.id} className="min-w-[280px] w-[85%] sm:w-auto flex-shrink-0 snap-center sm:min-w-0">
+                  <AdCard
+                    ad={space}
+                    size="small"
+                    showViewCount={false}
+                    showDate={false}
+                  />
+                </div>
               ))}
             </div>
           )}
