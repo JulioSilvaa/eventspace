@@ -74,8 +74,12 @@ export default function Footer() {
                 EventSpace é uma plataforma de conexão. Não intermediamos pagamentos ou garantimos transações.
               </p>
               <p className="text-sm text-gray-500">
-                © 2024 EventSpace. Todos os direitos reservados.
+                © {new Date().getFullYear()} EventSpace. Todos os direitos reservados.
               </p>
+              <div className="mt-4 space-y-1">
+                <p className="text-xs text-gray-600">As melhores chácaras para eventos em São Carlos e região - SP</p>
+                <p className="text-xs text-gray-600">Aluguel de áreas de lazer em São Carlos e região sem taxas de intermediação</p>
+              </div>
             </div>
             <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-6">
               <span className="text-sm text-gray-400 font-medium whitespace-nowrap flex items-center gap-1">
